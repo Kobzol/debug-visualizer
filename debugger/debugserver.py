@@ -65,3 +65,7 @@ class DebugServer(object):
             pass
         finally:
             self.client_connected = None
+    
+    def send_command(self, command):
+        if self.is_client_connected():
+            command.send(self.connected_client)

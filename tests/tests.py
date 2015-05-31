@@ -33,11 +33,23 @@ class ServerTest(unittest.TestCase):
 		response = debugcommand.DebugCommand.receive(sock)
 		assert response.type == cmd.type
 		assert response.data["message"] == cmd.data["message"]
+	
+	def test_server_send(self):
+		sock = self.connect_client()
 		
+		cmd = debugcommand.DebugCommand(debugcommand.CommandType.LoopbackCommand, { "message" : "hello" })
+		self.server.send_command(cmd)
+		
+		response = debugcommand.DebugCommand.receive(sock)
+		assert response.type == cmd.type
+		assert response.data["message"] == cmd.data["message"]
+	
 	def connect_client(self):
 		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		sock.connect(("localhost", self.port))
-		time.sleep(0.5)
+		
+		time.sleep(0.1) # give the server some time to acclimatize
+		
 		assert self.server.is_client_connected()
 		
 		return sock
