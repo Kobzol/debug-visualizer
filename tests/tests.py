@@ -8,6 +8,7 @@ sys.path.append("../debugger")
 
 import debugserver
 import debugcommand
+import debuglauncher
 
 class BasicTest(unittest.TestCase):
 	pass
@@ -53,6 +54,19 @@ class ServerTest(unittest.TestCase):
 		assert self.server.is_client_connected()
 		
 		return sock
+
+class LauncherTest(unittest.TestCase):
+	def test_launch(self):
+		port = 9999
+		launcher = debuglauncher.DebugLauncher("test", port)
+		launcher.launch(["arg1", "arg2"])
+
+		time.sleep(0.5)
+
+		client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		client.connect(("localhost", port))
+		
+		launcher.stop()
 
 if __name__ == '__main__':
     unittest.main()
