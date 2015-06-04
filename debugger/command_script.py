@@ -15,5 +15,6 @@ from debugger import Debugger
 from debugserver import DebugServer
 
 debugger = Debugger()
-server = DebugServer(data["server_port"])
-server.start()
+
+#server = DebugServer(data["server_port"])
+#server.start()
