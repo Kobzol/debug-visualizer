@@ -7,6 +7,7 @@ from gdb_helper import GdbHelper
 class ThreadManager(object):
     def __init__(self):
         self.gdb_helper = GdbHelper()
+        self.thread_stack = []
     
     def get_inferior(self):
         return gdb.selected_inferior()
@@ -23,8 +24,21 @@ class ThreadManager(object):
     def switch_to_thread(self, thread_id):
         self.get_threads()[thread_id - 1].switch()
     
-    def get_thread_locals(self, thread_id):
-        original_thread = self.get_current_thread()
-        self.switch_to_thread(thread_id)
+    def push_thread(self, new_thread_id):
+        self.thread_stack.append(self.get_current_thread())
+        self.switch_to_thread(new_thread_id)
         
-        self.switch_to_thread(original_thread.num)
+    def pop_thread(self):
+        self.switch_to_thread(self.thread_stack.pop().num)
+    
+    def get_thread_vars(self, thread_id=None):
+        if thread_id is not None:
+            self.push_thread(thread_id)
+        
+        locals = self.gdb_helper.get_locals()
+        args = self.gdb_helper.get_args()
+        
+        if thread_id is not None:
+            self.pop_thread()
+        
+        return (locals, args)
