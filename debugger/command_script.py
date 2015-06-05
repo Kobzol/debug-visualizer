@@ -14,7 +14,7 @@ sys.path.append(data["code_path"])
 from debugger import Debugger
 from debugserver import DebugServer
 
-debugger = Debugger()
+debugger = Debugger(data)
 
 #server = DebugServer(data["server_port"])
 #server.start()
