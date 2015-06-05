@@ -47,7 +47,7 @@ class Debugger(object):
         
         try:
             locals = self.thread_manager.get_thread_vars()[0]
-            self.memory.check_pointers(locals)
+            self.memory.match_pointers(locals)
             
             if isinstance(stop_event, gdb.SignalEvent):
                 print("ERROR: " + str(stop_event.stop_signal))
