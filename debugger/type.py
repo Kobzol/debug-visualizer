@@ -14,7 +14,10 @@ class TypeCode(IntEnum):
     Char = 9
     Bool = 10
     Reference = 11
-    Unknown = 12
+    Function = 12
+    Method = 13
+    Void = 14
+    Unknown = 15
 
 class Type(object):
     type_cache = {}
@@ -80,7 +83,10 @@ class Type(object):
             gdb.TYPE_CODE_STRING : TypeCode.String,
             gdb.TYPE_CODE_CHAR : TypeCode.Char,
             gdb.TYPE_CODE_BOOL : TypeCode.Bool,
-            gdb.TYPE_CODE_REF : TypeCode.Reference
+            gdb.TYPE_CODE_REF : TypeCode.Reference,
+            gdb.TYPE_CODE_FUNC : TypeCode.Function,
+            gdb.TYPE_CODE_METHOD : TypeCode.Method,
+            gdb.TYPE_CODE_VOID : TypeCode.Void
         }
         
         if gdb_code in map:
