@@ -7,6 +7,7 @@ import enum
 from gdb_helper import GdbHelper
 from memory import Memory
 from thread_manager import ThreadManager
+from frame_manager import FrameManager
 
 class DebuggerState(enum.IntEnum):
     Stopped = 1
@@ -25,6 +26,7 @@ class Debugger(object):
         self.memory = Memory()
         self.gdb_helper = GdbHelper()
         self.thread_manager = ThreadManager()
+        self.frame_manager = FrameManager()
         
         self.set_gdb_options()
         gdb.events.stop.connect(self.handle_break)
@@ -48,7 +50,7 @@ class Debugger(object):
             return
         
         self.state = DebuggerState.Stopped
-        
+
         try:
             locals = self.thread_manager.get_thread_vars()[0]
             self.memory.match_pointers(locals)
