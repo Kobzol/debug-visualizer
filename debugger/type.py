@@ -19,19 +19,19 @@ class TypeCode(IntEnum):
 class Type(object):
     type_cache = {}
     
-    @staticmethod
-    def register_type(gdb_type):
+    @classmethod
+    def register_type(cls, gdb_type):
         import gdb
         
         if gdb_type is None:
             return
         
-        gdb_type = Type.get_raw_type(gdb_type)
+        gdb_type = cls.get_raw_type(gdb_type)
         name = gdb_type.name
         
-        if name not in Type.type_cache:
+        if name not in cls.type_cache:
             size = gdb_type.sizeof 
-            code = Type.parse_gdb_code(gdb_type.code)
+            code = cls.parse_gdb_code(gdb_type.code)
             target = None
            
             if code == TypeCode.Pointer:
@@ -41,14 +41,14 @@ class Type(object):
         
             try:
                 for field in gdb_type.fields():
-                    member_type = Type.from_gdb_type(field.type)
+                    member_type = cls.from_gdb_type(field.type)
                     member_name = field.name
                     members.append(Member(member_name, name, member_type.name, member_type.size, code, member_type.fields, member_type.target))
             except:
                 pass
 
             final_type = Type(name, size, code, members, target)
-            Type.type_cache[name] = final_type
+            cls.type_cache[name] = final_type
            
     @staticmethod
     def get_raw_type(gdb_type):
@@ -59,11 +59,11 @@ class Type(object):
         else:
             return gdb_type.strip_typedefs()
     
-    @staticmethod
-    def from_gdb_type(gdb_type):
-        Type.register_type(gdb_type)
+    @classmethod
+    def from_gdb_type(cls, gdb_type):
+        cls.register_type(gdb_type)
             
-        return Type.type_cache[Type.get_raw_type(gdb_type).name]
+        return cls.type_cache[cls.get_raw_type(gdb_type).name]
     
     @staticmethod
     def parse_gdb_code(gdb_code):
