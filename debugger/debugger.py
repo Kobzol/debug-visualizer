@@ -52,7 +52,6 @@ class Debugger(object):
         try:
             locals = self.thread_manager.get_thread_vars()[0]
             self.memory.match_pointers(locals)
-            print(locals)
             
             if isinstance(stop_event, gdb.SignalEvent):
                 print("ERROR: " + str(stop_event.stop_signal))
@@ -95,7 +94,7 @@ class Debugger(object):
         finish = gdb.FinishBreakpoint(internal=True)
         self.command_finish()
         address = str(finish.return_value)
-        self.memory.malloc(address, byte_count)
+        self.memory.malloc(address, byte_count, gdb.newest_frame().name())
         
         return False
 

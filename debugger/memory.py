@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import type
+import re
 
 class MemoryBlock(object):
     def __init__(self, address, length, type=None):
@@ -26,9 +27,17 @@ class Memory(object):
                 if block.address == pointer.value:
                     block.type = pointer.type.target
     
-    def malloc(self, address, length):
+    def malloc(self, address, length, fn_name):
         if address and len(address) > 0:
-            self.blocks.append(MemoryBlock(address, length))
+            block = MemoryBlock(address, length)
+            
+            if fn_name:
+                match = re.search(r"operator new\(([^)]*)\)", fn_name)
+                if match:
+                    type_name = match.group(1)
+                    block.type = type_name
+                    
+            self.blocks.append(block)
             
     def free(self, address):
         freed_block = [ block for block in self.blocks if block.address == address ]
