@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 
 from subprocess import PIPE, Popen, call
-import threading, socket, time
-import os, tempfile, shutil
+import threading
+import socket
+import time
+import os
+import tempfile
+import shutil
 import json
 
 class DebugLauncher(object):
@@ -33,7 +37,7 @@ class DebugLauncher(object):
             launch_data = [self.gdb_path, "--silent", "-x", self.get_tmp_script_path(), "--args", self.binary_path] + program_arguments
             
             if use_valgrind:
-                self.valgrind_process = Popen(["valgrind", "--tool=memcheck", "--vgdb=yes", "--vgdb-error=0", self.binary_path])#, stdout=PIPE, stderr=PIPE)
+                self.valgrind_process = Popen(["valgrind", "--tool=memcheck", "--vgdb=yes", "--vgdb-error=0", self.binary_path], stdout=PIPE, stderr=PIPE)
                 script_arguments["valgrind_pid"] = self.valgrind_process.pid
             
             self.write_script_options(script_arguments)
@@ -47,8 +51,12 @@ class DebugLauncher(object):
             
             if self.valgrind_process:
                 self.valgrind_process.kill()
+                self.valgrind_process = None
+                
+            self.debugger_process = None
             
             self.running = False
+            shutil.rmtree(self.tmpdir, ignore_errors=True)
     
     def get_tmp_script_path(self):
         return os.path.join(self.tmpdir, "dv_script.py")
