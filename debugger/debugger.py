@@ -26,6 +26,7 @@ class Debugger(object):
         self.gdb_helper = GdbHelper()
         self.thread_manager = ThreadManager()
         
+        self.set_gdb_options()
         gdb.events.stop.connect(self.handle_break)
         gdb.events.exited.connect(self.handle_exit)
         
@@ -35,6 +36,9 @@ class Debugger(object):
             
         self.add_breakpoint("main")
         self.command_run()
+    
+    def set_gdb_options(self):
+        gdb.execute("set print elements 0")
     
     def handle_exit(self, exit_event):
         self.state = DebuggerState.Exited
@@ -48,6 +52,7 @@ class Debugger(object):
         try:
             locals = self.thread_manager.get_thread_vars()[0]
             self.memory.match_pointers(locals)
+            print(locals)
             
             if isinstance(stop_event, gdb.SignalEvent):
                 print("ERROR: " + str(stop_event.stop_signal))
