@@ -17,33 +17,53 @@ class TypeCode(IntEnum):
     Unknown = 12
 
 class Type(object):
+    type_cache = {}
+    
+    @staticmethod
+    def register_type(gdb_type):
+        import gdb
+        
+        if gdb_type is None:
+            return
+        
+        gdb_type = Type.get_raw_type(gdb_type)
+        name = gdb_type.name
+        
+        if name not in Type.type_cache:
+            size = gdb_type.sizeof 
+            code = Type.parse_gdb_code(gdb_type.code)
+            target = None
+           
+            if code == TypeCode.Pointer:
+                target = gdb_type.target().name
+            
+            members = []
+        
+            try:
+                for field in gdb_type.fields():
+                    member_type = Type.from_gdb_type(field.type)
+                    member_name = field.name
+                    members.append(Member(member_name, name, member_type.name, member_type.size, code, member_type.fields, member_type.target))
+            except:
+                pass
+
+            final_type = Type(name, size, code, members, target)
+            Type.type_cache[name] = final_type
+           
+    @staticmethod
+    def get_raw_type(gdb_type):
+        names_to_keep = ["std::string"]
+        
+        if gdb_type.name in names_to_keep:
+            return gdb_type
+        else:
+            return gdb_type.strip_typedefs()
+    
     @staticmethod
     def from_gdb_type(gdb_type):
-        if gdb_type is None:
-            return None
-        
-        gdb_type = gdb_type.strip_typedefs()
-        
-        name = gdb_type.name
-        size = gdb_type.sizeof
-        
-        code = Type.parse_gdb_code(gdb_type.code)
-        target = None
-        
-        if code == TypeCode.Pointer:
-            target = gdb_type.target().name
-        
-        members = []
-        
-        try:
-            for field in gdb_type.fields():
-                member_type = Type.from_gdb_type(field.type)
-                member_name = field.name
-                members.append(Member(member_type.name, member_type.size, code, member_name, name, member_type.fields, member_type.target))
-        except:
-            pass
+        Type.register_type(gdb_type)
             
-        return Type(name, size, code, members, target)
+        return Type.type_cache[Type.get_raw_type(gdb_type).name]
     
     @staticmethod
     def parse_gdb_code(gdb_code):
@@ -74,7 +94,7 @@ class Type(object):
         self.code = code
         self.fields = fields
         self.target = target
-        
+    
     def __repr__(self):
         repr = self.name + " (" + str(TypeCode(self.code)) + ", " + str(self.size) + " bytes)"
         
@@ -84,7 +104,7 @@ class Type(object):
         return repr
         
 class Member(Type):
-    def __init__(self, name, size, code, member_name, parent_name, fields=[], target=None):
+    def __init__(self, member_name, parent_name, name, size, code, fields=[], target=None):
         Type.__init__(self, name, size, code, fields, target)
         self.member_name = member_name
         self.parent_name = parent_name
