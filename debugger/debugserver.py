@@ -9,8 +9,9 @@ import sys
 from debugcommand import CommandType, DebugCommand
 
 class DebugServer(object):
-    def __init__(self, port):
+    def __init__(self, port, debugger):
         self.address = ("localhost", port)
+        self.debugger = debugger
         self.running = False
         self.connected_client = None
         
@@ -53,6 +54,19 @@ class DebugServer(object):
     def handle_command(self, command):
         if command.type == CommandType.LoopbackCommand:
             self.send_command(command)
+        elif command.type == CommandType.ExecuteCommand:
+            target_prop = self.debugger
+            for prop in command.data["properties"]:
+                target_prop = getattr(target_prop, prop)
+                
+            if "arguments" in command.data:
+                result = target_prop(command.data["arguments"])
+            else:
+                result = target_prop()
+                
+            print(result)
+            sys.stdout.flush()
+            self.send_command(DebugCommand(CommandType.ResultCommand, { "result" : result }))
     
     def handle_client(self, client, address):
         self.connected_client = client

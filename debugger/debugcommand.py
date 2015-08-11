@@ -5,7 +5,9 @@ import json
 from sys import byteorder
 
 class CommandType(IntEnum):
-    LoopbackCommand = 1
+    LoopbackCommand = 1,
+    ExecuteCommand = 2,
+    ResultCommand = 3
 
 class DebugCommand(object):
     @staticmethod
