@@ -36,7 +36,7 @@ class DebugServer(object):
     def create_socket(self):
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.bind(self.address)
-        self.server.listen(0)
+        self.server.listen(1)
     
     def is_data_available(self, fd, timeout = 0.2):
         return len(select.select([fd], [], [], timeout)[0]) != 0
@@ -52,7 +52,7 @@ class DebugServer(object):
     
     def handle_command(self, command):
         if command.type == CommandType.LoopbackCommand:
-            command.send(self.connected_client)
+            self.send_command(command)
     
     def handle_client(self, client, address):
         self.connected_client = client
