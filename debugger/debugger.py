@@ -8,6 +8,7 @@ from gdb_helper import GdbHelper
 from memory import Memory
 from thread_manager import ThreadManager
 from frame_manager import FrameManager
+from file_manager import FileManager
 
 class DebuggerState(enum.IntEnum):
     Stopped = 1
@@ -27,6 +28,7 @@ class Debugger(object):
         self.gdb_helper = GdbHelper()
         self.thread_manager = ThreadManager()
         self.frame_manager = FrameManager()
+        self.file_manager = FileManager()
         
         self.set_gdb_options()
         gdb.events.stop.connect(self.handle_break)
