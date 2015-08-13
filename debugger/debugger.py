@@ -18,8 +18,8 @@ class DebuggerState(enum.IntEnum):
 class Debugger(object):
     def __init__(self, options):
         self.breakpoints = []
-        self.add_breakpoint("malloc", self.handle_malloc)
-        self.add_breakpoint("free", self.handle_free)
+        #self.add_breakpoint("malloc", self.handle_malloc)
+        #self.add_breakpoint("free", self.handle_free)
         
         self.state = DebuggerState.Exited
         self.manual_stepping = False
@@ -70,7 +70,7 @@ class Debugger(object):
                     break
         except:
             print(traceback.format_exc())
-    
+            
     def command_continue(self):
         self.state = DebuggerState.Running
         self.manual_stepping = False

@@ -6,7 +6,7 @@ import select
 import json
 import sys
 
-from debugcommand import CommandType, DebugCommand
+from debug_command import CommandType, DebugCommand
 
 class DebugServer(object):
     def __init__(self, port, debugger):
@@ -48,12 +48,12 @@ class DebugServer(object):
                 if self.is_data_available(self.server, 0.2) and not self.is_client_connected():
                     client, address = self.server.accept()
                     self.handle_client(client, address)
-            except:
-                pass
+            except Exception as e:
+                print(e)
     
-    def handle_command(self, command):
+    def handle_command(self, command):       
         if command.type == CommandType.LoopbackCommand:
-            self.send_command(command)
+            self.send_result(command, "ok")
         elif command.type == CommandType.ExecuteCommand:
             target_prop = self.debugger
             for prop in command.data["properties"]:
@@ -63,10 +63,8 @@ class DebugServer(object):
                 result = target_prop(command.data["arguments"])
             else:
                 result = target_prop()
-                
-            print(result)
-            sys.stdout.flush()
-            self.send_command(DebugCommand(CommandType.ResultCommand, { "result" : result }))
+            
+            self.send_result(command, result)
     
     def handle_client(self, client, address):
         self.connected_client = client
@@ -75,11 +73,10 @@ class DebugServer(object):
             while self.is_running():
                 if self.is_data_available(client, 0.2):
                     self.handle_command(DebugCommand.receive(client))
-        except:
-            pass
+        except Exception as e:
+            print(e)
         finally:
             self.client_connected = None
-    
-    def send_command(self, command):
-        if self.is_client_connected():
-            command.send(self.connected_client)
+            
+    def send_result(self, command, result):
+        command.send_result(self.connected_client, result)

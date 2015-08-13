@@ -3,6 +3,7 @@
 from enum import IntEnum
 import json
 from sys import byteorder
+import uuid
 
 class CommandType(IntEnum):
     LoopbackCommand = 1,
@@ -17,13 +18,17 @@ class DebugCommand(object):
         if length < 1:
             raise IOError()
                 
-        data = json.loads(client.recv(length).decode(encoding="utf_8"))
-        return DebugCommand(data["type"], data)
+        payload = json.loads(client.recv(length).decode(encoding="utf_8"))
+        
+        return DebugCommand(payload["type"], payload["data"], payload["id"])
     
-    def __init__(self, type, data):
+    def __init__(self, type, data, id = None):
         self.type = type
         self.data = data
-        self.data["type"] = type
+        self.id = id if id else self.generate_id()
+    
+    def generate_id(self):
+        return str(uuid.uuid4())
     
     def send(self, socket):
         serialized_data = self.get_serialized_data()
@@ -32,4 +37,13 @@ class DebugCommand(object):
         socket.sendall(serialized_data)
         
     def get_serialized_data(self):
-        return json.dumps(self.data).encode(encoding="utf_8")
+        payload = {
+            "data" : self.data,
+            "type" : self.type,
+            "id" : self.id
+        }
+        return json.dumps(payload).encode(encoding="utf_8")
+    
+    def send_result(self, socket, result):
+        result = DebugCommand(CommandType.ResultCommand, {"result" : result, "query_id" : self.id})
+        result.send(socket)
