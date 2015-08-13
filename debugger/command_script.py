@@ -10,7 +10,7 @@ class TestCommand(gdb.Command):
         self.debugger = debugger
         
     def invoke(self, argument, from_tty):
-        self.debugger.command_next()
+        print(self.debugger.file_manager.get_current_location())
 
 data = {}
 
@@ -20,10 +20,10 @@ with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "options.json
 sys.path.append(data["code_path"])
 
 from debugger import Debugger
-from debugserver import DebugServer
+from net.server import Server
 
 debugger = Debugger(data)
 tstcommand = TestCommand(debugger)
 
-#server = DebugServer(data["server_port"])
-#server.start()
+server = Server(data["server_port"], debugger)
+server.start()

@@ -4,9 +4,10 @@ import socket
 import threading
 import select
 import sys
-from debug_command import DebugCommand, CommandType
 
-class DebugClient(object):
+from net.command import Command, CommandType
+
+class Client(object):
     def __init__(self, address):
         self.address = address
         
@@ -61,11 +62,11 @@ class DebugClient(object):
     def receive_thread_fn(self):
         while self.listening:
             if self.is_data_available(0.2):
-                command = DebugCommand.receive(self.socket)
+                command = Command.receive(self.socket)
                 self.handle_command(command)
     
     def handle_command(self, command):
-        if command.type == CommandType.ResultCommand:
+        if command.type == CommandType.Result:
             query_id = command.data["query_id"]
             callback = self.waiting_messages.pop(query_id, None)
             
@@ -82,11 +83,11 @@ class DebugClient(object):
         if args is not None:
             data["args"] = args
         
-        cmd = DebugCommand(CommandType.ExecuteCommand, data)
+        cmd = Command(CommandType.Execute, data)
         self.send(cmd, callback)
         
     def cmd_get_location(self, callback):
         self.exec_command(["file_manager", "get_current_location"], None, callback)
         
     def cmd_loopback(self, callback):
-        self.send(DebugCommand(CommandType.LoopbackCommand, {}), callback)
+        self.send(Command(CommandType.Loopback, {}), callback)

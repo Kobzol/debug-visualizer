@@ -6,23 +6,29 @@ import sys
 import time
 sys.path.append("../debugger")
 
-import debug_server
-import debug_command
-import debug_launcher
-import debug_client
+from net.server import Server
+from net.client import Client
 
 class BasicTest(unittest.TestCase):
 	pass
 
 class ServerTest(unittest.TestCase):
 	def setUp(self):
-		self.port = 9994
-		self.server = debug_server.DebugServer(self.port, None)
+		self.port = 9995
+		self.server = Server(self.port, None)
 		self.server.start()
 		
 		assert self.server.is_running()
 		
 		self.client = self.connect_client(self.port)
+	
+	def connect_client(self, port):
+		client = Client(("localhost", port))
+		client.connect()
+		
+		assert client.is_connected()
+		
+		return client
 	
 	def tearDown(self):
 		self.server.stop()
@@ -36,14 +42,6 @@ class ServerTest(unittest.TestCase):
 	
 	def check_loopback_response(self, response):
 		assert response == "ok"
-	
-	def connect_client(self, port):
-		client = debug_client.DebugClient(("localhost", port))
-		client.connect()
-		
-		assert client.is_connected()
-		
-		return client
 
 if __name__ == '__main__':
     unittest.main()

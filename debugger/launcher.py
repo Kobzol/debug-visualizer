@@ -9,7 +9,7 @@ import tempfile
 import shutil
 import json
 
-class DebugLauncher(object):
+class Launcher(object):
     def __init__(self, binary_path, server_port):
         self.gdb_path = "gdb"
         self.binary_path = binary_path

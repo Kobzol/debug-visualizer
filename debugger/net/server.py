@@ -6,9 +6,9 @@ import select
 import json
 import sys
 
-from debug_command import CommandType, DebugCommand
+from net.command import Command, CommandType
 
-class DebugServer(object):
+class Server(object):
     def __init__(self, port, debugger):
         self.address = ("localhost", port)
         self.debugger = debugger
@@ -52,9 +52,9 @@ class DebugServer(object):
                 print(e)
     
     def handle_command(self, command):       
-        if command.type == CommandType.LoopbackCommand:
+        if command.type == CommandType.Loopback:
             self.send_result(command, "ok")
-        elif command.type == CommandType.ExecuteCommand:
+        elif command.type == CommandType.Execute:
             target_prop = self.debugger
             for prop in command.data["properties"]:
                 target_prop = getattr(target_prop, prop)
@@ -72,7 +72,7 @@ class DebugServer(object):
         try:
             while self.is_running():
                 if self.is_data_available(client, 0.2):
-                    self.handle_command(DebugCommand.receive(client))
+                    self.handle_command(Command.receive(client))
         except Exception as e:
             print(e)
         finally:

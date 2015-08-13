@@ -6,11 +6,11 @@ from sys import byteorder
 import uuid
 
 class CommandType(IntEnum):
-    LoopbackCommand = 1,
-    ExecuteCommand = 2,
-    ResultCommand = 3
+    Loopback = 1,
+    Execute = 2,
+    Result = 3
 
-class DebugCommand(object):
+class Command(object):
     @staticmethod
     def receive(client):
         length = int.from_bytes(client.recv(4), byteorder = "little")
@@ -20,9 +20,9 @@ class DebugCommand(object):
                 
         payload = json.loads(client.recv(length).decode(encoding="utf_8"))
         
-        return DebugCommand(payload["type"], payload["data"], payload["id"])
+        return Command(payload["type"], payload["data"], payload["id"])
     
-    def __init__(self, type, data, id = None):
+    def __init__(self, type, data = {}, id = None):
         self.type = type
         self.data = data
         self.id = id if id else self.generate_id()
@@ -45,5 +45,5 @@ class DebugCommand(object):
         return json.dumps(payload).encode(encoding="utf_8")
     
     def send_result(self, socket, result):
-        result = DebugCommand(CommandType.ResultCommand, {"result" : result, "query_id" : self.id})
+        result = Command(CommandType.Result, {"result" : result, "query_id" : self.id})
         result.send(socket)
