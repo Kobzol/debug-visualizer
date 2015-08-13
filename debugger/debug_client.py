@@ -44,14 +44,14 @@ class DebugClient(object):
         if not self.is_connected():
             return
         
-        if self.socket:
-            self.socket.close()
-            self.socket = None
-        
         if self.receive_thread:
             self.listening = False
             self.receive_thread.join()
             self.receive_thread = None
+        
+        if self.socket:
+            self.socket.close()
+            self.socket = None
         
         self.connected = False
     
@@ -87,3 +87,6 @@ class DebugClient(object):
         
     def cmd_get_location(self, callback):
         self.exec_command(["file_manager", "get_current_location"], None, callback)
+        
+    def cmd_loopback(self, callback):
+        self.send(DebugCommand(CommandType.LoopbackCommand, {}), callback)

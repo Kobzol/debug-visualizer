@@ -6,67 +6,44 @@ import sys
 import time
 sys.path.append("../debugger")
 
-import debugserver
-import debugcommand
-import debuglauncher
+import debug_server
+import debug_command
+import debug_launcher
+import debug_client
 
 class BasicTest(unittest.TestCase):
 	pass
 
 class ServerTest(unittest.TestCase):
 	def setUp(self):
-		self.port = 9999
-		self.server = debugserver.DebugServer(self.port)
+		self.port = 9994
+		self.server = debug_server.DebugServer(self.port, None)
 		self.server.start()
 		
 		assert self.server.is_running()
+		
+		self.client = self.connect_client(self.port)
 	
 	def tearDown(self):
 		self.server.stop()
 		assert not self.server.is_running()
 		
+		self.client.disconnect()
+		assert not self.client.is_connected()
+		
 	def test_loopback(self):
-		sock = self.connect_client()
-		
-		cmd = debugcommand.DebugCommand(debugcommand.CommandType.LoopbackCommand, { "message" : "hello" })
-		cmd.send(sock)
-		
-		response = debugcommand.DebugCommand.receive(sock)
-		assert response.type == cmd.type
-		assert response.data["message"] == cmd.data["message"]
+		self.client.cmd_loopback(self.check_loopback_response)
 	
-	def test_server_send(self):
-		sock = self.connect_client()
-		
-		cmd = debugcommand.DebugCommand(debugcommand.CommandType.LoopbackCommand, { "message" : "hello" })
-		self.server.send_command(cmd)
-		
-		response = debugcommand.DebugCommand.receive(sock)
-		assert response.type == cmd.type
-		assert response.data["message"] == cmd.data["message"]
+	def check_loopback_response(self, response):
+		assert response == "ok"
 	
-	def connect_client(self):
-		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		sock.connect(("localhost", self.port))
+	def connect_client(self, port):
+		client = debug_client.DebugClient(("localhost", port))
+		client.connect()
 		
-		time.sleep(0.1) # give the server some time to acclimatize
+		assert client.is_connected()
 		
-		assert self.server.is_client_connected()
-		
-		return sock
-
-class LauncherTest(unittest.TestCase):
-	def test_launch(self):
-		port = 9999
-		launcher = debuglauncher.DebugLauncher("test", port)
-		launcher.launch(["arg1", "arg2"])
-
-		time.sleep(0.5)
-
-		client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		client.connect(("localhost", port))
-		
-		launcher.stop()
+		return client
 
 if __name__ == '__main__':
     unittest.main()
