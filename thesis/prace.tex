@@ -1,0 +1,339 @@
+% Nejprve uvedeme tridu dokumentu s volbami
+%\documentclass[bc,male,java,dept460]{diploma}						% jednostranny dokument
+\documentclass[bc,male,java,dept460,twoside]{diploma}		% oboustranny dokument
+\usepackage[czech]{babel}
+
+
+% Zadame pozadovane vstupy pro generovani titulnich stran.
+\ThesisAuthor{Jiří Dvorský}
+
+% U bakalarske praxe neni nutne nazev zadavat
+\ThesisTitle{Ukázka sazby diplomové nebo bakalářské práce}
+
+% U bakalarske praxe neni nutne anglicky nazev zadavat
+\EnglishThesisTitle{Diploma Thesis Typesetting Demo}
+
+\SubmissionDate{16. dubna 2009}
+
+\PrintPublicationAgreement{true}
+
+\AccessRestriction{Zde vložte text dohodnutého omezení přístupu k Vaší práci, chránící například firemní know-how.
+Zde vložte text dohodnutého omezení přístupu k Vaší práce, chránící například firemní know-how.
+A zavazujete se, že\par
+\begin{enumerate}
+\item o práci nikomu neřeknete,
+\item po obhajobě na ni zapomenete a
+\item budete popírat její existenci.
+\end{enumerate}
+A ještě jeden důležitý odstavec. A ještě jeden důležitý odstavec.
+A ještě jeden důležitý odstavec. A ještě jeden důležitý odstavec.
+A ještě jeden důležitý odstavec. A ještě jeden důležitý odstavec.
+Konec textu dohodnutého omezení přístupu k Vaší práci.}
+
+\Thanks{Rád bych na tomto místě poděkovala všem, kteří mi s prací pomohli, protože bez nich by tato práce nevznikla.}
+
+\CzechAbstract{Tohle je nějaký abstrakt. Tohle je nějaký abstrakt. Tohle je nějaký abstrakt. Tohle je nějaký abstrakt.
+Tohle je nějaký abstrakt. Tohle je nějaký abstrakt. Tohle je nějaký abstrakt. Tohle je nějaký abstrakt.
+Tohle je nějaký abstrakt. Tohle je nějaký abstrakt. Tohle je nějaký abstrakt. Tohle je nějaký abstrakt.}
+
+\CzechKeywords{typografie, \LaTeX, diplomová práce}
+
+\EnglishAbstract{This is English abstract. This is English abstract. This is English abstract. This is English abstract. This is English abstract. This is English abstract.}
+
+\EnglishKeywords{typography, \LaTeX, master thesis}
+
+% Pridame pouzivane zkratky (pokud nejake pouzivame).
+\AddAcronym{DVD}{Digital Versatile Disc}
+\AddAcronym{TNT}{Trinitrotoluen}
+\AddAcronym{OASIS}{Organization For The Advancement Of Structured Information Systems}
+\AddAcronym{HTML}{Hyper Text Markup Language}
+
+
+% Zadame cestu a jmeno souboru ci nekolika souboru s digitalizovanou podobou zadani prace
+% Pri sazbe se pak hledaji soubory Figures/Zadani1.jpg, Figures/Zadani2.jpg atd.
+% Do diplomove prace se postupne vlozi vsechny existujici soubory Figures/ZadaniXXX.jpg
+% Pokud toto makro zapoznamkujeme sazi se stranka s upozornenim
+%\ThesisAssignmentImagePath{Figures/Zadani}
+
+% Zadame soubor s digitalizovanou podobou prohlaseni
+% Pokud toto makro zapoznamkujeme sazi se cisty text prohlaseni
+\DeclarationImageFile{Figures/Prohlaseni.jpg}
+
+
+
+% Zacatek dokumentu
+\begin{document}
+
+% Nechame vysazet titulni strany.
+\MakeTitlePages
+
+% Asi urcite budeme potrebovat obsah prace.
+\tableofcontents
+\cleardoublepage	% odstrankujeme, u jednostranneho dokumentu o jednu stranku, u oboustrenneho o dve
+
+% Jsou v praci tabulky? Pokud ano vysazime jejich seznam.
+% Pokud ne smazeme nasledujici makro.
+\listoftables
+\cleardoublepage	% odstrankujeme, u jednostranneho dokumentu o jednu stranku, u oboustrenneho o dve
+
+% Jsou v praci obrazky? Pokud ano vysazime jejich seznam.
+\listoffigures
+\cleardoublepage	% odstrankujeme, u jednostranneho dokumentu o jednu stranku, u oboustrenneho o dve
+
+
+% Jsou v praci vypisy programu? Pokud ano vysazime jejich seznam.
+\lstlistoflistings
+\cleardoublepage	% odstrankujeme, u jednostranneho dokumentu o jednu stranku, u oboustrenneho o dve
+
+
+
+% Zacneme uvodem
+\section{Úvod}
+\label{sec:Uvod}
+Tento text je ukázkou sazby diplomové práce v \LaTeX{}u pomocí třídy dokumentů \verb|diploma|.
+Pochopitelně text není skutečnou diplomovou prací, ale jen ukázkou použití
+implementovaných maker v praxi. V kapitole \ref{sec:Typo} jsou ukázky použití
+různých maker a prostředí. V kapitole \ref{sec:Conclusion} bude \uv{jako závěr}. Zároveň
+tato kapitola slouží jako ukázka generování křížových odkazů v \LaTeX{}u.
+
+
+
+\section{Ukázky sazby}
+\label{sec:Typo}
+
+
+\subsection{Ukázka nadpisů}
+Toto je nadpis podsekce, generováno makrem \verb|\subsection|.
+
+
+\subsubsection{subsection}
+
+\paragraph{paragraph}
+
+
+\subparagraph{subparagraph}
+Ale tak hluboko se asi stejně nikdo nedostane.
+
+
+
+\subsection{Sazba definic, vět atd.}
+Určitě se bude hodit prostředí pro sazbu definice jako je definice binárního vyhledávacího
+stromu, viz definice \ref{def:BinVyhlStrom}.
+
+\begin{remark}
+Následující definice a věty nedávají dohromady příliš smysl. Jsou tu jen pro ukázku.
+\end{remark}
+
+
+\begin{definition}
+\label{def:BinVyhlStrom}
+Binární strom je struktura definovaná nad konečnou množinou uzlů, která:
+\begin{itemize}
+\item neobsahuje žádný uzel,
+\item je složena ze tří disjunktních množin uzlů:
+      kořene, binárního stromu zvaného levý podstrom a~binárního stromu tzv.\ pravého podstromu.
+\end{itemize}
+\end{definition}
+
+Pak by se taky mohla hodit nějaká věta a k ní důkaz.
+
+\begin{theorem}
+\label{VetaNeuspechSepar}
+Průměrná časová složitost neúspěšného vyhledání  v~hashovací tabulce se  separátním zřetězením je $\Theta(1+\alpha)$, za předpokladu jednoduchého uniformního hashování.
+\end{theorem}
+\begin{proof}
+Za předpokladu jednoduchého uniformního hashování se každý  klíč
+$k$ hashuje se stejnou pravděpodobností do libovolného z~$m$ slotů
+tabulky. Průměrný čas neúspěšného hledání klíče $k$ je proto
+průměrný čas prohledání jednoho z~$m$ seznamů. Průměrná délka
+každého takového seznamu je rovna faktoru naplnění $\alpha=n/m$.
+Tudíž lze očekávat, že budeme nuceni prozkoumat $\alpha$ prvků.
+Z~toho plyne, že celkový čas pro neúspěšné hledání (plus navíc
+konstantní čas pro výpočet $h(k)$) je $\Theta(1+\alpha)$.
+\end{proof}
+
+
+\begin{example}
+\label{priklad}
+Mějme napsat funkci, která spočítá uzly ve stromu. Předpokládejme,
+že binární strom je definován způsobem uvedeným v~definici
+\ref{def:BinVyhlStrom} na straně \pageref{def:BinVyhlStrom}. Naše úloha se výrazně zjednoduší
+uvědomíme-li si její rekurzivní charakter a~předpokládáme, že aktuální uzel je $R$.
+\begin{itemize}
+\item Je-li $R$ prázdný strom (tj.\ $R=NULL$), pak počet jeho uzlů je pochopitelně nula. Tím máme problém vyřešen.
+
+\item V~opačném případě víme, že ve stromu  určitě jeden uzel existuje ($R$) a~počty uzlů
+v~levém a~pravém podstromu se dají určit obdobným způsobem
+rekurzivně. To znamená, že počet uzlů ve stromu s~kořenem $R$ je
+$1 + \mathrm{pocet\_uzlu}(A) + \mathrm{pocet\_uzlu}(B)$
+\end{itemize}
+
+Počty uzlů pro jednotlivé podstromy se předávají jako výsledky
+volání funkcí prostřednictvím zásobníku programu, nejsou tudíž
+potřeba žádné pomocné proměnné.
+\end{example}
+
+
+\begin{remark}
+Program z příkladu \ref{priklad} pochopitelně chybí,
+ale můžete se podívat třeba na program uvedený ve výpisu \ref{src:Java}.
+\end{remark}
+
+
+
+
+\subsection{Výpisy programů}
+Tato diplomová práce má nastaven výchozí jazyk Java, jak je vidět z výpisu~\ref{src:Java}. Výpis kódu \ref{src:Java} zároveň demonstruje možnost přímého vložení zdrojového kódu programu do textu práce. Druhou možností je načtení zdrojového kódu programu z externího souboru, viz výpis \ref{src:JavaExternal}. Pokud potřebujeme změnit programovací jazyk pro konkrétní výpis kódu, můžeme jeho to provést přímo v záhlaví prostředí \verb|lstlisting|. Výpis \ref{src:Pascal} je v jazyku Pascal. Všimněte si zvýraznění klíčových slov. 
+
+\begin{remark}
+Pro správnou sazbu je třeba pro odsazování používat tabulátory, nikoliv mezery.
+\end{remark}
+
+
+\begin{lstlisting}[label=src:Java,caption=Program v jazyce Java]
+public class MyClass
+{
+	public int MyMethod(int a, int b)
+	{
+		while (a != b)
+		{
+			if (a < b)
+				b -= a;
+			else
+				a -= b;
+		}
+	}
+}
+\end{lstlisting}
+
+
+\lstinputlisting[label=src:JavaExternal,caption={Program v jazyce Java, načtený z externího souboru}]{MyClass.java}
+
+
+\begin{lstlisting}[language=Pascal,label=src:Pascal,caption=Program v Pascalu]
+procedure X(i : integer; var x : real);
+begin
+	x := i + 3;
+end;
+\end{lstlisting}
+
+
+
+\subsection{Obrázky a tabulky}
+A ještě si můžeme zkusit vysázet obrázek. Obrázek \ref{fig:SampleFigAbs} má určenu absolutní velikost,
+zatímco obrázek \ref{fig:SampleFigRel} je určen relativně vůči šířce textu.
+
+
+\InsertFigure{Figures/Obr1}{40mm}{Pokusný obrázek -- absolutní velikost}{fig:SampleFigAbs}
+
+
+\InsertFigure{Figures/Obr1}{0.7\textwidth}{Pokusný obrázek -- relativní velikost}{fig:SampleFigRel}
+
+\InsertSidewaysFigure{Figures/Obr1}{0.6\textheight}{Pokusný obrázek -- otočený naležato}{fig:SampleFigSideway}
+
+
+A ještě zkusíme vysázet několik tabulek, ale jen kvůli seznamu tabulek v úvodu. Tabulka \ref{tab:ExpTable} představuje jednoduchou tabulku, která se svou šířkou pohodlně vejde do šířky textu. Velké tabulky, stejně jako obrázky, můžeme vysázet naležato. Ukázkou velké, komplikované tabulky\footnote{Pokud, ale píšete práci česky, měly by být tabulky také česky -- mě se jen nechtěla předělávat do češtiny.} je tabulka \ref{tab:ExpFilesDetailStats}.
+ 
+\begin{table}
+  \centering
+  \begin{tabular}{|c|c|c|}
+    \hline
+    q & $\delta(q, 0)$ & $\delta(q, 1)$ \\
+    \hline
+    $q_0$ & $q_1$ & $q_0$ \\
+    \hline
+    $q_1$ & $q_1$ & $q_2$ \\
+    \hline
+    $q_2$ & $q_1$ & $q_0$ \\
+    \hline
+  \end{tabular}
+  \caption{Pokusná tabulka}
+  \label{tab:ExpTable}
+\end{table}
+
+
+
+\begin{sidewaystable}
+\centering
+\begin{tabular}{|l|rr|rr|rr|rr|}
+\hline
+File &
+\multicolumn{2}{c|}{bible.txt} &
+\multicolumn{2}{c|}{world.txt} &
+\multicolumn{2}{c|}{law.txt} &
+\multicolumn{2}{c|}{latimes.txt} \\
+\hline
+Language &
+\multicolumn{2}{c|}{English} &
+\multicolumn{2}{c|}{English} &
+\multicolumn{2}{c|}{Czech} &
+\multicolumn{2}{c|}{English} \\
+Format &
+\multicolumn{2}{c|}{Plain text} &
+\multicolumn{2}{c|}{Plain text} &
+\multicolumn{2}{c|}{Plain text} &
+\multicolumn{2}{c|}{SGML} \\
+\hline
+Size of file [bytes] & 4047392 &  & 2473400 &  & 64573143 &  & 498360166 & \\
+\hline
+{\small{}Number of tokens} & 1532262 & 100\% & 684767 & 100\% & 19432898 & 100\% & 161254928 & 100\%\\
+{\small{}Number of words} & 766131 & 50\% & 342383 & 50\% & 9716449 & 50\% & 70766067 & 43.885\%\\
+{\small{}Number of nonwords} & 766131 & 50\% & 342384 & 50\% & 9716449 & 50\% & 80619289 & 49.995\%\\
+{\small{}Number of controls} &  &  &  &  &  &  & 9869572 & 6.12\%\\
+\hline
+{\small{}Number of unique tokens} & 13791 & 100\% & 23564 & 100\% & 250570 & 100\% & 529482 & 100\%\\
+{\small{}Number of unique words} & 13744 & 99.659\% & 23082 & 97.955\% & 246266 & 98.282\% & 524280 & 99.018\%\\
+{\small{}Number of unique nonwords} & 47 & 0.341\% & 482 & 2.045\% & 4304 & 1.718\% & 3079 & 0.582\%\\
+{\small{}Number of unique controls} &  &  &  &  &  &  & 2123 & 0.401\%\\
+\hline
+{\small{}Word average frequency} & 55.743 &  & 14.833 &  & 39.455 &  & 134.978 & \\
+{\small{}Nonword average frequency} & 16300.66 &  & 710.34 &  & 2257.539 &  & 26183.595 & \\
+{\small{}Control average frequency} &  &  &  &  &  &  & 4648.88 & \\
+\hline
+{\small{}Minimal length of word} & 1 &  & 1 &  & 1 &  & 1 & \\
+{\small{}Maximal length of word} & 18 &  & 27 &  & 41 &  & 58 & \\
+{\small{}Minimal length of nonword} & 1 &  & 1 &  & 1 &  & 1 & \\
+{\small{}Maximal length of nonword} & 4 &  & 56 &  & 700 &  & 253 & \\
+{\small{}Minimal length of control} &  &  &  &  &  &  & 3 & \\
+{\small{}Maximal length of control} &  &  &  &  &  &  & 132 & \\
+\hline
+\end{tabular}
+\caption{Experimental Files --- Detailed Statistics}
+\label{tab:ExpFilesDetailStats}
+\end{sidewaystable}
+
+
+\section{Závěr}
+\label{sec:Conclusion}
+Tak doufám, že Vám tato ukázka k něčemu byla. Další informace najdete v~publikacích
+\cite{goossens94,lamport94}.
+
+\bigskip
+\begin{flushright}
+Jiří Dvorský
+\end{flushright}
+
+
+
+
+\begin{thebibliography}{99}
+
+\bibitem{goossens94} Goossens, Michel,
+\textit{The \LaTeX\ companion,} New York: Addison, 1994.
+
+\bibitem{lamport94} Lamport, Leslie,
+\textit{\LaTeX: a document preparation system: user's guide and reference manual},
+New York: Addison-Wesley Pub. Co., 1994.
+
+\end{thebibliography}
+
+
+\appendix
+\section{Grafy a měření}
+Tohle je příloha k práci. Většinou se sem dávají grafy, tabulky, které by vzhledem
+ke svému počtu překážely v textu diplomky.
+\clearpage
+
+\InsertFigure{Figures/Graf}{0.7\textwidth}{Nějaký graf}{fig:SampleGraph}
+
+\end{document}
