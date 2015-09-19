@@ -71,6 +71,8 @@ class Server(object):
                     
                 self.send_result(command, result)
             except:
+                print(traceback.format_exc())
+                sys.stdout.flush()
                 self.send_result_error(command, traceback.format_exc())
     
     def handle_client(self, client, address):
@@ -86,7 +88,15 @@ class Server(object):
             self.client_connected = None
             
     def send_result(self, command, result):
-        command.send_result(self.connected_client, result)
+        try:
+            command.send_result(self.connected_client, result)
+        except:
+            print(traceback.format_exc())
+            sys.stdout.flush()
         
     def send_result_error(self, command, error):
-        command.send_result_error(self.connected_client, error)
+        try:
+            command.send_result_error(self.connected_client, error)
+        except:
+            print(traceback.format_exc())
+            sys.stdout.flush()
