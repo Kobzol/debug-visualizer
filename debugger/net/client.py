@@ -4,6 +4,7 @@ import socket
 import threading
 import select
 import sys
+import time
 
 from net.command import Command, CommandType
 
@@ -40,6 +41,14 @@ class Client(object):
         self.receive_thread.start()
         
         return True
+    
+    def connect_repeat(self, timeout=5):
+        start_time = time.clock()
+        
+        while not self.connect() and time.clock() < start_time + timeout:
+            time.sleep(0.1)
+            
+        return self.is_connected()
         
     def disconnect(self):
         if not self.is_connected():
