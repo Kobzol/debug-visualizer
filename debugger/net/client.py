@@ -80,17 +80,23 @@ class Client(object):
             callback = self.waiting_messages.pop(query_id, None)
             
             if callback:
-                callback(command.data["result"])
+                if "error" in command.data:
+                    callback(True, command.data["error"])
+                    
+                    print("ERROR CLIENT: " + str(command.data["error"]))
+                    sys.stdout.flush()
+                elif "result" in command.data:
+                    callback(False, command.data["result"])
     
     def send(self, command, callback):
         self.waiting_messages[command.id] = callback
         command.send(self.socket)
         
-    def exec_command(self, properties, args, callback):
+    def exec_command(self, properties, args=None, callback=None):
         data = {"properties" : properties}
         
         if args is not None:
-            data["args"] = args
+            data["arguments"] = args
         
         cmd = Command(CommandType.Execute, data)
         self.send(cmd, callback)
@@ -100,3 +106,6 @@ class Client(object):
         
     def cmd_loopback(self, callback):
         self.send(Command(CommandType.Loopback, {}), callback)
+        
+    def cmd_get_status(self, callback):
+        self.exec_command(["get_status"], None, callback)

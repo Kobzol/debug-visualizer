@@ -6,8 +6,8 @@ from sys import byteorder
 import uuid
 
 class CommandType(IntEnum):
-    Loopback = 1,
-    Execute = 2,
+    Loopback = 1
+    Execute = 2
     Result = 3
 
 class Command(object):
@@ -47,3 +47,10 @@ class Command(object):
     def send_result(self, socket, result):
         result = Command(CommandType.Result, {"result" : result, "query_id" : self.id})
         result.send(socket)
+    
+    def send_result_error(self, socket, error):
+        result = Command(CommandType.Result, {"error" : error, "query_id" : self.id})
+        result.send(socket)
+    
+    def __repr__(self, *args, **kwargs):
+        return str(CommandType(self.type)) + ", " + str(self.id) + ", " + str(self.data)

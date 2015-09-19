@@ -5,6 +5,7 @@ import threading
 import select
 import json
 import sys
+import traceback
 
 from net.command import Command, CommandType
 
@@ -54,17 +55,23 @@ class Server(object):
     def handle_command(self, command):       
         if command.type == CommandType.Loopback:
             self.send_result(command, "ok")
-        elif command.type == CommandType.Execute:
+        elif command.type == CommandType.Execute:           
             target_prop = self.debugger
-            for prop in command.data["properties"]:
-                target_prop = getattr(target_prop, prop)
-                
-            if "arguments" in command.data:
-                result = target_prop(command.data["arguments"])
-            else:
-                result = target_prop()
             
-            self.send_result(command, result)
+            result = None
+            
+            try:
+                for prop in command.data["properties"]: 
+                    target_prop = getattr(target_prop, prop)
+            
+                if "arguments" in command.data:
+                    result = target_prop(command.data["arguments"])
+                else:
+                    result = target_prop()
+                    
+                self.send_result(command, result)
+            except:
+                self.send_result_error(command, traceback.format_exc())
     
     def handle_client(self, client, address):
         self.connected_client = client
@@ -80,3 +87,6 @@ class Server(object):
             
     def send_result(self, command, result):
         command.send_result(self.connected_client, result)
+        
+    def send_result_error(self, command, error):
+        command.send_result_error(self.connected_client, error)
