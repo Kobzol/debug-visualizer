@@ -11,10 +11,7 @@ class BreakpointManager(object):
         self.breakpoints = []
             
     def handle_break(self, stop_event):
-        should_continue = self.before_bp(stop_event)
-        
-        if not should_continue:
-            return
+        self.before_bp(stop_event)
         
         callback = None
         
@@ -24,9 +21,10 @@ class BreakpointManager(object):
                 break
             
         if callback:
-            cb(stop_event)
-        
-        self.after_bp(stop_event)
+            cb(stop_event) # inspecting callback, continue execution
+            self.after_bp(stop_event, True)
+        else:
+            self.after_bp(stop_event, False)
     
     def add_breakpoint(self, location, callback = None):
         self.breakpoints.append((gdb.Breakpoint(location, internal=True), callback))
