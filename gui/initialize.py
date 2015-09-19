@@ -7,6 +7,7 @@ import locale
 
 import paths
 sys.path.append(paths.DIR_GUI)
+sys.path.append(paths.DIR_DEBUGGER)
 
 from config import Config
 from app import VisualiserApp
