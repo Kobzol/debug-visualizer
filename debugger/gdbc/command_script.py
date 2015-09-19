@@ -19,10 +19,10 @@ with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "options.json
     
 sys.path.append(data["code_path"])
 
-from debugger import Debugger
+from gdbc.gdb_debugger import GdbDebugger
 from net.server import Server
 
-debugger = Debugger(data)
+debugger = GdbDebugger(data)
 tstcommand = TestCommand(debugger)
 
 server = Server(data["server_port"], debugger)

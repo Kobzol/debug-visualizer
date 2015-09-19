@@ -2,7 +2,7 @@
 
 import gdb
 
-class FrameManager(object):
+class GdbFrameManager(object):
     def get_frames(self):
         frame_lines = gdb.execute("bt", to_string=True)
         frames = []

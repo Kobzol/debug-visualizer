@@ -9,9 +9,9 @@ import tempfile
 import shutil
 import json
 
-class Launcher(object):
+class GdbLauncher(object):
     def __init__(self, binary_path, server_port):
-        self.gdb_path = "gdb"
+        self.gdb_path = "/home/kobzol/Downloads/gdb-7.10/gdb/gdb"
         self.binary_path = binary_path
         self.server_port = server_port
         
@@ -29,10 +29,10 @@ class Launcher(object):
         
     def launch(self, program_arguments = [], script_arguments = {}, use_valgrind = False):
         if not self.is_running():
-            script_arguments["code_path"] = os.path.dirname(os.path.abspath(__file__))
+            script_arguments["code_path"] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
             script_arguments["server_port"] = self.server_port
             
-            self.prepare_tmp_folder(os.path.join(script_arguments["code_path"], "command_script.py"))
+            self.prepare_tmp_folder(os.path.join(os.path.join(script_arguments["code_path"], "gdbc"), "command_script.py"))
             
             launch_data = [self.gdb_path, "--silent", "-x", self.get_tmp_script_path(), "--args", self.binary_path] + program_arguments
             
@@ -42,7 +42,7 @@ class Launcher(object):
             
             self.write_script_options(script_arguments)
             
-            self.debugger_process = Popen(launch_data)#, stdout=PIPE, stderr=PIPE)
+            self.debugger_process = Popen(launch_data, stdin=PIPE)#stdout=PIPE, stderr=PIPE)
             self.running = True
     
     def stop(self):

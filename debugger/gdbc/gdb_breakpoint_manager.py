@@ -2,7 +2,7 @@
 
 import gdb
 
-class BreakpointManager(object):
+class GdbBreakpointManager(object):
     def __init__(self, before_bp, after_bp):
         self.before_bp = before_bp
         self.after_bp = after_bp

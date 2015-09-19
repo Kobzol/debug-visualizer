@@ -2,9 +2,9 @@
 
 import gdb
 import re
-from gdb_helper import GdbHelper
+from gdbc.gdb_helper import GdbHelper
 
-class ThreadManager(object):
+class GdbThreadManager(object):
     def __init__(self):
         self.gdb_helper = GdbHelper()
         self.thread_stack = []

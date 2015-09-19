@@ -4,23 +4,23 @@ import gdb
 import traceback
 import sys
 
-from gdb_helper import GdbHelper
+from gdbc.gdb_helper import GdbHelper
+from gdbc.gdb_thread_manager import GdbThreadManager
+from gdbc.gdb_frame_manager import GdbFrameManager
+from gdbc.gdb_file_manager import GdbFileManager
+from gdbc.gdb_breakpoint_manager import GdbBreakpointManager
 from memory import Memory
-from thread_manager import ThreadManager
-from frame_manager import FrameManager
-from file_manager import FileManager
-from breakpoint_manager import BreakpointManager
 from debugger_state import DebuggerState
 
 
-class Debugger(object):
+class GdbDebugger(object):
     def __init__(self, options):
         self.memory = Memory()
         self.gdb_helper = GdbHelper()
-        self.thread_manager = ThreadManager()
-        self.frame_manager = FrameManager()
-        self.file_manager = FileManager()
-        self.bp_manager = BreakpointManager(self.before_bp, self.after_bp)
+        self.thread_manager = GdbThreadManager()
+        self.frame_manager = GdbFrameManager()
+        self.file_manager = GdbFileManager()
+        self.bp_manager = GdbBreakpointManager(self.before_bp, self.after_bp)
         #self.bp_manager.add_breakpoint("malloc", self.handle_malloc)
         #self.bp_manager.add_breakpoint("free", self.handle_free)
         

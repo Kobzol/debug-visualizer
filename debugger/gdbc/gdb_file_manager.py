@@ -3,7 +3,7 @@
 import gdb
 import sys
 
-class FileManager(object):
+class GdbFileManager(object):
     """
     Returns tuple (filename, line_number).
     """
