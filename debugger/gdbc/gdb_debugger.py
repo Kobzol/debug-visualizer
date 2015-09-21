@@ -24,7 +24,7 @@ class GdbDebugger(object):
         #self.bp_manager.add_breakpoint("malloc", self.handle_malloc)
         #self.bp_manager.add_breakpoint("free", self.handle_free)
         
-        self.set_gdb_options()
+        self.set_options()
         gdb.events.exited.connect(self.handle_exit)
         
         if "valgrind_pid" in options:
@@ -35,7 +35,7 @@ class GdbDebugger(object):
     def get_status(self):
         return self.state
     
-    def set_gdb_options(self):
+    def set_options(self):
         gdb.execute("set print elements 0")
     
     def change_state(self, state):
