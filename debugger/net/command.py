@@ -20,6 +20,17 @@ class EnumEncoder(json.JSONEncoder):
         else:
             return d
     
+    @staticmethod
+    def byteify(input):
+        if isinstance(input, dict):
+            return { EnumEncoder.byteify(key) : EnumEncoder.byteify(value) for key, value in input.iteritems()}
+        elif isinstance(input, list):
+            return [ EnumEncoder.byteify(element) for element in input]
+        elif isinstance(input, unicode):
+            return input.encode('utf-8')
+        else:
+            return input
+    
     def default(self, obj):
         if isinstance(obj, Enum):
             return {"__enum__": str(obj)}
@@ -34,7 +45,7 @@ class Command(object):
             raise IOError()
                 
         data = client.recv(length).decode(encoding="utf_8")
-        payload = json.loads(data, object_hook=EnumEncoder.parse_enum)
+        payload = EnumEncoder.byteify(json.loads(data, object_hook=EnumEncoder.parse_enum))
         
         return Command(payload["type"], payload["data"], payload["id"])
     
