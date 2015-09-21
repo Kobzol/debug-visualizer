@@ -12,17 +12,18 @@ class CommandType(Enum):
     Result = 3
 
 class EnumEncoder(json.JSONEncoder):
+    @staticmethod
+    def parse_enum(d):
+        if "__enum__" in d:
+            name, member = d["__enum__"].split(".")
+            return getattr(globals()[name], member)
+        else:
+            return d
+    
     def default(self, obj):
         if isinstance(obj, Enum):
             return {"__enum__": str(obj)}
         return json.JSONEncoder.default(self, obj)
-
-def as_enum(d):
-    if "__enum__" in d:
-        name, member = d["__enum__"].split(".")
-        return getattr(globals()[name], member)
-    else:
-        return d
 
 class Command(object):
     @staticmethod
@@ -33,7 +34,7 @@ class Command(object):
             raise IOError()
                 
         data = client.recv(length).decode(encoding="utf_8")
-        payload = json.loads(data, object_hook=as_enum)
+        payload = json.loads(data, object_hook=EnumEncoder.parse_enum)
         
         return Command(payload["type"], payload["data"], payload["id"])
     
