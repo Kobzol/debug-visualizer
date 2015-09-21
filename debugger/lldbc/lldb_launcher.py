@@ -27,12 +27,11 @@ class LldbLauncher(object):
                 
         return self.running
         
-    def launch(self, program_arguments = [], script_arguments = {}, use_valgrind = False):
+    def launch(self):
         if not self.is_running():
+            script_arguments = {}
             script_arguments["code_path"] = self.code_path
             script_arguments["server_port"] = self.server_port
-            script_arguments["binary_path"] = self.binary_path
-            script_arguments["program_arguments"] = program_arguments
             
             self.prepare_tmp_folder(os.path.join(os.path.join(script_arguments["code_path"], "lldbc"), "command_script.py"))
             self.write_script_options(script_arguments)

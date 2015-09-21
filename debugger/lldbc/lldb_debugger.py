@@ -1,129 +1,70 @@
-# -*- coding: utf-8 -*-
-
 import lldb
-import traceback
+import threading
 import sys
+import os
+import time
 
-from lldbc.lldb_helper import GdbHelper
-from lldbc.lldb_thread_manager import GdbThreadManager
-from lldbc.lldb_frame_manager import GdbFrameManager
-from lldbc.lldb_file_manager import GdbFileManager
-from lldbc.lldb_breakpoint_manager import GdbBreakpointManager
-from memory import Memory
 from debugger_state import DebuggerState
-
+from lldbc.lldb_thread_manager import LldbThreadManager
 
 class LldbDebugger(object):
-    def __init__(self, options):
-        self.memory = Memory()
-        self.lldb_helper = LLdbHelper()
-        self.thread_manager = LLdbThreadManager()
-        self.frame_manager = LLdbFrameManager()
-        self.file_manager = LLdbFileManager()
-        self.bp_manager = LLdbBreakpointManager(self.before_bp, self.after_bp)
-        #self.bp_manager.add_breakpoint("malloc", self.handle_malloc)
-        #self.bp_manager.add_breakpoint("free", self.handle_free)
+    def __init__(self):
+        self.debugger = lldb.SBDebugger.Create()
+        self.debugger.SetAsync(False) # we want blocking process control
         
-        self.set_options()
-        #gdb.events.exited.connect(self.handle_exit)
-    
+        self.thread_manager = LldbThreadManager(self)
+        
         self.change_state(DebuggerState.Started)
+        
+        self.target = None
+        self.process = None
     
-    def get_status(self):
-        return self.state
+    def get_selected_thread(self):
+        return self.process.GetSelectedThread()
     
-    def set_gdb_options(self):
-        pass
+    def get_selected_frame(self):
+        return self.get_selected_thread().GetSelectedFrame()
     
     def change_state(self, state):
         self.state = state
-        print("Changed state: " + str(DebuggerState(state)))
+        
+    def load_binary(self, binary_path):
+        self.target = self.debugger.CreateTargetWithFileAndArch(binary_path, lldb.LLDB_ARCH_DEFAULT)
+        
+        if self.target != None:
+            self.change_state(DebuggerState.BinaryLoaded)
+    
+    def launch(self, arguments=None, file_in=None, file_out=None, async=True):
+        if self.process != None:
+            self.change_state(DebuggerState.Running)     
+         
+        if async:
+            self.done = threading.Event()
+            self.thread = threading.Thread(target=self.receive_events, args=[arguments,file_in,file_out])
+            self.thread.start()
+        else:
+            self.receive_events(arguments, file_in, file_out)
+        
+    def receive_events(self, arguments, file_in,file_out):
+        launch_info = lldb.SBLaunchInfo(arguments)
+        launch_info.SetWorkingDirectory(os.path.dirname(os.path.abspath(self.target.GetExecutable().GetFilename())))
+        launch_info.AddOpenFileAction(0, file_in, True, False)
+        launch_info.AddOpenFileAction(1, file_out, False, True)
+        error = lldb.SBError()
+        self.process = self.target.Launch(launch_info, error)
+        
+        if self.process.state == lldb.eStateStopped:
+            self.handle_stop()
+        elif self.process.state == lldb.eStateExited:
+            self.handle_exit()
+    
+    def handle_stop(self):
+        print("program is stopped")
+        print(self.get_selected_frame().locals)
         sys.stdout.flush()
     
-    def handle_exit(self, exit_event):
-        self.change_state(DebuggerState.Exited)
-        self.bp_manager.remove_all_breakpoints()
-        
-    def before_bp(self, stop_event):
-        self.change_state(DebuggerState.Stopped)
-        
-        """try:
-            locals = self.thread_manager.get_thread_vars()[0]
-            self.memory.match_pointers(locals)
-            
-            if isinstance(stop_event, gdb.SignalEvent):
-                print("ERROR: " + str(stop_event.stop_signal))
-            
-            if not isinstance(stop_event, gdb.BreakpointEvent):
-                return False
-            
-            return True
-        except:
-            print(traceback.format_exc())
-            return False"""
+    def handle_exit(self):
+        print("program exited")
     
-    def after_bp(self, stop_event, continue_exec):
-        if continue_exec:
-            self.continue_exec()
-            
-    def continue_exec(self):
-        self.change_state(DebuggerState.Running)
-        #gdb.execute("continue") TODO
-    
-    def finish(self):
-        self.change_state(DebuggerState.Running)
-        #gdb.execute("finish") TODO
-     
-    def run(self):
-        self.change_state(DebuggerState.Running)
-        #gdb.execute("run") TODO
-    
-    def next(self):
-        self.change_state(DebuggerState.Running)
-        #gdb.execute("next") TODO
-        
-    def is_valid_memory_frame(self, frame):
-        #return frame.is_valid() and frame.type() in [gdb.NORMAL_FRAME, gdb.INLINE_FRAME]   
-        return None # TODO
-        
-    def handle_malloc(self, stop_event):
-        """frame = gdb.newest_frame()
-        frame_name = frame.name()
-        
-        if not self.is_valid_memory_frame(frame):
-            return    
-        
-        args = self.gdb_helper.get_args()
-        
-        if len(args) == 1:
-            byte_count = args[0].value
-            finish = gdb.FinishBreakpoint(internal=False)
-            
-            if not finish.is_valid():
-                return
-            
-            self.finish()
-            
-            if not finish.is_valid():
-                return
-            
-            address = str(finish.return_value)
-            self.memory.malloc(address, byte_count, frame_name)
-            
-            if finish.is_valid():
-                finish.delete()"""
-        return None # TODO
-
-    def handle_free(self, stop_event):
-        """frame = gdb.newest_frame()
-        
-        if not self.is_valid_memory_frame(frame):
-            return
-        
-        args = self.gdb_helper.get_args()
-        
-        if len(args) == 1:
-            address = self.gdb_helper.get_args()[0].value
-            self.memory.free(address)
-        """
-        return None # TODO
+    def kill(self):
+        self.process.kill()
