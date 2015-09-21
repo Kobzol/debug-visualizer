@@ -15,8 +15,8 @@ class GdbLauncher(object):
         self.binary_path = binary_path
         self.server_port = server_port
         
-        self.debugger_process = False
-        self.valgrind_process = False
+        self.debugger_process = None
+        self.valgrind_process = None
         
         self.running = False
     
