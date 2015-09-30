@@ -1,15 +1,24 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
+
+import os
 
 from gi.repository import Gtk
+import pty
+import threading
+from lldbc.lldb_debugger import LldbDebugger
+from window import MainWindow
+
 
 class VisualiserApp(object):
-	def __init__(self, config):
-		self.config = config
-		self.builder = Gtk.Builder()
-		self.builder.add_from_file(config.main_window_gui)
-		self.main_window = self.builder.get_object("main_window")
-		self.main_window.connect("delete-event", Gtk.main_quit)
-	
-	def start(self):
-		self.main_window.show_all()
-		Gtk.main()
+    def __init__(self, config):
+        self.debugger = LldbDebugger()
+        self.main_window = MainWindow(self, config)
+
+    def quit(self):
+        self.debugger.stop(True)
+        Gtk.main_quit()
+
+    def start(self):
+        self.main_window.show_all()
+        Gtk.main()

@@ -9,42 +9,38 @@ import tempfile
 import shutil
 import json
 
+
 class LldbLauncher(object):
-    def __init__(self, binary_path, server_port):
+    def __init__(self, server_port):
         self.python_path = "python2.7"
-        self.binary_path = os.path.abspath(binary_path)
         self.server_port = server_port
         self.code_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         
         self.debugger_process = None
-        
         self.running = False
     
     def is_running(self):
-        if self.running:
-            if self.debugger_process.poll() is not None:
-                self.stop()
-                
         return self.running
         
     def launch(self):
         if not self.is_running():
-            script_arguments = {}
-            script_arguments["code_path"] = self.code_path
-            script_arguments["server_port"] = self.server_port
+            script_arguments = {
+                "code_path": self.code_path,
+                "server_port": self.server_port
+            }
             
             self.prepare_tmp_folder(os.path.join(os.path.join(script_arguments["code_path"], "lldbc"), "command_script.py"))
             self.write_script_options(script_arguments)
             
             launch_data = [self.python_path, self.get_tmp_script_path()]
             
-            self.debugger_process = Popen(launch_data, stdin=PIPE) #stdout=PIPE, stderr=PIPE)
+            self.debugger_process = Popen(launch_data, stdin=PIPE)  # stdout=PIPE, stderr=PIPE)
             self.running = True
     
     def stop(self):
         if self.is_running():
             self.debugger_process.kill()
-                
+            self.debugger_process.wait()
             self.debugger_process = None
             
             self.running = False

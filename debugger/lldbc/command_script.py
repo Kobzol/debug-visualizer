@@ -11,13 +11,10 @@ with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "options.json
     
 sys.path.append(data["code_path"])
 
-print(str(data))
-
-"""from gdbc.gdb_debugger import GdbDebugger
+from lldbc.lldb_debugger import LldbDebugger
 from net.server import Server
 
-debugger = GdbDebugger(data)
-tstcommand = TestCommand(debugger)
+debugger = LldbDebugger()
 
 server = Server(data["server_port"], debugger)
-server.start()"""
+server.start()

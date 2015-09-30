@@ -10,6 +10,7 @@ tmp/
 local.properties
 .settings/
 .loadpath
+.idea/
 
 # Eclipse Core
 .project
@@ -40,3 +41,8 @@ local.properties
 
 # Python compiled files
 *.pyc
+
+# waf
+build/
+.waf*
+.lock*

@@ -13,6 +13,6 @@ from config import Config
 from app import VisualiserApp
  
 if __name__ == '__main__':
-  config = Config()
-  app = VisualiserApp(config)
-  app.start()
+    config = Config()
+    app = VisualiserApp(config)
+    app.start()

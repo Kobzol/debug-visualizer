@@ -1,43 +1,36 @@
 # -*- coding: utf-8 -*-
 
-import lldb
+from debugger_state import DebuggerState
+
+
+class BreakpointInfo(object):
+    def __init__(self, breakpoint, location, line):
+        self.breakpoint = breakpoint
+        self.location = location
+        self.line = line
+
+    def has_location(self, location, line):
+        return location == self.location and line == self.line
+
 
 class LldbBreakpointManager(object):
-    def __init__(self, before_bp, after_bp):
-        self.before_bp = before_bp
-        self.after_bp = after_bp
-        #gdb.events.stop.connect(self.handle_break) TODO
-        
+    def __init__(self, debugger):
+        self.debugger = debugger
         self.breakpoints = []
-            
-    def handle_break(self, stop_event):
-        self.before_bp(stop_event)
-        
-        callback = None
-        
-        for bp, cb in self.breakpoints:
-            if bp in stop_event.breakpoints:
-                callback = cb
-                break
-            
-        if callback:
-            cb(stop_event) # inspecting callback, continue execution
-            self.after_bp(stop_event, True)
-        else:
-            self.after_bp(stop_event, False)
-    
-    def add_breakpoint(self, location, callback = None):
-        self.breakpoints.append((gdb.Breakpoint(location, internal=True), callback))
-        
-    def remove_breakpoint(self, location):
-        for bp, callback in self.breakpoints:
-            if bp.location == location:
-                bp.delete()
-                
-        self.breakpoints = [bp for bp in self.breakpoints if bp[0].location != location]
-        
-    def remove_all_breakpoints(self):
-        for bp, callback in self.breakpoints:
-            bp.delete()
-        
-        self.breakpoints = []
+
+    def get_breakpoints(self):
+        return [ self.debugger.target.GetBreakpointAtIndex(i) for i in self.debugger.target.GetNumBreakpoints()]
+
+    def add_breakpoint(self, location, line):
+        self.debugger.require_state(DebuggerState.BinaryLoaded)
+
+        bp = self.debugger.target.BreakpointCreateByLocation(location, line)
+        self.breakpoints.append(BreakpointInfo(bp, location, line))
+
+    def remove_breakpoint(self, location, line):
+        self.debugger.require_state(DebuggerState.BinaryLoaded)
+
+        breakpoints = [bp_info.breakpoint for bp_info in self.breakpoints if bp_info.has_location(location, line)]
+
+        for breakpoint in breakpoints:
+            self.debugger.target.BreakpointDelete(breakpoint.id)

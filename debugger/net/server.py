@@ -8,6 +8,8 @@ import sys
 import traceback
 
 from net.command import Command, CommandType
+from dispatcher import Dispatcher
+
 
 class Server(object):
     def __init__(self, port, debugger):
@@ -15,6 +17,8 @@ class Server(object):
         self.debugger = debugger
         self.running = False
         self.connected_client = None
+        self.server = None
+        self.server_thread = None
         
     def is_running(self):
         return self.running
@@ -37,38 +41,36 @@ class Server(object):
     
     def create_socket(self):
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.server.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         self.server.bind(self.address)
         self.server.listen(1)
     
-    def is_data_available(self, fd, timeout = 0.2):
+    def is_data_available(self, fd, timeout=0.1):
         return len(select.select([fd], [], [], timeout)[0]) != 0
     
     def run_server_thread(self):
         while self.is_running():
             try:
-                if self.is_data_available(self.server, 0.2) and not self.is_client_connected():
+                if self.is_data_available(self.server, 0.1) and not self.is_client_connected():
                     client, address = self.server.accept()
                     self.handle_client(client, address)
             except Exception as e:
                 print(e)
+                sys.stdout.flush()
     
-    def handle_command(self, command):       
+    def handle_command(self, command):
         if command.type == CommandType.Loopback:
             self.send_result(command, "ok")
+        elif command.type == CommandType.StopServer:
+            self.server.close()
+            self.running = False
         elif command.type == CommandType.Execute:           
-            target_prop = self.debugger
-            
-            result = None
-            
+            arguments = command.data["arguments"] if "arguments" in command.data else None
+            properties = command.data["properties"]
+
             try:
-                for prop in command.data["properties"]: 
-                    target_prop = getattr(target_prop, prop)
-            
-                if "arguments" in command.data:
-                    result = target_prop(command.data["arguments"])
-                else:
-                    result = target_prop()
-                    
+                result = Dispatcher.dispatch(self.debugger, properties, arguments)
                 self.send_result(command, result)
             except:
                 print(traceback.format_exc())
@@ -80,12 +82,12 @@ class Server(object):
         
         try:
             while self.is_running():
-                if self.is_data_available(client, 0.2):
+                if self.is_data_available(client, 0.1):
                     self.handle_command(Command.receive(client))
         except Exception as e:
             print(e)
         finally:
-            self.client_connected = None
+            self.connected_client = None
             
     def send_result(self, command, result):
         try:

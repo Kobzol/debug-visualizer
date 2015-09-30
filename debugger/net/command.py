@@ -5,11 +5,18 @@ import json
 from sys import byteorder
 import uuid
 import struct
+import traceback
+import jsonpickle
+
+from debugger_state import DebuggerState
+from lldbc.lldb_process_enums import ProcessState
 
 class CommandType(Enum):
     Loopback = 1
     Execute = 2
     Result = 3
+    StopServer = 4
+
 
 class EnumEncoder(json.JSONEncoder):
     @staticmethod
@@ -36,26 +43,31 @@ class EnumEncoder(json.JSONEncoder):
             return {"__enum__": str(obj)}
         return json.JSONEncoder.default(self, obj)
 
+
 class Command(object):
     @staticmethod
     def receive(client):
         length = struct.unpack_from("<I", client.recv(4))[0]
-                
+
         if length < 1:
             raise IOError()
-                
+
         data = client.recv(length).decode(encoding="utf_8")
-        payload = EnumEncoder.byteify(json.loads(data, object_hook=EnumEncoder.parse_enum))
-        
+        payload = jsonpickle.decode(data)#EnumEncoder.byteify(json.loads(data, object_hook=EnumEncoder.parse_enum))
+
         return Command(payload["type"], payload["data"], payload["id"])
-    
-    def __init__(self, type, data = {}, id = None):
+
+    @staticmethod
+    def generate_id():
+        return str(uuid.uuid4())
+
+    def __init__(self, type, data=None, id=None):
+        if data is None:
+            data = {}
+
         self.type = type
         self.data = data
-        self.id = id if id else self.generate_id()
-    
-    def generate_id(self):
-        return str(uuid.uuid4())
+        self.id = id if id else Command.generate_id()
     
     def send(self, socket):
         serialized_data = self.get_serialized_data()
@@ -69,7 +81,7 @@ class Command(object):
             "type" : self.type,
             "id" : self.id
         }
-        return json.dumps(payload, cls=EnumEncoder).encode(encoding="utf_8")
+        return jsonpickle.encode(payload).encode(encoding="utf_8")#json.dumps(payload, cls=EnumEncoder).encode(encoding="utf_8")
     
     def send_result(self, socket, result):
         result = Command(CommandType.Result, {"result" : result, "query_id" : self.id})
