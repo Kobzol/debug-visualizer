@@ -73,7 +73,7 @@ class IOConsole(Console):
         self.tag_stdout = self.get_buffer().create_tag("stdout", foreground="black", editable=False)
         self.tag_stderr = self.get_buffer().create_tag("stderr", foreground="red", editable=False)
         self.tag_stdin = self.get_buffer().create_tag("stdin", foreground="blue", editable=True)
-        self.tag_handled = self.get_buffer().create_tag("handled", background="yellow", editable=False)
+        self.tag_handled = self.get_buffer().create_tag("handled", editable=False)
 
         self.watch_thread = None
         self.stop_thread = threading.Event()
@@ -102,8 +102,6 @@ class IOConsole(Console):
 
             end_iter = start_iter.copy()
             end_iter.forward_char()
-
-            print(start_iter == end_iter)
 
             buffer.apply_tag(self.tag_handled, start_iter, end_iter)
             buffer.apply_tag(self.tag_stdin, start_iter, end_iter)
