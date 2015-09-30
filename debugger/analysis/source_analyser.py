@@ -4,9 +4,12 @@ from clang.cindex import TranslationUnit, File, SourceLocation, Cursor
 
 
 class SourceAnalyzer(object):
-    def __init__(self, file_path):
+    def __init__(self, file_path=None):
         self.tu = None
         self.file = None
+
+        if file_path:
+            self.set_file(file_path)
 
     def _create_tu_from_file(self, file_path):
         return TranslationUnit.from_source(file_path, [])
