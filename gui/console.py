@@ -152,13 +152,13 @@ class IOConsole(Console):
                 stdout = debugger.io_manager.stdout.readline()
                 stderr = debugger.io_manager.stderr.readline()
 
-                if len(stderr) > 0:
-                    GObject.idle_add(lambda *x: self._write_on_ui(stderr, "stderr"))
-
                 if len(stdout) > 0:
                     GObject.idle_add(lambda *x: self._write_on_ui(stdout, "stdout"))
+
+                if len(stderr) > 0:
+                    GObject.idle_add(lambda *x: self._write_on_ui(stderr, "stderr"))
             except:
-                time.sleep(0.05)
+                time.sleep(0.01)
 
     def _stop_watch_thread(self):
         if self.watch_thread is not None:
