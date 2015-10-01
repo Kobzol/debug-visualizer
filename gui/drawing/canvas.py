@@ -35,6 +35,7 @@ class CanvasUtils(object):
 
         return (size[2], size[3])   # (width, height)
 
+
 class Canvas(Gtk.EventBox):
     def __init__(self):
         super(Canvas, self).__init__()
@@ -45,7 +46,7 @@ class Canvas(Gtk.EventBox):
         self.fixed_wrapper = Gtk.Fixed()
         self.value_entry = ValueEntry()
         self.fixed_wrapper.add(self.value_entry)
-        #self.add(self.fixed_wrapper)
+        self.add(self.fixed_wrapper)
 
         self.value_entry.hide()
 
@@ -64,8 +65,6 @@ class Canvas(Gtk.EventBox):
         cr.rectangle(0, 0, width, height)
         cr.fill()
 
-        self.draw_text(cr, "ahoj", 40, 30)
-
     def draw_text(self, cr, text, x, y, color=(0, 0, 0, 1), center=False):
         cr.save()
 
@@ -80,6 +79,19 @@ class Canvas(Gtk.EventBox):
         cr.set_source_rgba(color[0], color[1], color[2], color[3])
         cr.move_to(x, y)
         cr.show_text(text)
+
+        cr.restore()
+
+    def draw_arrow(self, cr, point_from, point_to, color=(0, 0, 0, 1), width=0.5):
+        cr.save()
+
+        cr.set_source_rgba(color[0], color[1], color[2], color[3])
+        cr.set_line_width(width)
+
+        cr.move_to(point_from[0], point_from[1])
+        cr.line_to(point_to[0], point_to[1])
+
+        cr.stroke()
 
         cr.restore()
 
