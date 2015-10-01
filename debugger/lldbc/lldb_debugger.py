@@ -85,7 +85,7 @@ class LldbDebugger(object):
         return self.process_state
 
     def load_binary(self, binary_path):
-        self.target = self.debugger.CreateTargetWithFileAndArch(binary_path, lldb.LLDB_ARCH_DEFAULT)
+        self.target = self.debugger.CreateTargetWithFileAndArch(os.path.abspath(binary_path), lldb.LLDB_ARCH_DEFAULT)
 
         if self.target is not None:
             self.state.set(DebuggerState.BinaryLoaded)
