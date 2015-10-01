@@ -2,6 +2,7 @@
 
 from gi.repository import Gtk
 from gi.repository import Gdk
+from drawing.vector import Vector
 
 from events import EventBroadcaster
 
@@ -52,7 +53,11 @@ class Canvas(Gtk.EventBox):
 
         self.bg_color = (0.0, 0.8, 0.8, 1.0)
 
+        self.add_events(Gdk.EventMask.POINTER_MOTION_MASK)
+
         self.connect("draw", self._handle_draw)
+
+        self.mouse_click = None
 
     def _handle_draw(self, canvas, cr):
         should_draw, rectangle = Gdk.cairo_get_clip_rectangle(cr)
@@ -64,6 +69,7 @@ class Canvas(Gtk.EventBox):
         cr.set_source_rgba(self.bg_color[0], self.bg_color[1], self.bg_color[2], self.bg_color[3])
         cr.rectangle(0, 0, width, height)
         cr.fill()
+
 
     def draw_text(self, cr, text, x, y, color=(0, 0, 0, 1), center=False):
         cr.save()
@@ -82,7 +88,7 @@ class Canvas(Gtk.EventBox):
 
         cr.restore()
 
-    def draw_arrow(self, cr, point_from, point_to, color=(0, 0, 0, 1), width=0.5):
+    def draw_line(self, cr, point_from, point_to, color=(0, 0, 0, 1), width=1):
         cr.save()
 
         cr.set_source_rgba(color[0], color[1], color[2], color[3])
@@ -90,10 +96,21 @@ class Canvas(Gtk.EventBox):
 
         cr.move_to(point_from[0], point_from[1])
         cr.line_to(point_to[0], point_to[1])
-
         cr.stroke()
 
         cr.restore()
+
+    def draw_arrow(self, cr, point_from, point_to, color=(0, 0, 0, 1), width=1):
+        self.draw_line(cr, point_from, point_to, color, width)
+
+        vec_arrow = Vector.from_points(point_from, point_to)
+
+        wing = vec_arrow.inverse().normalized().scaled(10)
+        wing_right = wing.copy().rotate(45)
+        wing_left = wing.copy().rotate(-45)
+
+        self.draw_line(cr, point_to, wing_right.add(point_to).to_point(), color, width)
+        self.draw_line(cr, point_to, wing_left.add(point_to).to_point(), color, width)
 
     def show_value_entry(self, x, y):
         self.value_entry.set_visible(True)
