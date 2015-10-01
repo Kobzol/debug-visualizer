@@ -28,6 +28,13 @@ class ValueEntry(Gtk.Box):
         self.on_value_entered.notify(value)
 
 
+class CanvasUtils(object):
+    @staticmethod
+    def get_text_size(cr, text):
+        size = cr.text_extents(text)
+
+        return (size[2], size[3])   # (width, height)
+
 class Canvas(Gtk.EventBox):
     def __init__(self):
         super(Canvas, self).__init__()
@@ -38,7 +45,7 @@ class Canvas(Gtk.EventBox):
         self.fixed_wrapper = Gtk.Fixed()
         self.value_entry = ValueEntry()
         self.fixed_wrapper.add(self.value_entry)
-        self.add(self.fixed_wrapper)
+        #self.add(self.fixed_wrapper)
 
         self.value_entry.hide()
 
@@ -56,6 +63,25 @@ class Canvas(Gtk.EventBox):
         cr.set_source_rgba(self.bg_color[0], self.bg_color[1], self.bg_color[2], self.bg_color[3])
         cr.rectangle(0, 0, width, height)
         cr.fill()
+
+        self.draw_text(cr, "ahoj", 40, 30)
+
+    def draw_text(self, cr, text, x, y, color=(0, 0, 0, 1), center=False):
+        cr.save()
+
+        text = text.strip()
+
+        if center:
+            text_size = CanvasUtils.get_text_size(cr, text)
+
+            x -= text_size[0] / 2
+            y -= text_size[1] / 2
+
+        cr.set_source_rgba(color[0], color[1], color[2], color[3])
+        cr.move_to(x, y)
+        cr.show_text(text)
+
+        cr.restore()
 
     def show_value_entry(self, x, y):
         self.value_entry.set_visible(True)
