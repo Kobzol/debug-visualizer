@@ -10,9 +10,9 @@ from console import IOConsole
 from toolbar_manager import ToolbarManager
 
 
-class MainWindow(Gtk.ApplicationWindow):
+class MainWindow(Gtk.Window):
     def __init__(self, app, config):
-        super(MainWindow, self).__init__(title="Visualizing debugger")
+        Gtk.Window.__init__(self, title="Visualizing debugger")
 
         self.app = app
         self.accel_group = Gtk.AccelGroup()
