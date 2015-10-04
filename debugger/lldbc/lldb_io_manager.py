@@ -19,6 +19,7 @@ class LldbIOManager(object):
 
     def __init__(self):
         self.file_threads = []
+        self.file_paths = []
 
         self.stdin = None
         self.stdout = None
@@ -41,6 +42,8 @@ class LldbIOManager(object):
 
         stdin, stdout, stderr = [LldbIOManager.create_pipe() for _ in xrange(3)]
 
+        self.file_paths += (stdin, stdout, stderr)
+
         self.file_threads.append(threading.Thread(target=self._open_file, args=["stdin", "w", stdin]))
         self.file_threads.append(threading.Thread(target=self._open_file, args=["stdout", "r", stdout]))
         self.file_threads.append(threading.Thread(target=self._open_file, args=["stderr", "r", stderr]))
@@ -57,3 +60,11 @@ class LldbIOManager(object):
         self._close_file("stderr")
 
         self.file_threads = []
+
+        for path in self.file_paths:
+            try:
+                os.remove(path)
+            except:
+                pass
+
+        self.file_paths = []
