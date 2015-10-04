@@ -75,7 +75,7 @@ class MainWindow(Gtk.Window):
                 self.add_status_message("Process stopped at {0}:{1} - {2} ({3})"
                                         .format(location[0], location[1], event_data.stop_reason, event_data.stop_desc))
             else:
-                self.add_status_message("Process stopped - {2} ({3})"
+                self.add_status_message("Process stopped - {0} ({1})"
                                         .format(event_data.stop_reason, event_data.stop_desc))
         elif state == ProcessState.Running:
             self.add_status_message("Process is running...")
