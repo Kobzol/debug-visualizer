@@ -21,11 +21,17 @@ class LldbBreakpointManager(object):
     def get_breakpoints(self):
         return [ self.debugger.target.GetBreakpointAtIndex(i) for i in self.debugger.target.GetNumBreakpoints()]
 
-    def add_breakpoint(self, location, line):
+    def add_breakpoint(self, location, line=None):
         self.debugger.require_state(DebuggerState.BinaryLoaded)
 
-        bp = self.debugger.target.BreakpointCreateByLocation(location, line)
+        if line is not None:
+            bp = self.debugger.target.BreakpointCreateByLocation(location, line)
+        else:
+            bp = self.debugger.target.BreakpointCreateByName(location)
+
         self.breakpoints.append(BreakpointInfo(bp, location, line))
+
+        return bp
 
     def remove_breakpoint(self, location, line):
         self.debugger.require_state(DebuggerState.BinaryLoaded)
