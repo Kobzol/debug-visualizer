@@ -14,7 +14,7 @@ class LldbMemoryManager(object):
     def _handle_malloc(self, bp):
         pass
 
-    def create_memory_bps(self, target):
+    def create_memory_bps(self):
         self.bp_free = self.debugger.breakpoint_manager.add_breakpoint("free")
         self.bp_malloc = self.debugger.breakpoint_manager.add_breakpoint("malloc")
 

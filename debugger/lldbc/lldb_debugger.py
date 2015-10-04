@@ -128,7 +128,7 @@ class LldbDebugger(object):
         if self.target is not None:
             self.state.set(DebuggerState.BinaryLoaded)
 
-            self.memory_manager.create_memory_bps(self.target)
+            self.memory_manager.create_memory_bps()
 
             return True
         else:
