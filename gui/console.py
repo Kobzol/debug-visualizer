@@ -153,17 +153,20 @@ class IOConsole(Console):
         else:
             self.write(text)
 
+    def _read_data(self, debugger, stream_attr, data_tag):
+        stream_file = getattr(debugger.io_manager, stream_attr)
+
+        if Console.is_data_available(stream_file):
+            data = stream_file.readline()
+
+            if len(data) > 0:
+                    GObject.idle_add(lambda *x: self._write_on_ui(data, data_tag))
+
     def _watch_file_thread(self, debugger):
         while not self.stop_thread.is_set():
             try:
-                stdout = debugger.io_manager.stdout.readline()
-                stderr = debugger.io_manager.stderr.readline()
-
-                if len(stdout) > 0:
-                    GObject.idle_add(lambda *x: self._write_on_ui(stdout, "stdout"))
-
-                if len(stderr) > 0:
-                    GObject.idle_add(lambda *x: self._write_on_ui(stderr, "stderr"))
+                self._read_data(debugger, "stdout", "stdout")
+                self._read_data(debugger, "stderr", "stderr")
             except:
                 time.sleep(0.01)
 
