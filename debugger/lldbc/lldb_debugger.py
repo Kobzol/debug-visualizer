@@ -17,6 +17,22 @@ from lldbc.lldb_process_enums import ProcessState, StopReason
 from flags import Flags
 
 
+class ProcessExitedEventData(object):
+    def __init__(self, return_code, return_desc):
+        self.return_code = return_code
+        self.return_desc = return_desc
+
+
+class ProcessStoppedEventData(object):
+    def __init__(self, stop_reason, stop_desc=None, breakpoints=None):
+        if breakpoints is None:
+            breakpoints = []
+
+        self.stop_reason = stop_reason
+        self.stop_desc = stop_desc
+        self.breakpoints = breakpoints
+
+
 class LldbDebugger(object):
     def __init__(self):
         self.debugger = lldb.SBDebugger.Create()
@@ -62,17 +78,25 @@ class LldbDebugger(object):
             self.process = None
             self.io_manager.stop_io()
 
-            self.on_process_state_changed.notify(state, return_code, return_desc)
+            self.on_process_state_changed.notify(state, ProcessExitedEventData(return_code, return_desc))
 
             return
         elif state == ProcessState.Stopped:
             thread = self.thread_manager.get_current_thread()
+            stop_reason = StopReason(thread.GetStopReason())
 
-            self.on_process_state_changed.notify(state, StopReason(thread.GetStopReason()), thread.GetStopDescription(100))
+            if stop_reason == StopReason.Breakpoint:
+                breakpoints = [thread.GetStopReasonDataAtIndex(i) for i in xrange(thread.GetStopReasonDataCount())]
+            else:
+                breakpoints = []
+
+            self.on_process_state_changed.notify(state,
+                 ProcessStoppedEventData(stop_reason, thread.GetStopDescription(100), breakpoints)
+            )
 
             return
 
-        self.on_process_state_changed.notify(state, None, None)
+        self.on_process_state_changed.notify(state, None)
 
     def require_state(self, required_state):
         if not self.get_state().is_set(required_state):
@@ -89,6 +113,7 @@ class LldbDebugger(object):
 
         if self.target is not None:
             self.state.set(DebuggerState.BinaryLoaded)
+
             return True
         else:
             return False

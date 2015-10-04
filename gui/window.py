@@ -66,14 +66,17 @@ class MainWindow(Gtk.Window):
     def _add_to_row(self, widget, row_index):
         self.wrapper.attach(widget, 0, row_index, 1, 1)
 
-    def _handle_process_state_change(self, state, reason, desc):
+    def _handle_process_state_change(self, state, event_data):
         if state == ProcessState.Exited:
-            self.add_status_message("Process exited with code {0} ({1}).".format(reason, desc))
+            self.add_status_message("Process exited with code {0} ({1}).".format(event_data.return_code, event_data.return_desc))
         elif state == ProcessState.Stopped:
             location = self.app.debugger.file_manager.get_current_location()
             if location[0]:
                 self.add_status_message("Process stopped at {0}:{1} - {2} ({3})"
-                                        .format(location[0], location[1], reason, desc))
+                                        .format(location[0], location[1], event_data.stop_reason, event_data.stop_desc))
+            else:
+                self.add_status_message("Process stopped - {2} ({3})"
+                                        .format(event_data.stop_reason, event_data.stop_desc))
         elif state == ProcessState.Running:
             self.add_status_message("Process is running...")
 

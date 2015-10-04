@@ -89,7 +89,7 @@ class IOConsole(Console):
 
         self.textview.set_editable(False)
 
-    def _handle_process_state_change(self, state, reason, desc):
+    def _handle_process_state_change(self, state, event_data):
         if state == ProcessState.Running:
             self.textview.set_editable(True)
         else:

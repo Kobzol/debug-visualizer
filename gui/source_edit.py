@@ -167,7 +167,7 @@ class SourceManager(Gtk.Notebook):
         elif change_type == BreakpointChangeType.Delete:
             self.debugger.breakpoint_manager.remove_breakpoint(*location)
 
-    def _handle_process_state_change(self, state, reason, desc):
+    def _handle_process_state_change(self, state, event_data):
         if state == ProcessState.Stopped:
             location = self.debugger.file_manager.get_current_location()
             if location[0]:

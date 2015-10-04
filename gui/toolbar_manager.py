@@ -54,7 +54,7 @@ class ToolbarManager(object):
         self._change_state("continue", False)
         self._change_state("step_over", False)
 
-    def _handle_process_state_change(self, state, reason, desc):
+    def _handle_process_state_change(self, state, event_data):
         if state == ProcessState.Exited:
             self._state_exited()
         elif state == ProcessState.Stopped:
