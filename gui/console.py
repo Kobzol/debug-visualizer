@@ -56,6 +56,9 @@ class Console(Gtk.ScrolledWindow):
         end_line.forward_to_line_end()
         return (start_line, end_line)
 
+    def clear(self):
+        self.get_buffer().set_text("")
+
 
 class IOConsole(Console):
     @staticmethod
@@ -91,6 +94,10 @@ class IOConsole(Console):
             self.textview.set_editable(True)
         else:
             self.textview.set_editable(False)
+
+        if state == ProcessState.Launching:
+            self.clear()
+
 
     def _handle_key(self, key):
         if key.keyval == Gdk.KEY_Return:
