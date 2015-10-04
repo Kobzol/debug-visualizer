@@ -33,6 +33,9 @@ class LldbBreakpointManager(object):
 
         return bp
 
+    def find_breakpoint(self, breakpoint_id):
+        return self.debugger.target.FindBreakpointByID(breakpoint_id)
+
     def remove_breakpoint(self, location, line):
         self.debugger.require_state(DebuggerState.BinaryLoaded)
 
