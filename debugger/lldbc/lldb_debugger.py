@@ -124,13 +124,13 @@ class LldbDebugger(object):
 
         self.state.set(DebuggerState.Running)
 
-        self.event_thread = threading.Thread(target=self._check_events)
-        self.event_thread.start()
-
         if error.fail:
             self.process = None
             self.stop(True)
             raise Exception(error.description)
+
+        self.event_thread = threading.Thread(target=self._check_events)
+        self.event_thread.start()
 
     def exec_continue(self):
         self.require_state(DebuggerState.Running)
