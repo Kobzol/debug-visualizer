@@ -12,6 +12,7 @@ from debugger_state import DebuggerState
 from lldbc.lldb_breakpoint_manager import LldbBreakpointManager
 from lldbc.lldb_file_manager import LldbFileManager
 from lldbc.lldb_io_manager import LldbIOManager
+from lldbc.lldb_memory_manager import LldbMemoryManager
 from lldbc.lldb_thread_manager import LldbThreadManager
 from lldbc.lldb_process_enums import ProcessState, StopReason
 from flags import Flags
@@ -41,6 +42,7 @@ class LldbDebugger(object):
         self.breakpoint_manager = LldbBreakpointManager(self)
         self.file_manager = LldbFileManager(self)
         self.thread_manager = LldbThreadManager(self)
+        self.memory_manager = LldbMemoryManager(self)
         self.io_manager = LldbIOManager()
 
         self.target = None
@@ -84,11 +86,23 @@ class LldbDebugger(object):
         elif state == ProcessState.Stopped:
             thread = self.thread_manager.get_current_thread()
             stop_reason = StopReason(thread.GetStopReason())
+            breakpoints = []
 
             if stop_reason == StopReason.Breakpoint:
-                breakpoints = [thread.GetStopReasonDataAtIndex(i) for i in xrange(thread.GetStopReasonDataCount())]
-            else:
-                breakpoints = []
+                for i in xrange(0, thread.GetStopReasonDataCount(), 2):
+                    bp_id = thread.GetStopReasonDataAtIndex(i)
+                    bp_loc_id = thread.GetStopReasonDataAtIndex(i + 1)
+                    bp = self.breakpoint_manager.find_breakpoint(bp_id)
+
+                    breakpoints.append((bp, bp.FindLocationByID(bp_loc_id)))
+
+            for bp in breakpoints:
+                is_memory_bp = self.memory_manager.is_memory_bp(bp[0])
+
+                if is_memory_bp:
+                    self.memory_manager.handle_memory_bp(bp[0])
+                    self.exec_continue()
+                    return
 
             self.on_process_state_changed.notify(state,
                  ProcessStoppedEventData(stop_reason, thread.GetStopDescription(100), breakpoints)
@@ -113,6 +127,8 @@ class LldbDebugger(object):
 
         if self.target is not None:
             self.state.set(DebuggerState.BinaryLoaded)
+
+            self.memory_manager.create_memory_bps(self.target)
 
             return True
         else:
