@@ -93,7 +93,7 @@ class LldbDebugger(object):
         else:
             return False
     
-    def launch(self, arguments=None, env_vars=None, file_in=None, file_out=None, file_err=None, working_directory=None):
+    def launch(self, arguments=None, env_vars=None, working_directory=None):
         self.require_state(DebuggerState.BinaryLoaded)
 
         if self.process is not None:
