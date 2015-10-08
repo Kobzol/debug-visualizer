@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 
-import os
 
 from gi.repository import Gtk
-import pty
-import threading
 from lldbc.lldb_debugger import LldbDebugger
 from window import MainWindow
 
