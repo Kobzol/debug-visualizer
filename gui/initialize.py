@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 
-import os
 import sys
-import gettext
-import locale
 
 import paths
 sys.path.append(paths.DIR_GUI)
 sys.path.append(paths.DIR_DEBUGGER)
+sys.path.append(paths.LLDB_LOCATION)
+
 
 from config import Config
 from app import VisualiserApp
