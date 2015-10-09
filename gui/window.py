@@ -52,7 +52,10 @@ class MainWindow(Gtk.Window):
         self.console = IOConsole(height=150)
         self.console.watch(app.debugger)
 
-        config.gui_io_console.connect_signals({"filter-changed": lambda button: self.console.filter_toggle_io(button.get_label())})
+        config.gui_io_console.connect_signals({
+            "filter-changed": lambda button: self.console.filter_toggle_io(button.get_label()),
+            "console-clear": lambda button: self.console.clear()
+        })
         self.console_wrapper = config.gui_io_console.get_object("wrapper")
         self.console_wrapper.add(self.console)
 

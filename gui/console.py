@@ -179,6 +179,12 @@ class IOConsole(Console):
         self.watch_thread = threading.Thread(target=self._watch_file_thread, args=[debugger])
         self.watch_thread.start()
 
+    def clear(self):
+        Console.clear(self)
+
+        buffer = self.get_buffer()
+        buffer.move_mark(self.last_handled_char, buffer.get_start_iter())
+
     def watch(self, debugger):
         self.debugger = debugger
 
