@@ -183,7 +183,6 @@ class IOConsole(Console):
         self.debugger = debugger
 
         debugger.on_process_state_changed.subscribe(self._handle_process_state_change)
-        debugger.on_debugger_state_changed.subscribe(self._handle_debugger_state_change)
 
         self._watch_output(debugger)
 
@@ -194,7 +193,6 @@ class IOConsole(Console):
     def stop_watch(self):
         self._stop_watch_thread()
         self.debugger.on_process_state_changed.unsubscribe(self._handle_process_state_change)
-        self.debugger.on_debugger_state_changed.unsubscribe(self._handle_debugger_state_change)
 
     def filter_toggle_io(self, type):
         tag = self.get_buffer().get_tag_table().lookup(type)
