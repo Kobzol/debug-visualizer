@@ -2,7 +2,6 @@
 
 import lldb
 import threading
-import sys
 import os
 from events import EventBroadcaster
 import lldbc.exceptions as exceptions
@@ -123,7 +122,9 @@ class LldbDebugger(object):
         return self.process_state
 
     def load_binary(self, binary_path):
-        self.target = self.debugger.CreateTargetWithFileAndArch(os.path.abspath(binary_path), lldb.LLDB_ARCH_DEFAULT)
+        #error = lldb.SBError()
+        #self.target = self.debugger.CreateTarget(os.path.abspath(binary_path), "i386-pc-linux", None, True, error)
+        self.target = self.debugger.CreateTarget(os.path.abspath(binary_path))
 
         if self.target is not None:
             self.state.set(DebuggerState.BinaryLoaded)
