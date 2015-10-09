@@ -62,7 +62,7 @@ class ToolbarManager(object):
         elif state == ProcessState.Running:
             self._state_running()
 
-    def _handle_debugger_state_change(self, state):
+    def _handle_debugger_state_change(self, state, old_value):
         if state.is_set(DebuggerState.BinaryLoaded):
             self._change_state("run", True)
         else:
