@@ -3,6 +3,7 @@
 import lldb
 import threading
 import os
+import sys
 from events import EventBroadcaster
 import lldbc.exceptions as exceptions
 import time
@@ -58,12 +59,18 @@ class LldbDebugger(object):
     def _check_events(self):
         event = lldb.SBEvent()
         listener = self.debugger.GetListener()
+        start_handled = False
 
         while self.process is not None:
             if listener.WaitForEvent(1, event):
                 if lldb.SBProcess.EventIsProcessEvent(event):
                     state = ProcessState(lldb.SBProcess.GetStateFromEvent(event))
-                    self._handle_process_state(state)
+
+                    if state == ProcessState.Stopped and not start_handled:
+                        start_handled = True
+                        self.exec_continue()
+                    else:
+                        self._handle_process_state(state)
 
         self.event_thread = None
 
@@ -87,7 +94,7 @@ class LldbDebugger(object):
             stop_reason = StopReason(thread.GetStopReason())
             breakpoints = []
 
-            if stop_reason == StopReason.Breakpoint:
+            """if stop_reason == StopReason.Breakpoint:
                 for i in xrange(0, thread.GetStopReasonDataCount(), 2):
                     bp_id = thread.GetStopReasonDataAtIndex(i)
                     bp_loc_id = thread.GetStopReasonDataAtIndex(i + 1)
@@ -101,7 +108,7 @@ class LldbDebugger(object):
                 if is_memory_bp:
                     self.memory_manager.handle_memory_bp(bp[0])
                     self.exec_continue()
-                    return
+                    return"""
 
             self.on_process_state_changed.notify(state,
                  ProcessStoppedEventData(stop_reason, thread.GetStopDescription(100), breakpoints)
@@ -122,14 +129,12 @@ class LldbDebugger(object):
         return self.process_state
 
     def load_binary(self, binary_path):
-        #error = lldb.SBError()
-        #self.target = self.debugger.CreateTarget(os.path.abspath(binary_path), "i386-pc-linux", None, True, error)
         self.target = self.debugger.CreateTarget(os.path.abspath(binary_path))
 
         if self.target is not None:
             self.state.set(DebuggerState.BinaryLoaded)
 
-            self.memory_manager.create_memory_bps()
+            #self.memory_manager.create_memory_bps()
 
             return True
         else:
@@ -161,7 +166,7 @@ class LldbDebugger(object):
                                           stderr, # stderr
                                           working_directory, # working directory
                                           lldb.eLaunchFlagNone, # launch flags
-                                          False, # stop at entry
+                                          True, # stop at entry
                                           error)
 
         self.state.set(DebuggerState.Running)
@@ -184,7 +189,7 @@ class LldbDebugger(object):
 
     def exec_step_over(self):
         self.require_state(DebuggerState.Running)
-        self.thread_manager.get_current_thread().StepOver(lldb.eOnlyDuringStepping)
+        self.thread_manager.get_current_thread().StepOver()
 
     def stop(self, kill_process=False):
         if not self.state.is_set(DebuggerState.Running):
@@ -204,3 +209,6 @@ class LldbDebugger(object):
         self.io_manager.stop_io()
 
         self.state.unset(DebuggerState.Running)
+
+    def quit(self):
+        self.debugger.Terminate()
