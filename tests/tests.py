@@ -18,9 +18,9 @@ class BasicTest(unittest.TestCase):
         self.debugger = LldbDebugger()
 
     def test_binary_load(self):
-        self.debugger.load_binary("../debugger/test")
+        self.debugger.load_binary("src/test_empty")
 
-        self.assertEqual(self.debugger.file_manager.get_main_source_file(), os.path.abspath("../debugger/test.cpp"))
+        self.assertEqual(self.debugger.file_manager.get_main_source_file(), os.path.abspath("src/test_empty.cpp"))
         self.assertTrue(self.debugger.get_state().is_set(DebuggerState.BinaryLoaded))
 
 
