@@ -26,14 +26,14 @@ class Flags(object):
 
         old_value = self.value
         self.value |= (1 << value.value)
-        self.on_value_changed.notify(self, old_value)
+        self.on_value_changed.notify(self, Flags(self.enum_cls, old_value))
 
     def unset(self, value):
         self._check_cls(value)
 
         old_value = self.value
         self.value &= ~(1 << value.value)
-        self.on_value_changed.notify(self, old_value)
+        self.on_value_changed.notify(self, Flags(self.enum_cls, old_value))
 
     def is_set(self, value):
         self._check_cls(value)
@@ -45,7 +45,7 @@ class Flags(object):
     def clear(self):
         old_value = self.value
         self.value = 0
-        self.on_value_changed.notify(self, old_value)
+        self.on_value_changed.notify(self, Flags(self.enum_cls, old_value))
 
     def __repr__(self):
         flags = "["
