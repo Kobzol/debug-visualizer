@@ -94,7 +94,7 @@ class Canvas(Gtk.EventBox):
         self.fixed_wrapper = Gtk.Fixed()
         self.add(self.fixed_wrapper)
 
-        self.bg_color = (0.0, 0.8, 0.8, 1.0)
+        self.bg_color = (0.8, 0.8, 0.8, 1.0)
 
         self.add_events(Gdk.EventMask.POINTER_MOTION_MASK)
         self.connect("draw", lambda canvas, cr: self._handle_draw(cr))
