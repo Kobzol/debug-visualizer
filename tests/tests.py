@@ -15,34 +15,123 @@ from lldbc.lldb_debugger import LldbDebugger
 from debugger_state import DebuggerState
 
 
+class AsyncSequence(object):
+    def __init__(self, state_seq=None, loc_seq=None, com_seq=None, start_ignore=0):
+        if state_seq is None:
+            state_seq = []
+
+        if loc_seq is None:
+            loc_seq = []
+
+        if com_seq is None:
+            com_seq = []
+
+        self.state_seq = state_seq
+        self.loc_seq = loc_seq
+        self.com_seq = com_seq
+
+        self.index = 0
+        self.start_ignore = start_ignore
+        self.ignore_index = 0
+
+    def _has_value(self, arr):
+        return len(arr) > self.index and arr[self.index] is not None
+
+    def _get_value(self, arr):
+        return arr[self.index]
+
+    def has_state(self):
+        return self._has_value(self.state_seq)
+
+    def has_location(self):
+        return self._has_value(self.loc_seq)
+
+    def has_command(self):
+        return self._has_value(self.com_seq)
+
+    def get_state(self):
+        return self._get_value(self.state_seq)
+
+    def get_location(self):
+        return self._get_value(self.loc_seq)
+
+    def get_command(self):
+        return self._get_value(self.com_seq)
+
+    def should_skip(self):
+        return self.ignore_index < self.start_ignore
+
+    def skip(self):
+        self.ignore_index += 1
+
+    def increment(self):
+        self.index += 1
+
+
 class BasicTest(unittest.TestCase):
     def setUp(self):
         self.debugger = LldbDebugger()
 
     def test_binary_load(self):
-        self.debugger.load_binary("src/test_empty")
+        self.debugger.load_binary("src/test_breakpoint_basic")
 
-        self.assertEqual(self.debugger.file_manager.get_main_source_file(), os.path.abspath("src/test_empty.cpp"))
+        self.assertEqual(self.debugger.file_manager.get_main_source_file(), os.path.abspath("src/test_breakpoint_basic.cpp"))
         self.assertTrue(self.debugger.get_state().is_set(DebuggerState.BinaryLoaded))
 
     def test_breakpoint_basic(self):
-        src_file = os.path.abspath("test_breakpoint_basic.cpp")
+        src_file = "test_breakpoint_basic.cpp"
+        src_abs_path = os.path.abspath("src/" + src_file)
         line_number = 3
 
         self.debugger.load_binary("src/test_breakpoint_basic")
 
         self.debugger.breakpoint_manager.add_breakpoint(src_file, line_number)
-        self.debugger.on_process_state_changed.subscribe(lambda state, event_data: self._async_bp_basic(state, src_file, line_number))
+
+        states = [ProcessState.Stopped, ProcessState.Running, ProcessState.Exited]
+        locations = [(src_abs_path, line_number)]
+        commands = [lambda: self.debugger.exec_continue()]
+
+        async_seq = AsyncSequence(states, locations, commands, 3)
+
+        self.debugger.on_process_state_changed.subscribe(lambda state, event_data: self._async_bp_step(state, async_seq))
         self.debugger.launch()
 
-        time.sleep(2)
+        self.debugger.stop(False)
 
-    def _async_bp_basic(self, state, file, line_number):
-        if state == ProcessState.Stopped:
-            location = self.debugger.file_manager.get_current_location()
+    def test_step_over(self):
+        src_file = "test_breakpoint_basic.cpp"
+        src_abs_path = os.path.abspath("src/" + src_file)
+        line_number = 3
 
-            if location[0] is not None:
-                self.assertEqual(location, (file, line_number))
+        self.debugger.load_binary("src/test_breakpoint_basic")
+
+        self.debugger.breakpoint_manager.add_breakpoint(src_file, line_number)
+
+        states = [ProcessState.Stopped, ProcessState.Running, ProcessState.Stopped, ProcessState.Running, ProcessState.Exited]
+        locations = [(src_abs_path, line_number), None, (src_abs_path, line_number + 2)]
+        commands = [lambda: self.debugger.exec_step_over(), None, lambda: self.debugger.exec_continue()]
+
+        async_seq = AsyncSequence(states, locations, commands, 3)
+
+        self.debugger.on_process_state_changed.subscribe(lambda state, event_data: self._async_bp_step(state, async_seq))
+        self.debugger.launch()
+
+        self.debugger.stop(False)
+
+
+    def _async_bp_step(self, state, async_seq):
+        if async_seq.should_skip():
+            async_seq.skip()
+            return
+
+        if async_seq.has_state():
+            self.assertEqual(state, async_seq.get_state())
+        if async_seq.has_location():
+            self.assertEqual(self.debugger.file_manager.get_current_location(), async_seq.get_location())
+        if async_seq.has_command():
+            async_seq.get_command()()
+
+        async_seq.increment()
 
 
 class ServerTest(unittest.TestCase):
