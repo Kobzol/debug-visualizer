@@ -42,18 +42,19 @@ class CanvasUtils(object):
         canvas.cr.set_source_rgba(color[0], color[1], color[2], color[3])
 
     @staticmethod
-    def draw_text(canvas, text, point_from, color=(0, 0, 0, 1), center=False):
+    def draw_text(canvas, text, point_from, color=(0, 0, 0, 1), y_center=False, x_center=False):
         cr = canvas.cr
         cr.save()
 
         point_from = Vector.vectorize(point_from)
 
         text = text.strip()
+        text_size = CanvasUtils.get_text_size(canvas, text)
 
-        if center:
-            text_size = CanvasUtils.get_text_size(canvas, text)
-
+        if x_center:
             point_from.x -= text_size.width / 2
+
+        if y_center:
             point_from.y += text_size.height / 2
 
         CanvasUtils.set_color(canvas, color)
