@@ -15,3 +15,9 @@ class Size(object):
     def __init__(self, width, height):
         self.width = width
         self.height = height
+
+    def copy(self):
+        return Size(self.width, self.height)
+
+    def __repr__(self):
+        return "(" + str(self.width) + "," + str(self.height) + ")"
