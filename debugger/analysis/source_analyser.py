@@ -21,8 +21,11 @@ class SourceAnalyzer(object):
             return SourceLocation.from_offset(self.tu, self.file, offset)
 
     def set_file(self, file_path):
-        self.tu = self._create_tu_from_file(file_path)
-        self.file = File.from_name(self.tu, file_path)
+        try:
+            self.tu = self._create_tu_from_file(file_path)
+            self.file = File.from_name(self.tu, file_path)
+        except Exception as e:
+            print(e)
 
     def get_symbol_name(self, offset, column=None):
         if self.tu is None or self.file is None:
