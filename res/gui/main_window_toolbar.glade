@@ -9,6 +9,7 @@
     <child>
       <object class="GtkToolButton" id="run">
         <property name="visible">True</property>
+        <property name="sensitive">False</property>
         <property name="can_focus">False</property>
         <property name="tooltip_text" translatable="yes">Run</property>
         <property name="is_important">True</property>
@@ -82,8 +83,42 @@
         <property name="is_important">True</property>
         <property name="label" translatable="yes">Step _over</property>
         <property name="use_underline">True</property>
-        <property name="stock_id">gtk-sort-ascending</property>
+        <property name="stock_id">gtk-jump-to</property>
         <signal name="clicked" handler="toolbar-step-over" swapped="no"/>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="homogeneous">True</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkToolButton" id="step_in">
+        <property name="visible">True</property>
+        <property name="sensitive">False</property>
+        <property name="can_focus">False</property>
+        <property name="tooltip_text" translatable="yes">Step over</property>
+        <property name="is_important">True</property>
+        <property name="label" translatable="yes">Step _in</property>
+        <property name="use_underline">True</property>
+        <property name="stock_id">gtk-go-down</property>
+        <signal name="clicked" handler="toolbar-step-in" swapped="no"/>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="homogeneous">True</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkToolButton" id="step_out">
+        <property name="visible">True</property>
+        <property name="sensitive">False</property>
+        <property name="can_focus">False</property>
+        <property name="tooltip_text" translatable="yes">Step over</property>
+        <property name="is_important">True</property>
+        <property name="label" translatable="yes">Step o_ut</property>
+        <property name="use_underline">True</property>
+        <property name="stock_id">gtk-sort-descending</property>
+        <signal name="clicked" handler="toolbar-step-out" swapped="no"/>
       </object>
       <packing>
         <property name="expand">False</property>

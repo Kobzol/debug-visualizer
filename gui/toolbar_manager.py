@@ -13,7 +13,9 @@ class ToolbarManager(object):
             "toolbar-continue": lambda *x: self.cont(),
             "toolbar-stop": lambda *x: self.stop(),
             "toolbar-pause": lambda *x: self.pause(),
-            "toolbar-step-over": lambda *x: self.step_over()
+            "toolbar-step-over": lambda *x: self.step_over(),
+            "toolbar-step-in": lambda *x: self.step_in(),
+            "toolbar-step-out": lambda *x: self.step_out()
         }
 
         toolbar_builder.connect_signals(signals)
@@ -24,35 +26,27 @@ class ToolbarManager(object):
         self.debugger.on_process_state_changed.subscribe(self._handle_process_state_change)
         self.debugger.on_debugger_state_changed.subscribe(self._handle_debugger_state_change)
 
-        self._change_state("run", False)
-        self._change_state("stop", False)
-        self._change_state("pause", False)
-        self._change_state("continue", False)
-        self._change_state("step_over", False)
+        self.grp_halt_control = ["stop", "pause"]
+        self.grp_step = ["continue", "step_over", "step_in", "step_out"]
 
     def _get_items(self):
         return [self.toolbar.get_nth_item(i) for i in xrange(0, self.toolbar.get_n_items())]
 
     def _state_exited(self):
+        self._change_grp_state(self.grp_halt_control, False)
+        self._change_grp_state(self.grp_step, False)
         self._change_state("run", True)
-        self._change_state("stop", False)
-        self._change_state("pause", False)
-        self._change_state("continue", False)
-        self._change_state("step_over", False)
 
     def _state_stopped(self):
-        self._change_state("run", False)
+        self._change_grp_state(self.grp_halt_control, False)
+        self._change_grp_state(self.grp_step, True)
+
         self._change_state("stop", True)
-        self._change_state("pause", False)
-        self._change_state("continue", True)
-        self._change_state("step_over", True)
 
     def _state_running(self):
+        self._change_grp_state(self.grp_halt_control, True)
+        self._change_grp_state(self.grp_step, False)
         self._change_state("run", False)
-        self._change_state("stop", True)
-        self._change_state("pause", True)
-        self._change_state("continue", False)
-        self._change_state("step_over", False)
 
     def _handle_process_state_change(self, state, event_data):
         if state == ProcessState.Exited:
@@ -70,6 +64,10 @@ class ToolbarManager(object):
 
     def _change_state(self, item_name, sensitive=True):
         GObject.idle_add(lambda *x: self._change_state_ui(item_name, sensitive))
+
+    def _change_grp_state(self, group, sensitive=True):
+        for item in group:
+            self._change_state(item, sensitive)
 
     def _change_state_ui(self, item_name, sensitive=True):
         item = self.toolbar_builder.get_object(item_name)
@@ -89,3 +87,9 @@ class ToolbarManager(object):
 
     def step_over(self):
         self.debugger.exec_step_over()
+
+    def step_in(self):
+        self.debugger.exec_step_in()
+
+    def step_out(self):
+        self.debugger.exec_step_out()
