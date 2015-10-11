@@ -48,6 +48,7 @@ class LldbDebugger(object):
         self.target = None
         self.process = None
         self.event_thread = None
+        self.event_thread_stop_flag = threading.Event()
 
         self.state = Flags(DebuggerState, DebuggerState.Started)
         self.process_state = ProcessState.Invalid
@@ -59,18 +60,13 @@ class LldbDebugger(object):
     def _check_events(self):
         event = lldb.SBEvent()
         listener = self.debugger.GetListener()
-        start_handled = False
 
-        while self.process is not None:
+        while not self.event_thread_stop_flag.is_set():
             if listener.WaitForEvent(1, event):
                 if lldb.SBProcess.EventIsProcessEvent(event):
                     state = ProcessState(lldb.SBProcess.GetStateFromEvent(event))
 
-                    if state == ProcessState.Stopped and not start_handled:
-                        start_handled = True
-                        self.exec_continue()
-                    else:
-                        self._handle_process_state(state)
+                    self._handle_process_state(state)
 
         self.event_thread = None
 
@@ -84,6 +80,9 @@ class LldbDebugger(object):
             return_desc = self.process.GetExitDescription()
 
             self.process = None
+
+            self.event_thread_stop_flag.set()
+
             self.io_manager.stop_io()
 
             self.on_process_state_changed.notify(state, ProcessExitedEventData(return_code, return_desc))
@@ -157,6 +156,10 @@ class LldbDebugger(object):
 
         stdin, stdout, stderr = self.io_manager.handle_io()
 
+        self.event_thread_stop_flag.clear()
+        self.event_thread = threading.Thread(target=self._check_events)
+        self.event_thread.start()
+
         error = lldb.SBError()
         self.process = self.target.Launch(self.debugger.GetListener(),
                                           arguments, # argv
@@ -166,7 +169,7 @@ class LldbDebugger(object):
                                           stderr, # stderr
                                           working_directory, # working directory
                                           lldb.eLaunchFlagNone, # launch flags
-                                          True, # stop at entry
+                                          False, # stop at entry
                                           error)
 
         self.state.set(DebuggerState.Running)
@@ -175,9 +178,6 @@ class LldbDebugger(object):
             self.process = None
             self.stop(True)
             raise Exception(error.description)
-
-        self.event_thread = threading.Thread(target=self._check_events)
-        self.event_thread.start()
 
     def exec_continue(self):
         self.require_state(DebuggerState.Running)
@@ -203,6 +203,7 @@ class LldbDebugger(object):
                     time.sleep(0.1)
 
         if self.event_thread is not None:
+            self.event_thread_stop_flag.set()
             self.event_thread.join()
             self.event_thread = None
 
