@@ -49,7 +49,7 @@ class CanvasUtils(object):
             text_size = CanvasUtils.get_text_size(canvas, text)
 
             point_from.x -= text_size[0] / 2
-            point_from.y -= text_size[1] / 2
+            point_from.y += text_size[1] / 2
 
         cr.set_source_rgba(color[0], color[1], color[2], color[3])
         cr.move_to(point_from.x, point_from.y)
@@ -93,7 +93,7 @@ class CanvasUtils(object):
         CanvasUtils.draw_line(canvas, point_to, wing_left.add(point_to).to_point(), color, width)
 
     @staticmethod
-    def draw_rectangle(canvas, position, size, color=(0, 0, 0, 1), center=False):
+    def draw_rectangle(canvas, position, size, color=(0, 0, 0, 1), width=1, center=False):
         cr = canvas.cr
         cr.save()
 
@@ -104,7 +104,9 @@ class CanvasUtils(object):
             position.y -= size[1] / 2
 
         cr.set_source_rgba(color[0], color[1], color[2], color[3])
+        cr.set_line_width(width)
         cr.rectangle(position.x, position.y, size[0], size[1])
+        cr.stroke()
 
         cr.restore()
 
