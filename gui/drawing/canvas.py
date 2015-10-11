@@ -122,9 +122,11 @@ class Canvas(Gtk.EventBox):
 
     def add_drawable(self, drawable):
         self.drawables.append(drawable)
+        self.redraw()
 
     def clear_drawables(self):
         self.drawables = []
+        self.redraw()
 
     def set_background_color(self, r, g, b, a=1.0):
         self.bg_color = (r, g, b, a)
