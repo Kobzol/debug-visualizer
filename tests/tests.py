@@ -118,7 +118,6 @@ class BasicTest(unittest.TestCase):
 
         self.debugger.stop(False)
 
-
     def _async_bp_step(self, state, async_seq):
         if async_seq.should_skip():
             async_seq.skip()
