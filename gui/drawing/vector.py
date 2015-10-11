@@ -9,7 +9,7 @@ class Vector(object):
         return Vector(point_to[0] - point_from[0], point_to[1] - point_from[1])
 
     @staticmethod
-    def _vectorize(vector):
+    def vectorize(vector):
         if isinstance(vector, Vector):
             return vector
         else:
@@ -24,12 +24,12 @@ class Vector(object):
         self.y = y
 
     def add(self, vector):
-        vector = Vector._vectorize(vector)
+        vector = Vector.vectorize(vector)
 
         return Vector(vector.x + self.x, vector.y + self.y)
 
     def dot(self, vector):
-        vector = Vector._vectorize(vector)
+        vector = Vector.vectorize(vector)
 
         return self.x * vector.x +  self.y * vector.y
 
