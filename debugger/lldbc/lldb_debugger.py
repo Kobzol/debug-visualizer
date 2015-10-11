@@ -191,6 +191,14 @@ class LldbDebugger(object):
         self.require_state(DebuggerState.Running)
         self.thread_manager.get_current_thread().StepOver()
 
+    def exec_step_in(self):
+        self.require_state(DebuggerState.Running)
+        self.thread_manager.get_current_thread().StepInto()
+
+    def exec_step_out(self):
+        self.require_state(DebuggerState.Running)
+        self.thread_manager.get_current_thread().StepOut()
+
     def stop(self, kill_process=False):
         if not self.state.is_set(DebuggerState.Running):
             return
