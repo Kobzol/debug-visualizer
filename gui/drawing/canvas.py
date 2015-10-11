@@ -2,6 +2,7 @@
 
 from gi.repository import Gtk
 from gi.repository import Gdk
+from drawing.size import Size
 from drawing.vector import Vector
 
 from events import EventBroadcaster
@@ -34,7 +35,7 @@ class CanvasUtils(object):
     def get_text_size(canvas, text):
         size = canvas.cr.text_extents(text)
 
-        return (size[2], size[3])   # (width, height)
+        return Size(size[2], size[3])   # (width, height)
 
     @staticmethod
     def draw_text(canvas, text, point_from, color=(0, 0, 0, 1), center=False):
@@ -48,8 +49,8 @@ class CanvasUtils(object):
         if center:
             text_size = CanvasUtils.get_text_size(canvas, text)
 
-            point_from.x -= text_size[0] / 2
-            point_from.y += text_size[1] / 2
+            point_from.x -= text_size.width / 2
+            point_from.y += text_size.height / 2
 
         cr.set_source_rgba(color[0], color[1], color[2], color[3])
         cr.move_to(point_from.x, point_from.y)
@@ -98,10 +99,11 @@ class CanvasUtils(object):
         cr.save()
 
         position = Vector.vectorize(position)
+        size = Size.make_size(size)
 
         if center:
-            position.x -= size[0] / 2
-            position.y -= size[1] / 2
+            position.x -= size.width / 2
+            position.y -= size.height / 2
 
         cr.set_source_rgba(color[0], color[1], color[2], color[3])
         cr.set_line_width(width)
