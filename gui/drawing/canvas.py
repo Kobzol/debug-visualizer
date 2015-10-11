@@ -38,6 +38,10 @@ class CanvasUtils(object):
         return Size(size[2], size[3])   # (width, height)
 
     @staticmethod
+    def set_color(canvas, color):
+        canvas.cr.set_source_rgba(color[0], color[1], color[2], color[3])
+
+    @staticmethod
     def draw_text(canvas, text, point_from, color=(0, 0, 0, 1), center=False):
         cr = canvas.cr
         cr.save()
@@ -52,7 +56,7 @@ class CanvasUtils(object):
             point_from.x -= text_size.width / 2
             point_from.y += text_size.height / 2
 
-        cr.set_source_rgba(color[0], color[1], color[2], color[3])
+        CanvasUtils.set_color(canvas, color)
         cr.move_to(point_from.x, point_from.y)
         cr.show_text(text)
 
@@ -66,7 +70,7 @@ class CanvasUtils(object):
         point_from = Vector.vectorize(point_from)
         point_to = Vector.vectorize(point_to)
 
-        cr.set_source_rgba(color[0], color[1], color[2], color[3])
+        CanvasUtils.set_color(canvas, color)
         cr.set_line_width(width)
 
         cr.move_to(point_from.x, point_from.y)
@@ -77,8 +81,6 @@ class CanvasUtils(object):
 
     @staticmethod
     def draw_arrow(canvas, point_from, point_to, color=(0, 0, 0, 1), width=1):
-        cr = canvas.cr
-
         point_from = Vector.vectorize(point_from)
         point_to = Vector.vectorize(point_to)
 
@@ -105,7 +107,7 @@ class CanvasUtils(object):
             position.x -= size.width / 2
             position.y -= size.height / 2
 
-        cr.set_source_rgba(color[0], color[1], color[2], color[3])
+        CanvasUtils.set_color(canvas, color)
         cr.set_line_width(width)
         cr.rectangle(position.x, position.y, size[0], size[1])
         cr.stroke()
@@ -140,11 +142,11 @@ class Canvas(Gtk.EventBox):
             self._draw(cr, rectangle.width, rectangle.height)
 
     def _draw(self, cr, width, height):
-        cr.set_source_rgba(self.bg_color[0], self.bg_color[1], self.bg_color[2], self.bg_color[3])
+        self.cr = cr
+
+        CanvasUtils.set_color(self, self.bg_color)
         cr.rectangle(0, 0, width, height)
         cr.fill()
-
-        self.cr = cr
 
         for drawable in self.drawables:
             drawable.draw(self)
