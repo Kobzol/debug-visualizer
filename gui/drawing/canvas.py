@@ -109,7 +109,7 @@ class CanvasUtils(object):
 
         CanvasUtils.set_color(canvas, color)
         cr.set_line_width(width)
-        cr.rectangle(position.x, position.y, size[0], size[1])
+        cr.rectangle(position.x, position.y, size.width, size.height)
         cr.stroke()
 
         cr.restore()
