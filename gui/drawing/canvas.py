@@ -31,47 +31,14 @@ class ValueEntry(Gtk.Box):
 
 class CanvasUtils(object):
     @staticmethod
-    def get_text_size(cr, text):
-        size = cr.text_extents(text)
+    def get_text_size(canvas, text):
+        size = canvas.cr.text_extents(text)
 
         return (size[2], size[3])   # (width, height)
 
-
-class Canvas(Gtk.EventBox):
-    def __init__(self):
-        super(Canvas, self).__init__()
-
-        self.set_hexpand(True)
-        self.set_vexpand(True)
-
-        self.fixed_wrapper = Gtk.Fixed()
-        self.value_entry = ValueEntry()
-        self.fixed_wrapper.add(self.value_entry)
-        self.add(self.fixed_wrapper)
-
-        self.value_entry.hide()
-
-        self.bg_color = (0.0, 0.8, 0.8, 1.0)
-
-        self.add_events(Gdk.EventMask.POINTER_MOTION_MASK)
-
-        self.connect("draw", self._handle_draw)
-
-        self.mouse_click = None
-
-    def _handle_draw(self, canvas, cr):
-        should_draw, rectangle = Gdk.cairo_get_clip_rectangle(cr)
-
-        if should_draw:
-            self._draw(cr, rectangle.width, rectangle.height)
-
-    def _draw(self, cr, width, height):
-        cr.set_source_rgba(self.bg_color[0], self.bg_color[1], self.bg_color[2], self.bg_color[3])
-        cr.rectangle(0, 0, width, height)
-        cr.fill()
-
-
-    def draw_text(self, cr, text, x, y, color=(0, 0, 0, 1), center=False):
+    @staticmethod
+    def draw_text(canvas, text, x, y, color=(0, 0, 0, 1), center=False):
+        cr = canvas.cr
         cr.save()
 
         text = text.strip()
@@ -88,7 +55,9 @@ class Canvas(Gtk.EventBox):
 
         cr.restore()
 
-    def draw_line(self, cr, point_from, point_to, color=(0, 0, 0, 1), width=1):
+    @staticmethod
+    def draw_line(canvas, point_from, point_to, color=(0, 0, 0, 1), width=1):
+        cr = canvas.cr
         cr.save()
 
         cr.set_source_rgba(color[0], color[1], color[2], color[3])
@@ -100,8 +69,10 @@ class Canvas(Gtk.EventBox):
 
         cr.restore()
 
-    def draw_arrow(self, cr, point_from, point_to, color=(0, 0, 0, 1), width=1):
-        self.draw_line(cr, point_from, point_to, color, width)
+    @staticmethod
+    def draw_arrow(canvas, point_from, point_to, color=(0, 0, 0, 1), width=1):
+        cr = canvas.cr
+        CanvasUtils.draw_line(cr, point_from, point_to, color, width)
 
         vec_arrow = Vector.from_points(point_from, point_to)
 
@@ -109,15 +80,51 @@ class Canvas(Gtk.EventBox):
         wing_right = wing.copy().rotate(45)
         wing_left = wing.copy().rotate(-45)
 
-        self.draw_line(cr, point_to, wing_right.add(point_to).to_point(), color, width)
-        self.draw_line(cr, point_to, wing_left.add(point_to).to_point(), color, width)
+        CanvasUtils.draw_line(cr, point_to, wing_right.add(point_to).to_point(), color, width)
+        CanvasUtils.draw_line(cr, point_to, wing_left.add(point_to).to_point(), color, width)
 
-    def show_value_entry(self, x, y):
-        self.value_entry.set_visible(True)
-        self.fixed_wrapper.move(self.value_entry, x, y)
 
-    def hide_value_entry(self):
-        self.value_entry.set_visible(False)
+class Canvas(Gtk.EventBox):
+    def __init__(self):
+        super(Canvas, self).__init__()
+
+        self.set_hexpand(True)
+        self.set_vexpand(True)
+
+        self.fixed_wrapper = Gtk.Fixed()
+        self.add(self.fixed_wrapper)
+
+        self.bg_color = (0.0, 0.8, 0.8, 1.0)
+
+        self.add_events(Gdk.EventMask.POINTER_MOTION_MASK)
+        self.connect("draw", lambda canvas, cr: self._handle_draw(cr))
+
+        self.mouse_click = None
+        self.cr = None
+
+        self.drawables = []
+
+    def _handle_draw(self, cr):
+        should_draw, rectangle = Gdk.cairo_get_clip_rectangle(cr)
+
+        if should_draw:
+            self._draw(cr, rectangle.width, rectangle.height)
+
+    def _draw(self, cr, width, height):
+        cr.set_source_rgba(self.bg_color[0], self.bg_color[1], self.bg_color[2], self.bg_color[3])
+        cr.rectangle(0, 0, width, height)
+        cr.fill()
+
+        self.cr = cr
+
+        for drawable in self.drawables:
+            drawable.draw(self)
+
+    def add_drawable(self, drawable):
+        self.drawables.append(drawable)
+
+    def clear_drawables(self):
+        self.drawables = []
 
     def set_background_color(self, r, g, b, a=1.0):
         self.bg_color = (r, g, b, a)
