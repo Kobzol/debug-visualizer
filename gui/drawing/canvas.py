@@ -2,6 +2,7 @@
 
 from gi.repository import Gtk
 from gi.repository import Gdk
+import math
 from drawing.size import Size
 from drawing.vector import Vector
 
@@ -35,30 +36,32 @@ class CanvasUtils(object):
     def get_text_size(canvas, text):
         size = canvas.cr.text_extents(text)
 
-        return Size(size[2], size[3])   # (width, height)
+        return Size(size[2], -size[1])   # (width, height)
 
     @staticmethod
     def set_color(canvas, color):
         canvas.cr.set_source_rgba(color[0], color[1], color[2], color[3])
 
     @staticmethod
-    def draw_text(canvas, text, point_from, color=(0, 0, 0, 1), y_center=False, x_center=False):
+    def draw_text(canvas, text, position, color=(0, 0, 0, 1), y_center=False, x_center=False):
         cr = canvas.cr
         cr.save()
 
-        point_from = Vector.vectorize(point_from)
+        position = Vector.vectorize(position)
 
         text = text.strip()
         text_size = CanvasUtils.get_text_size(canvas, text)
 
         if x_center:
-            point_from.x -= text_size.width / 2
+            position.x -= text_size.width / 2.0
 
         if y_center:
-            point_from.y += text_size.height / 2
+            w_size = CanvasUtils.get_text_size(canvas, "W")
+            position.y += w_size.height / 2.0
 
         CanvasUtils.set_color(canvas, color)
-        cr.move_to(point_from.x, point_from.y)
+        cr.move_to(position.x, position.y)
+
         cr.show_text(text)
 
         cr.restore()
