@@ -74,18 +74,7 @@ class LldbDebugger(object):
         self.process_state = state
 
         if state == ProcessState.Exited:
-            self.state.unset(DebuggerState.Running)
-
-            return_code = self.process.GetExitStatus()
-            return_desc = self.process.GetExitDescription()
-
-            self.process = None
-
-            self.event_thread_stop_flag.set()
-
-            self.io_manager.stop_io()
-
-            self.on_process_state_changed.notify(state, ProcessExitedEventData(return_code, return_desc))
+            self.stop(False)
 
             return
         elif state == ProcessState.Stopped:
@@ -203,6 +192,8 @@ class LldbDebugger(object):
         if not self.state.is_set(DebuggerState.Running):
             return
 
+        self.state.unset(DebuggerState.Running)
+
         if self.process is not None:
             if kill_process:
                 self.process.Kill()
@@ -210,14 +201,17 @@ class LldbDebugger(object):
                 while self.process_state != ProcessState.Exited:
                     time.sleep(0.1)
 
+            return_code = self.process.GetExitStatus()
+            return_desc = self.process.GetExitDescription()
+
+            self.on_process_state_changed.notify(ProcessState.Exited, ProcessExitedEventData(return_code, return_desc))
+            self.process = None
+
         if self.event_thread is not None:
             self.event_thread_stop_flag.set()
-            self.event_thread.join()
             self.event_thread = None
 
         self.io_manager.stop_io()
-
-        self.state.unset(DebuggerState.Running)
 
     def quit(self):
         self.debugger.Terminate()
