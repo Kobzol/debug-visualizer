@@ -44,7 +44,7 @@ class CanvasUtils(object):
         text = text.strip()
 
         if center:
-            text_size = CanvasUtils.get_text_size(cr, text)
+            text_size = CanvasUtils.get_text_size(canvas, text)
 
             x -= text_size[0] / 2
             y -= text_size[1] / 2
@@ -72,7 +72,7 @@ class CanvasUtils(object):
     @staticmethod
     def draw_arrow(canvas, point_from, point_to, color=(0, 0, 0, 1), width=1):
         cr = canvas.cr
-        CanvasUtils.draw_line(cr, point_from, point_to, color, width)
+        CanvasUtils.draw_line(canvas, point_from, point_to, color, width)
 
         vec_arrow = Vector.from_points(point_from, point_to)
 
@@ -80,8 +80,8 @@ class CanvasUtils(object):
         wing_right = wing.copy().rotate(45)
         wing_left = wing.copy().rotate(-45)
 
-        CanvasUtils.draw_line(cr, point_to, wing_right.add(point_to).to_point(), color, width)
-        CanvasUtils.draw_line(cr, point_to, wing_left.add(point_to).to_point(), color, width)
+        CanvasUtils.draw_line(canvas, point_to, wing_right.add(point_to).to_point(), color, width)
+        CanvasUtils.draw_line(canvas, point_to, wing_left.add(point_to).to_point(), color, width)
 
 
 class Canvas(Gtk.EventBox):
