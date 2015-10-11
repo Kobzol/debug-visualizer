@@ -37,20 +37,22 @@ class CanvasUtils(object):
         return (size[2], size[3])   # (width, height)
 
     @staticmethod
-    def draw_text(canvas, text, x, y, color=(0, 0, 0, 1), center=False):
+    def draw_text(canvas, text, point_from, color=(0, 0, 0, 1), center=False):
         cr = canvas.cr
         cr.save()
+
+        point_from = Vector.vectorize(point_from)
 
         text = text.strip()
 
         if center:
             text_size = CanvasUtils.get_text_size(canvas, text)
 
-            x -= text_size[0] / 2
-            y -= text_size[1] / 2
+            point_from.x -= text_size[0] / 2
+            point_from.y -= text_size[1] / 2
 
         cr.set_source_rgba(color[0], color[1], color[2], color[3])
-        cr.move_to(x, y)
+        cr.move_to(point_from.x, point_from.y)
         cr.show_text(text)
 
         cr.restore()
@@ -60,11 +62,14 @@ class CanvasUtils(object):
         cr = canvas.cr
         cr.save()
 
+        point_from = Vector.vectorize(point_from)
+        point_to = Vector.vectorize(point_to)
+
         cr.set_source_rgba(color[0], color[1], color[2], color[3])
         cr.set_line_width(width)
 
-        cr.move_to(point_from[0], point_from[1])
-        cr.line_to(point_to[0], point_to[1])
+        cr.move_to(point_from.x, point_from.y)
+        cr.line_to(point_to.x, point_to.y)
         cr.stroke()
 
         cr.restore()
@@ -72,6 +77,10 @@ class CanvasUtils(object):
     @staticmethod
     def draw_arrow(canvas, point_from, point_to, color=(0, 0, 0, 1), width=1):
         cr = canvas.cr
+
+        point_from = Vector.vectorize(point_from)
+        point_to = Vector.vectorize(point_to)
+
         CanvasUtils.draw_line(canvas, point_from, point_to, color, width)
 
         vec_arrow = Vector.from_points(point_from, point_to)
@@ -82,6 +91,22 @@ class CanvasUtils(object):
 
         CanvasUtils.draw_line(canvas, point_to, wing_right.add(point_to).to_point(), color, width)
         CanvasUtils.draw_line(canvas, point_to, wing_left.add(point_to).to_point(), color, width)
+
+    @staticmethod
+    def draw_rectangle(canvas, position, size, color=(0, 0, 0, 1), center=False):
+        cr = canvas.cr
+        cr.save()
+
+        position = Vector.vectorize(position)
+
+        if center:
+            position.x -= size[0] / 2
+            position.y -= size[1] / 2
+
+        cr.set_source_rgba(color[0], color[1], color[2], color[3])
+        cr.rectangle(position.x, position.y, size[0], size[1])
+
+        cr.restore()
 
 
 class Canvas(Gtk.EventBox):
