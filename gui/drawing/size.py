@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+
+import numbers
 from drawing.vector import Vector
 
 
@@ -18,6 +20,26 @@ class Size(object):
 
     def copy(self):
         return Size(self.width, self.height)
+
+    def __add__(self, other):
+        assert isinstance(other, Size)
+
+        return Size(self.width + other.width, self.height + other.height)
+
+    def __sub__(self, other):
+        assert isinstance(other, Size)
+
+        return Size(self.width - other.width, self.height - other.height)
+
+    def __mul__(self, other):
+        assert isinstance(other, numbers.Number)
+
+        return Size(self.width * other, self.height * other)
+
+    def __div__(self, other):
+        assert isinstance(other, numbers.Number)
+
+        return Size(self.width / other, self.height / other)
 
     def __repr__(self):
         return "(" + str(self.width) + "," + str(self.height) + ")"

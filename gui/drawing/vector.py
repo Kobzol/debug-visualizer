@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import math
+import numbers
 
 
 class Vector(object):
@@ -53,7 +54,7 @@ class Vector(object):
     def angle(self):
         return math.degrees(math.atan2(self.x, -self.y))
 
-    def rotate(self, angle, point=(0,0)):
+    def rotate(self, angle, point=(0, 0)):
         theta = math.radians(angle)
 
         sin = math.sin(theta)
@@ -75,6 +76,32 @@ class Vector(object):
 
     def copy(self):
         return Vector(self.x, self.y)
+
+    def __add__(self, other):
+        assert isinstance(other, Vector)
+
+        return self.add(other)
+
+    def __sub__(self, other):
+        assert isinstance(other, Vector)
+
+        return Vector(self.x - other.x, self.y - other.y)
+
+    def __neg__(self):
+        return Vector(-self.x, -self.y)
+
+    def __mul__(self, other):
+        if isinstance(other, numbers.Number):
+            return Vector(self.x * other, self.y * other)
+        elif isinstance(other, Vector):
+            return self.x * other.x +  self.y * other.y
+        else:
+            raise TypeError
+
+    def __div__(self, other):
+        assert isinstance(other, numbers.Number)
+
+        return Vector(self.x / other, self.y / other)
 
     def __repr__(self):
         return "[" + str(self.x) + "," + str(self.y) + "]"
