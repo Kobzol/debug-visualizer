@@ -5,6 +5,15 @@ from lldbc.lldb_enums import ClassType
 
 
 class MemToViewTransformer(object):
+    @staticmethod
+    def unmangle_type_name(type):
+        type_name = type.name
+
+        clang_inline = "::__1"
+        type_name = type_name.replace(clang_inline, "")
+
+        return type_name  # TODO: strip typedefs
+
     def __init__(self):
         self.basic_drawable_map = {
             ClassType.Builtin: drawable.SimpleVarDrawable,
@@ -17,16 +26,13 @@ class MemToViewTransformer(object):
             "std::string": drawable.StringDrawable
         }
 
-    def unmangle_type_name(self, type):
-        return type  # TODO: unmangle libc++ namespaced names, strip typedefs
-
     def find_drawable(self, type):
         type_class = ClassType(type.type)
 
         if type_class == ClassType.Invalid:
             return None
 
-        type_name = self.unmangle_type_name(type.name)
+        type_name = MemToViewTransformer.unmangle_type_name(type)
 
         if type_name in self.custom_drawable_map:
             return self.custom_drawable_map[type_name]
