@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 
-import drawable
+from drawable import StackFrameDrawable, SimpleVarDrawable
 
 
 class MemToViewTransformer(object):
     def __init__(self):
         self.memtoviewmap = {
-            "int": drawable.SimpleVarDrawable,
-            "float": drawable.SimpleVarDrawable,
-            "double": drawable.SimpleVarDrawable,
-            "bool": drawable.SimpleVarDrawable
+            "int": SimpleVarDrawable,
+            "float": SimpleVarDrawable,
+            "double": SimpleVarDrawable,
+            "bool": SimpleVarDrawable
         }
 
     def unmangle_type_name(self, type_name):
@@ -25,7 +25,7 @@ class MemToViewTransformer(object):
         return drawable_class(var)
 
     def transform_frame(self, vars):
-        frame = drawable.StackFrameDrawable()
+        frame = StackFrameDrawable()
 
         for var in vars:
             transformed = self.transform_var(var)

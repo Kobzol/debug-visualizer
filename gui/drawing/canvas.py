@@ -2,11 +2,14 @@
 
 from gi.repository import Gtk
 from gi.repository import Gdk
-import math
+
+from debugger_state import DebuggerState
+from drawing.drawable import DrawingUtils
+from drawing.memtoview import MemToViewTransformer
 from drawing.size import Size
 from drawing.vector import Vector
-
 from events import EventBroadcaster
+from lldbc.lldb_process_enums import ProcessState
 
 
 class ValueEntry(Gtk.Box):
@@ -29,94 +32,6 @@ class ValueEntry(Gtk.Box):
         self.text_entry.set_text("")
 
         self.on_value_entered.notify(value)
-
-
-class CanvasUtils(object):
-    @staticmethod
-    def get_text_size(canvas, text):
-        size = canvas.cr.text_extents(text)
-
-        return Size(size[2], -size[1])   # (width, height)
-
-    @staticmethod
-    def set_color(canvas, color):
-        canvas.cr.set_source_rgba(color[0], color[1], color[2], color[3])
-
-    @staticmethod
-    def draw_text(canvas, text, position, color=(0, 0, 0, 1), y_center=False, x_center=False):
-        cr = canvas.cr
-        cr.save()
-
-        position = Vector.vectorize(position)
-
-        text = text.strip()
-        text_size = CanvasUtils.get_text_size(canvas, text)
-
-        if x_center:
-            position.x -= text_size.width / 2.0
-
-        if y_center:
-            w_size = CanvasUtils.get_text_size(canvas, "W")
-            position.y += w_size.height / 2.0
-
-        CanvasUtils.set_color(canvas, color)
-        cr.move_to(position.x, position.y)
-
-        cr.show_text(text)
-
-        cr.restore()
-
-    @staticmethod
-    def draw_line(canvas, point_from, point_to, color=(0, 0, 0, 1), width=1):
-        cr = canvas.cr
-        cr.save()
-
-        point_from = Vector.vectorize(point_from)
-        point_to = Vector.vectorize(point_to)
-
-        CanvasUtils.set_color(canvas, color)
-        cr.set_line_width(width)
-
-        cr.move_to(point_from.x, point_from.y)
-        cr.line_to(point_to.x, point_to.y)
-        cr.stroke()
-
-        cr.restore()
-
-    @staticmethod
-    def draw_arrow(canvas, point_from, point_to, color=(0, 0, 0, 1), width=1):
-        point_from = Vector.vectorize(point_from)
-        point_to = Vector.vectorize(point_to)
-
-        CanvasUtils.draw_line(canvas, point_from, point_to, color, width)
-
-        vec_arrow = Vector.from_points(point_from, point_to)
-
-        wing = vec_arrow.inverse().normalized().scaled(10)
-        wing_right = wing.copy().rotate(45)
-        wing_left = wing.copy().rotate(-45)
-
-        CanvasUtils.draw_line(canvas, point_to, wing_right.add(point_to).to_point(), color, width)
-        CanvasUtils.draw_line(canvas, point_to, wing_left.add(point_to).to_point(), color, width)
-
-    @staticmethod
-    def draw_rectangle(canvas, position, size, color=(0, 0, 0, 1), width=1, center=False):
-        cr = canvas.cr
-        cr.save()
-
-        position = Vector.vectorize(position)
-        size = Size.make_size(size)
-
-        if center:
-            position.x -= size.width / 2
-            position.y -= size.height / 2
-
-        CanvasUtils.set_color(canvas, color)
-        cr.set_line_width(width)
-        cr.rectangle(position.x, position.y, size.width, size.height)
-        cr.stroke()
-
-        cr.restore()
 
 
 class Canvas(Gtk.EventBox):
@@ -148,15 +63,15 @@ class Canvas(Gtk.EventBox):
     def _draw(self, cr, width, height):
         self.cr = cr
 
-        CanvasUtils.set_color(self, self.bg_color)
+        DrawingUtils.set_color(self, self.bg_color)
         cr.rectangle(0, 0, width, height)
         cr.fill()
 
         for drawable in self.drawables:
             drawable.draw(self)
 
-    def add_drawable(self, drawable):
-        self.drawables.append(drawable)
+    def set_drawables(self, drawables):
+        self.drawables = drawables
         self.redraw()
 
     def clear_drawables(self):
@@ -169,3 +84,26 @@ class Canvas(Gtk.EventBox):
 
     def redraw(self):
         self.queue_draw()
+
+
+class MemoryCanvas(Canvas):
+    def __init__(self, debugger):
+        super(MemoryCanvas, self).__init__()
+
+        self.debugger = debugger
+        self.debugger.on_debugger_state_changed.subscribe(self._handle_debugger_state_change)
+        self.debugger.on_process_state_changed.subscribe(self._handle_process_state_change)
+
+        self.memtoview = MemToViewTransformer()
+
+    def _handle_process_state_change(self, state, event_data):
+        if state == ProcessState.Stopped:
+            thread = self.debugger.thread_manager.get_current_thread()
+            frame = thread.GetSelectedFrame()
+
+            if frame.IsValid():
+                self.set_drawables([self.memtoview.transform_frame(frame.vars)])
+
+    def _handle_debugger_state_change(self, state, old_state):
+        if not state.is_set(DebuggerState.Running):
+            self.clear_drawables()
