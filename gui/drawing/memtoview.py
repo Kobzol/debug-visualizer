@@ -1,31 +1,50 @@
 # -*- coding: utf-8 -*-
 
-from drawable import StackFrameDrawable, SimpleVarDrawable
+import drawable
+from lldbc.lldb_enums import ClassType
 
 
 class MemToViewTransformer(object):
     def __init__(self):
-        self.memtoviewmap = {
-            "int": SimpleVarDrawable,
-            "float": SimpleVarDrawable,
-            "double": SimpleVarDrawable,
-            "bool": SimpleVarDrawable
+        self.basic_drawable_map = {
+            ClassType.Builtin: drawable.SimpleVarDrawable,
+            ClassType.Pointer: drawable.PointerDrawable,
+            ClassType.Struct: drawable.StructDrawable,
+            ClassType.Vector: drawable.VectorDrawable
         }
 
-    def unmangle_type_name(self, type_name):
-        return type_name  # TODO: unmangle libc++ namespaced names
+        self.custom_drawable_map = {
+            "std::string": drawable.StringDrawable
+        }
 
-    def transform_var(self, var):
-        type_name = self.unmangle_type_name(var.type.name)
+    def unmangle_type_name(self, type):
+        return type  # TODO: unmangle libc++ namespaced names, strip typedefs
 
-        if type_name not in self.memtoviewmap:
+    def find_drawable(self, type):
+        type_class = ClassType(type.type)
+
+        if type_class == ClassType.Invalid:
             return None
 
-        drawable_class = self.memtoviewmap[type_name]
-        return drawable_class(var)
+        type_name = self.unmangle_type_name(type.name)
+
+        if type_name in self.custom_drawable_map:
+            return self.custom_drawable_map[type_name]
+        elif type_class in self.basic_drawable_map:
+            return self.basic_drawable_map[type_class]
+        else:
+            return None
+
+    def transform_var(self, var):
+        drawable_class = self.find_drawable(var.type)
+
+        if drawable_class is not None:
+            return drawable_class(var)
+        else:
+            return None
 
     def transform_frame(self, vars):
-        frame = StackFrameDrawable()
+        frame = drawable.StackFrameDrawable()
 
         for var in vars:
             transformed = self.transform_var(var)

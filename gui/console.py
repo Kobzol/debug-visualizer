@@ -13,7 +13,7 @@ from gi.repository import Pango
 from gi.repository import GObject
 
 from events import EventBroadcaster
-from lldbc.lldb_process_enums import ProcessState
+from lldbc.lldb_enums import ProcessState
 
 
 class Console(Gtk.ScrolledWindow):

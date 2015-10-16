@@ -9,7 +9,7 @@ from enum import Enum
 from analysis.source_analyser import SourceAnalyzer
 
 from events import EventBroadcaster
-from lldbc.lldb_process_enums import ProcessState
+from lldbc.lldb_enums import ProcessState
 
 
 class BreakpointChangeType(Enum):

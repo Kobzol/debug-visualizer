@@ -3,13 +3,10 @@
 from gi.repository import Gtk
 from gi.repository import Gdk
 
-from debugger_state import DebuggerState
 from drawing.drawable import DrawingUtils
 from drawing.memtoview import MemToViewTransformer
-from drawing.size import Size
-from drawing.vector import Vector
 from events import EventBroadcaster
-from lldbc.lldb_process_enums import ProcessState
+from lldbc.lldb_enums import ProcessState
 
 
 class ValueEntry(Gtk.Box):
@@ -91,7 +88,6 @@ class MemoryCanvas(Canvas):
         super(MemoryCanvas, self).__init__()
 
         self.debugger = debugger
-        self.debugger.on_debugger_state_changed.subscribe(self._handle_debugger_state_change)
         self.debugger.on_process_state_changed.subscribe(self._handle_process_state_change)
 
         self.memtoview = MemToViewTransformer()
@@ -103,7 +99,3 @@ class MemoryCanvas(Canvas):
 
             if frame.IsValid():
                 self.set_drawables([self.memtoview.transform_frame(frame.vars)])
-
-    def _handle_debugger_state_change(self, state, old_state):
-        if not state.is_set(DebuggerState.Running):
-            self.clear_drawables()

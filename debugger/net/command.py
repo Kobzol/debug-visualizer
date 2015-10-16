@@ -2,14 +2,10 @@
 
 from enum import Enum
 import json
-from sys import byteorder
 import uuid
 import struct
-import traceback
 import jsonpickle
 
-from debugger_state import DebuggerState
-from lldbc.lldb_process_enums import ProcessState
 
 class CommandType(Enum):
     Loopback = 1

@@ -4,7 +4,7 @@ import unittest
 import sys
 import os
 import time
-from lldbc.lldb_process_enums import ProcessState
+from lldbc.lldb_enums import ProcessState
 
 sys.path.append("../debugger")
 

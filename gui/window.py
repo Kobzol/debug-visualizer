@@ -2,8 +2,10 @@
 
 from gi.repository import Gtk
 from gi.repository import Gdk
+from drawing.canvas import MemoryCanvas
+from drawing.drawable import SimpleVarDrawable
 
-from lldbc.lldb_process_enums import ProcessState
+from lldbc.lldb_enums import ProcessState
 from source_edit import SourceManager
 from dialog import FileOpenDialog, MessageBox
 from console import IOConsole
@@ -46,8 +48,11 @@ class MainWindow(Gtk.Window):
         scrolled_window = Gtk.ScrolledWindow()
         scrolled_window.set_size_request(-1, 500)
         scrolled_window.add(self.source_manager)
-        self.content.attach(scrolled_window, 0, 0, 2, 1)
+        self.content.attach(scrolled_window, 0, 0, 1, 1)
         self.add_shortcut(Gdk.KEY_space, self.source_manager.toggle_breakpoint, Gdk.ModifierType.CONTROL_MASK)
+
+        canvas = MemoryCanvas(app.debugger)
+        self.content.attach(canvas, 1, 0, 1, 2)
 
         self.console = IOConsole(height=150)
         self.console.watch(app.debugger)

@@ -145,12 +145,50 @@ class Drawable(object):
         pass
 
 
-class SimpleVarDrawable(Drawable):
+class AbsValueDrawable(Drawable):
     def __init__(self, value):
-        super(SimpleVarDrawable, self).__init__()
-        
+        super(AbsValueDrawable, self).__init__()
+
         self.value = value
 
+    def draw(self, canvas):
+        pass
+
+    def get_bbox(self, canvas):
+        return None
+
+
+class StackFrameDrawable(Drawable):
+    def __init__(self):
+        super(StackFrameDrawable, self).__init__()
+
+        self.variables = []
+
+    def add_variable(self, var):
+        self.variables.append(var)
+
+    def get_bbox(self, canvas):
+        bboxes = []
+        height = 0
+
+        for index, var in enumerate(self.variables):
+            bbox = var.get_bbox(canvas).copy()
+            bbox.y += height
+            height += bbox.height
+            bboxes.append(bbox)
+
+        return RectangleBBox.contain(bboxes)
+
+    def draw(self, canvas):
+        height = 0
+
+        for index, var in enumerate(self.variables):
+            var.position.y = height
+            height += var.get_bbox(canvas).height
+            var.draw(canvas)
+
+
+class SimpleVarDrawable(AbsValueDrawable):
     def get_name(self):
         return self.value.name
 
@@ -198,31 +236,17 @@ class SimpleVarDrawable(Drawable):
         DrawingUtils.draw_text(canvas, self.get_value(), line_top.add((value_margins[0], bbox.height / 2)), y_center=True)
 
 
-class StackFrameDrawable(Drawable):
-    def __init__(self):
-        super(StackFrameDrawable, self).__init__()
-        
-        self.variables = []
+class PointerDrawable(SimpleVarDrawable):
+    pass
 
-    def add_variable(self, var):
-        self.variables.append(var)
 
-    def get_bbox(self, canvas):
-        bboxes = []
-        height = 0
+class StringDrawable(SimpleVarDrawable):
+    pass
 
-        for index, var in enumerate(self.variables):
-            bbox = var.get_bbox(canvas).copy()
-            bbox.y += height
-            height += bbox.height
-            bboxes.append(bbox)
 
-        return RectangleBBox.contain(bboxes)
+class VectorDrawable(SimpleVarDrawable):
+    pass
 
-    def draw(self, canvas):
-        height = 0
 
-        for index, var in enumerate(self.variables):
-            var.position.y = height
-            height += var.get_bbox(canvas).height
-            var.draw(canvas)
+class StructDrawable(SimpleVarDrawable):
+    pass
