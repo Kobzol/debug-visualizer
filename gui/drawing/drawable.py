@@ -151,6 +151,17 @@ class AbsValueDrawable(Drawable):
 
         self.value = value
 
+    def get_name(self):
+        return self.value.name
+
+    def get_value(self):
+        value = self.value.value
+
+        if value is None:
+            return "(none)"
+        else:
+            return value
+
     def draw(self, canvas):
         pass
 
@@ -189,17 +200,6 @@ class StackFrameDrawable(Drawable):
 
 
 class SimpleVarDrawable(AbsValueDrawable):
-    def get_name(self):
-        return self.value.name
-
-    def get_value(self):
-        value = self.value.value
-
-        if value is None:
-            return "(none)"
-        else:
-            return value
-
     def get_name_margins(self):
         return (2, 2)
 
