@@ -40,6 +40,9 @@ class Type(object):
     def is_valid(self):
         return self.type_category != TypeCategory.Invalid
 
+    def __repr__(self):
+        return "{{{0}: {1}}}".format(self.type_category, self.name)
+
 
 class Variable(object):
     @staticmethod
@@ -87,3 +90,6 @@ class Variable(object):
         @type child: Variable
         """
         self.children.append(child)
+
+    def __repr__(self):
+        return "({0} {1} = {2})".format(self.type.name, self.path, self.value)
