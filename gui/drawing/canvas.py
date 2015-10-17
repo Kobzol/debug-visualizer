@@ -6,7 +6,7 @@ from gi.repository import Gdk
 from drawing.drawable import DrawingUtils
 from drawing.memtoview import MemToViewTransformer
 from events import EventBroadcaster
-from lldbc.lldb_enums import ProcessState
+from enums import ProcessState
 
 
 class ValueEntry(Gtk.Box):

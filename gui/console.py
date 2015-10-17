@@ -1,19 +1,16 @@
 # -*- coding: utf-8 -*-
-import os
 
 import threading
 import select
 import traceback
 import sys
 import time
-
 from gi.repository import Gtk
 from gi.repository import Gdk
 from gi.repository import Pango
 from gi.repository import GObject
 
-from events import EventBroadcaster
-from lldbc.lldb_enums import ProcessState
+from enums import ProcessState
 
 
 class Console(Gtk.ScrolledWindow):

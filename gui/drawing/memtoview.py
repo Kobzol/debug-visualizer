@@ -1,44 +1,29 @@
 # -*- coding: utf-8 -*-
 
 import drawable
-from lldbc.lldb_enums import ClassType
+from enums import TypeCategory
 
 
 class MemToViewTransformer(object):
     def __init__(self):
         self.basic_drawable_map = {
-            ClassType.Builtin: drawable.SimpleVarDrawable,
-            ClassType.Pointer: drawable.PointerDrawable,
-            ClassType.Struct: drawable.StructDrawable,
-            ClassType.Vector: drawable.VectorDrawable
+            TypeCategory.Builtin: drawable.SimpleVarDrawable,
+            TypeCategory.Pointer: drawable.PointerDrawable,
+            TypeCategory.Struct: drawable.StructDrawable,
+            TypeCategory.Vector: drawable.VectorDrawable
         }
 
         self.custom_drawable_map = {
             "std::string": drawable.StringDrawable
         }
 
-        self.type_replacements = {
-            "std::basic_string<char, std::char_traits<char>, std::allocator<char> >": "std::string"
-        }
-
-    def unmangle_type_name(self, type):
-        type_name = type.name
-
-        clang_inline = "::__1"
-        type_name = type_name.replace(clang_inline, "")
-
-        if type_name in self.type_replacements:
-            type_name = self.type_replacements[type_name]
-
-        return type_name  # TODO: strip typedefs
-
     def find_drawable(self, type):
-        type_class = ClassType(type.type)
+        type_class = TypeCategory(type.type)
 
-        if type_class == ClassType.Invalid:
+        if type_class == TypeCategory.Invalid:
             return None
 
-        type_name = self.unmangle_type_name(type)
+        type_name = type.name
 
         if type_name in self.custom_drawable_map:
             return self.custom_drawable_map[type_name]

@@ -29,7 +29,7 @@ class StopReason(Enum):
     Watchpoint = 4
 
 
-class ClassType(Enum):
+class TypeCategory(Enum):
     Any = -1
     Array = 1
     BlockPointer = 2
@@ -53,7 +53,7 @@ class ClassType(Enum):
     Vector = 131072
 
 
-class BasicType(Enum):
+class BasicTypeCategory(Enum):
     Bool = 20
     Char = 2
     Char16 = 8

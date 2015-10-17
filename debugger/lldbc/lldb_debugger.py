@@ -1,20 +1,19 @@
 # -*- coding: utf-8 -*-
 
-import lldb
 import threading
 import os
-import sys
-from events import EventBroadcaster
-import lldbc.exceptions as exceptions
 import time
 
+import lldb
+from events import EventBroadcaster
+import lldbc.exceptions as exceptions
 from debugger_state import DebuggerState
 from lldbc.lldb_breakpoint_manager import LldbBreakpointManager
 from lldbc.lldb_file_manager import LldbFileManager
 from lldbc.lldb_io_manager import LldbIOManager
 from lldbc.lldb_memory_manager import LldbMemoryManager
 from lldbc.lldb_thread_manager import LldbThreadManager
-from lldbc.lldb_enums import ProcessState, StopReason
+from enums import ProcessState, StopReason
 from flags import Flags
 
 

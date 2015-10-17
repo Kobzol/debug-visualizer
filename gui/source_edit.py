@@ -3,13 +3,13 @@
 from gi.repository import Gtk
 from gi.repository import GtkSource
 from gi.repository import GObject
-
 import os
-from enum import Enum
-from analysis.source_analyser import SourceAnalyzer
 
+from enum import Enum
+
+from analysis.source_analyser import SourceAnalyzer
 from events import EventBroadcaster
-from lldbc.lldb_enums import ProcessState
+from enums import ProcessState
 
 
 class BreakpointChangeType(Enum):

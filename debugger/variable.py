@@ -1,15 +1,71 @@
 # -*- coding: utf-8 -*-
+from enums import BasicTypeCategory
+from enums import TypeCategory
 
 
 class Type(object):
-    def __init__(self, name, type_class, basic_class):
+    type_replacements = {
+        "std::basic_string<char, std::char_traits<char>, std::allocator<char> >": "std::string"
+    }
+
+    @staticmethod
+    def from_lldb(lldb_type):
+        """
+        @type lldb_type: lldb.SBType
+        @rtype: Type
+        """
+
+        type_name = lldb_type.GetCanonicalType().name.replace("::__1", "")
+
+        if type_name in Type.type_replacements:
+            type_name = Type.type_replacements[type_name]
+
+        return Type(type_name, TypeCategory(lldb_type.type), BasicTypeCategory(lldb_type.GetBasicType()))
+
+    def __init__(self, name, type_category, basic_type_category):
+        """
+        @type name: str
+        @type type_category: enums.TypeCategory
+        @type basic_type_category: enums.BasicTypeCategory
+        @return:
+        """
         self.name = name
-        self.type_class = type_class
-        self.basic_class = basic_class
+        self.type_category = type_category
+        self.basic_type_category = basic_type_category
 
 
 class Variable(object):
+    @staticmethod
+    def from_lldb(lldb_var):
+        """
+        @type lldb_var: lldb.SBValue
+        @rtype: Variable
+        """
+        address = str(lldb_var.addr)
+        name = lldb_var.name
+        value = lldb_var.value
+
+        if value is None:
+            value = lldb_var.summary
+
+        type = Type.from_lldb(lldb_var.type)
+        path = lldb_var.path
+
+        var = Variable(address, name, value, type, path)
+
+        for i in xrange(lldb_var.num_children):
+            var.add_child(Variable.from_lldb(lldb_var.GetChildAtIndex(i)))
+
+        return var
+
     def __init__(self, address=None, name=None, value=None, type=None, path=None):
+        """
+        @type address: str
+        @type name: str
+        @type value: str
+        @type type: Type
+        @type path: str
+        """
         self.address = address
         self.name = name
         self.value = value
@@ -19,4 +75,7 @@ class Variable(object):
         self.children = []
 
     def add_child(self, child):
+        """
+        @type child: Variable
+        """
         self.children.append(child)

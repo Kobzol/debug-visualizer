@@ -3,7 +3,7 @@
 from gi.repository import GObject
 
 from debugger_state import DebuggerState
-from lldbc.lldb_enums import ProcessState
+from enums import ProcessState
 
 
 class ToolbarManager(object):

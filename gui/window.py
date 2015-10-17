@@ -2,10 +2,9 @@
 
 from gi.repository import Gtk
 from gi.repository import Gdk
-from drawing.canvas import MemoryCanvas
-from drawing.drawable import SimpleVarDrawable
 
-from lldbc.lldb_enums import ProcessState
+from drawing.canvas import MemoryCanvas
+from enums import ProcessState
 from source_edit import SourceManager
 from dialog import FileOpenDialog, MessageBox
 from console import IOConsole
