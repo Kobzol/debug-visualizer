@@ -5,6 +5,37 @@ from drawing.size import Size
 from drawing.vector import Vector
 
 
+class Color(object):
+    def __init__(self, red=0.0, green=0.0, blue=0.0, alpha=1.0):
+        """
+        Represents RGBA color.
+        @type red: float
+        @type green: float
+        @type blue: float
+        @type alpha: float
+        """
+        self._red = red
+        self._green = green
+        self._blue = blue
+        self._alpha = alpha
+
+    @property
+    def red(self):
+        return self._red
+
+    @property
+    def green(self):
+        return self._green
+
+    @property
+    def blue(self):
+        return self._blue
+
+    @property
+    def alpha(self):
+        return self._alpha
+
+
 class DrawingUtils(object):
     @staticmethod
     def get_text_size(canvas, text):
@@ -14,10 +45,24 @@ class DrawingUtils(object):
 
     @staticmethod
     def set_color(canvas, color):
-        canvas.cr.set_source_rgba(color[0], color[1], color[2], color[3])
+        """
+        Sets color for Cairo context in canvas.
+        @type canvas: canvas.Canvas
+        @type color: Color
+        """
+        canvas.cr.set_source_rgba(color.red, color.green, color.blue, color.alpha)
 
     @staticmethod
-    def draw_text(canvas, text, position, color=(0, 0, 0, 1), y_center=False, x_center=False):
+    def draw_text(canvas, text, position, color=Color(), y_center=False, x_center=False):
+        """
+        Draws text on a given position. When no centering is set, it will be drawn from top-left corner.
+        @type canvas: canvas.Canvas
+        @type text: str
+        @type position: Vector
+        @param color: Color
+        @param y_center: bool
+        @param x_center: bool
+        """
         cr = canvas.cr
         cr.save()
 
@@ -32,6 +77,8 @@ class DrawingUtils(object):
         if y_center:
             w_size = DrawingUtils.get_text_size(canvas, "W")
             position.y += w_size.height / 2.0
+        else:
+            position.y += text_size.height
 
         DrawingUtils.set_color(canvas, color)
         cr.move_to(position.x, position.y)
@@ -41,7 +88,7 @@ class DrawingUtils(object):
         cr.restore()
 
     @staticmethod
-    def draw_line(canvas, point_from, point_to, color=(0, 0, 0, 1), width=1):
+    def draw_line(canvas, point_from, point_to, color=Color(), width=1):
         cr = canvas.cr
         cr.save()
 
@@ -58,7 +105,7 @@ class DrawingUtils(object):
         cr.restore()
 
     @staticmethod
-    def draw_arrow(canvas, point_from, point_to, color=(0, 0, 0, 1), width=1):
+    def draw_arrow(canvas, point_from, point_to, color=Color(), width=1):
         point_from = Vector.vectorize(point_from)
         point_to = Vector.vectorize(point_to)
 
@@ -74,7 +121,7 @@ class DrawingUtils(object):
         DrawingUtils.draw_line(canvas, point_to, wing_left.add(point_to).to_point(), color, width)
 
     @staticmethod
-    def draw_rectangle(canvas, position, size, color=(0, 0, 0, 1), width=1, center=False):
+    def draw_rectangle(canvas, position, size, color=Color(), width=1, center=False):
         cr = canvas.cr
         cr.save()
 
@@ -128,6 +175,20 @@ class RectangleBBox(object):
         return RectangleBBox((self.x, self.y), (self.width, self.height))
 
 
+class Margin(object):
+    def __init__(self, top=0, right=0, bottom=0, left=0):
+        """
+        @type top: int
+        @type right: int
+        @type bottom: int
+        @type left: int
+        """
+        self.top = top
+        self.right = right
+        self.bottom = bottom
+        self.left = left
+
+
 class Drawable(object):
     def __init__(self):
         self.position = Vector(0, 0)
@@ -143,6 +204,38 @@ class Drawable(object):
     @abc.abstractmethod
     def get_bbox(self, canvas):
         pass
+
+
+class BoxedLabelDrawable(Drawable):
+    def __init__(self, label, margin=None):
+        """
+        @type label: str
+        @type margin: Margin
+        """
+        super(BoxedLabelDrawable, self).__init__()
+
+        self.label = label
+        self.margin = margin if margin else Margin()
+
+    def get_bbox(self, canvas):
+        label_size = DrawingUtils.get_text_size(canvas, self.label)
+
+        width = self.margin.left + label_size.width + self.margin.right
+        height = self.margin.top + label_size.height + self.margin.bottom
+
+        return RectangleBBox(self.position, Size(width, height))
+
+    def draw(self, canvas):
+        bbox = self.get_bbox(canvas)
+
+        # box
+        DrawingUtils.draw_rectangle(canvas, self.position, bbox.size, center=False)
+
+        text_x = self.position.x + self.margin.left
+        text_y = self.position.y + self.margin.top
+
+        # value
+        DrawingUtils.draw_text(canvas, self.label, Vector(text_x, text_y), y_center=False)
 
 
 class AbsValueDrawable(Drawable):
@@ -191,7 +284,7 @@ class StackFrameDrawable(Drawable):
         return RectangleBBox.contain(bboxes)
 
     def draw(self, canvas):
-        height = 0
+        height = self.position.y
 
         for index, var in enumerate(self.variables):
             var.position.y = height
@@ -200,40 +293,29 @@ class StackFrameDrawable(Drawable):
 
 
 class SimpleVarDrawable(AbsValueDrawable):
-    def get_name_margins(self):
-        return (2, 2)
+    def __init__(self, var):
+        super(SimpleVarDrawable, self).__init__(var)
 
-    def get_value_margins(self):
-        return (2, 2)
-
+        self.name_box = BoxedLabelDrawable(self.get_name(), Margin(10, 10, 10, 10))
+        self.value_box = BoxedLabelDrawable(self.get_value(), Margin(10, 10, 10, 10))
+    
     def get_bbox(self, canvas):
-        name_margins = self.get_name_margins()
-        value_margins = self.get_value_margins()
-        name_size = DrawingUtils.get_text_size(canvas, self.get_name())
-        value_size = DrawingUtils.get_text_size(canvas, self.get_value())
+        self.name_box.set_position(self.position)
+        name_bbox = self.name_box.get_bbox(canvas)
 
-        rect_size = Size(sum(name_margins) + sum(value_margins) + name_size.width + value_size.width,
-                         name_size.height + 10)
+        self.value_box.set_position(self.position.add(Vector(name_bbox.width, 0)))
+        value_bbox = self.value_box.get_bbox(canvas)
 
-        return RectangleBBox(self.position, rect_size)
+        return RectangleBBox.contain((name_bbox, value_bbox))
 
     def draw(self, canvas):
-        bbox = self.get_bbox(canvas)
-        name_margins = self.get_name_margins()
-        value_margins = self.get_value_margins()
-        name_size = DrawingUtils.get_text_size(canvas, self.get_name())
+        self.name_box.set_position(self.position)
+        name_bbox = self.name_box.get_bbox(canvas)
 
-        # rectangle
-        DrawingUtils.draw_rectangle(canvas, self.position, bbox.size, center=False)
-        # name
-        DrawingUtils.draw_text(canvas, self.get_name(), self.position.add((name_margins[0], bbox.height / 2)), y_center=True)
-        # divider
-        line_top = self.position.add((name_margins[0] + name_size.width + name_margins[1], 0))
-        DrawingUtils.draw_line(canvas,
-                              line_top,
-                              line_top.add((0, bbox.height)))
-        # value
-        DrawingUtils.draw_text(canvas, self.get_value(), line_top.add((value_margins[0], bbox.height / 2)), y_center=True)
+        self.value_box.set_position(self.position.add(Vector(name_bbox.width, 0)))
+
+        self.name_box.draw(canvas)
+        self.value_box.draw(canvas)
 
 
 class PointerDrawable(SimpleVarDrawable):
@@ -252,31 +334,27 @@ class StructDrawable(SimpleVarDrawable):
     def add_child(self, child):
         self.children.append(child)
 
+    def get_children_left_offset(self):
+        return 10
+
     def get_bbox(self, canvas):
-        name_margins = self.get_name_margins()
-        value_margins = self.get_value_margins()
-        name_size = DrawingUtils.get_text_size(canvas, self.get_name())
-        value_size = DrawingUtils.get_text_size(canvas, self.get_value())
+        bboxes = []
+        height = self.position.y
 
-        rect_size = Size(sum(name_margins) + sum(value_margins) + name_size.width + value_size.width,
-                         name_size.height + 10)
+        for index, var in enumerate(self.children):
+            bbox = var.get_bbox(canvas).copy()
+            bbox.y = height
+            bbox.x += self.position.x + self.get_children_left_offset()
+            height += bbox.height
+            bboxes.append(bbox)
 
-        return RectangleBBox(self.position, rect_size)
+        return RectangleBBox.contain(bboxes)
 
     def draw(self, canvas):
-        bbox = self.get_bbox(canvas)
-        name_margins = self.get_name_margins()
-        value_margins = self.get_value_margins()
-        name_size = DrawingUtils.get_text_size(canvas, self.get_name())
+        height = self.position.y
 
-        # rectangle
-        DrawingUtils.draw_rectangle(canvas, self.position, bbox.size, center=False)
-        # name
-        DrawingUtils.draw_text(canvas, self.get_name(), self.position.add((name_margins[0], bbox.height / 2)), y_center=True)
-        # divider
-        line_top = self.position.add((name_margins[0] + name_size.width + name_margins[1], 0))
-        DrawingUtils.draw_line(canvas,
-                              line_top,
-                              line_top.add((0, bbox.height)))
-        # value
-        DrawingUtils.draw_text(canvas, self.get_value(), line_top.add((value_margins[0], bbox.height / 2)), y_center=True)
+        for index, var in enumerate(self.children):
+            var.position.y = height
+            var.position.x = self.position.x + self.get_children_left_offset()
+            height += var.get_bbox(canvas).height
+            var.draw(canvas)
