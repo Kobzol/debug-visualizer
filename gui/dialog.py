@@ -3,18 +3,22 @@ from gi.repository import Gtk
 
 class FileOpenDialog(object):
     @staticmethod
-    def open_file(title, parent):
-        dialog = FileOpenDialog(title, parent)
+    def open_file(title, parent, initial_path=None):
+        dialog = FileOpenDialog(title, parent, initial_path)
         
         file = dialog.open()
         dialog.destroy()
         
         return file
     
-    def __init__(self, title, parent):
+    def __init__(self, title, parent, initial_path=None):
         self.dialog = Gtk.FileChooserDialog(title, parent,
                                     Gtk.FileChooserAction.OPEN,
                                     (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
+
+        if initial_path:
+            self.dialog.set_current_folder(initial_path)
+
                
     def open(self):
         response = self.dialog.run()
