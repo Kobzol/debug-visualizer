@@ -297,7 +297,7 @@ class StructDrawable(SimpleVarDrawable):
         @type val: variable.Variable
         """
         super(StructDrawable, self).__init__(canvas, value)
-        self.struct_label = BoxedLabelDrawable(canvas, "{0} {1}".format(value.type.type_category.nice_name(), value.name),
+        self.struct_label = BoxedLabelDrawable(canvas, "{0} {1}".format(value.type.name, value.name),
                                                Margin.all(6.0))
         self.children = []
 

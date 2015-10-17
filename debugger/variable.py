@@ -6,6 +6,7 @@ from enums import TypeCategory
 
 class Type(object):
     type_replacements = {
+        ":__1": "",
         "std::basic_string<char, std::char_traits<char>, std::allocator<char> >": "std::string"
     }
 
@@ -16,10 +17,10 @@ class Type(object):
         @rtype: Type
         """
 
-        type_name = lldb_type.GetCanonicalType().name.replace("::__1", "")
+        type_name = lldb_type.GetCanonicalType()
 
-        if type_name in Type.type_replacements:
-            type_name = Type.type_replacements[type_name]
+        for original, replacement in Type.type_replacements.iteritems():
+            type_name = type_name.replace(original, replacement)
 
         return Type(type_name, TypeCategory(lldb_type.type), BasicTypeCategory(lldb_type.GetBasicType()))
 
