@@ -78,6 +78,8 @@ class Canvas(Gtk.EventBox):
         @type move_event: Gdk.EventMotion
         """
         self.mouse_position = Vector(move_event.x, move_event.y)
+        self.mouse_position *= (1 / self.zoom)
+
         self._notify_handlers()
         self.redraw()
 
