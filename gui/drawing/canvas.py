@@ -7,6 +7,7 @@ from drawing.drawable import DrawingUtils
 from drawing.memtoview import MemToViewTransformer
 from events import EventBroadcaster
 from enums import ProcessState
+from variable import Variable
 
 
 class ValueEntry(Gtk.Box):
@@ -97,5 +98,7 @@ class MemoryCanvas(Canvas):
             thread = self.debugger.thread_manager.get_current_thread()
             frame = thread.GetSelectedFrame()
 
+            parsed_vars = [Variable.from_lldb(var) for var in frame.vars]
+
             if frame.IsValid():
-                self.set_drawables([self.memtoview.transform_frame(frame.vars)])
+                self.set_drawables([self.memtoview.transform_frame(parsed_vars)])

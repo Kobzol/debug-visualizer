@@ -18,17 +18,15 @@ class MemToViewTransformer(object):
         }
 
     def find_drawable(self, type):
-        type_class = TypeCategory(type.type)
-
-        if type_class == TypeCategory.Invalid:
+        if type.type_category == TypeCategory.Invalid:
             return None
 
         type_name = type.name
 
         if type_name in self.custom_drawable_map:
             return self.custom_drawable_map[type_name]
-        elif type_class in self.basic_drawable_map:
-            return self.basic_drawable_map[type_class]
+        elif type.type_category in self.basic_drawable_map:
+            return self.basic_drawable_map[type.type_category]
         else:
             return None
 
