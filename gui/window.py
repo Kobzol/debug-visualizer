@@ -2,8 +2,11 @@
 
 from gi.repository import Gtk
 from gi.repository import Gdk
+from gi.repository import GObject
 
-from drawing.canvas import MemoryCanvas
+import os
+
+from drawing.canvas import MemoryCanvas, CanvasToolbarWrapper
 from enums import ProcessState
 from source_edit import SourceManager
 from dialog import FileOpenDialog, MessageBox
@@ -51,7 +54,12 @@ class MainWindow(Gtk.Window):
         self.add_shortcut(Gdk.KEY_space, self.source_manager.toggle_breakpoint, Gdk.ModifierType.CONTROL_MASK)
 
         canvas = MemoryCanvas(app.debugger)
-        self.content.attach(canvas, 1, 0, 1, 2)
+        config.gui_memory_canvas_toolbar.connect_signals({
+            "zoom-in": lambda *x: canvas.zoom_in(),
+            "zoom-out": lambda *x: canvas.zoom_out()
+        })
+        canvas_toolbar = config.gui_memory_canvas_toolbar.get_object("toolbar")
+        self.content.attach(CanvasToolbarWrapper(canvas, canvas_toolbar), 1, 0, 1, 2)
 
         self.console = IOConsole(height=150)
         self.console.watch(app.debugger)
@@ -69,6 +77,14 @@ class MainWindow(Gtk.Window):
         self._add_to_row(self.status_bar, 3)
 
         app.debugger.on_process_state_changed.subscribe(self._handle_process_state_change)
+
+        loaded = self.app.debugger.load_binary("../debugger/test")
+
+        if loaded:
+            main_file = self.app.debugger.file_manager.get_main_source_file()
+
+            if main_file:
+                self.source_manager.open_file(main_file)
 
     def _add_to_row(self, widget, row_index):
         self.wrapper.attach(widget, 0, row_index, 1, 1)
@@ -94,7 +110,7 @@ class MainWindow(Gtk.Window):
         self.accel_group.connect(key, mask, Gtk.AccelFlags.VISIBLE, lambda *x: callback())
 
     def binary_load_dialog(self):
-        file_path = FileOpenDialog.open_file("Choose a binary file", self)
+        file_path = FileOpenDialog.open_file("Choose a binary file", self, os.path.abspath("../debugger/"))
 
         if file_path:
             self.app.debugger.stop()

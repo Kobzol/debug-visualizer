@@ -52,6 +52,13 @@ class TypeCategory(Enum):
     Union = 65536
     Vector = 131072
 
+    def nice_name(self):
+        name_mappings = {
+            TypeCategory.Class: "class",
+            TypeCategory.Struct: "struct"
+        }
+        return name_mappings.get(self, str(self))
+
 
 class BasicTypeCategory(Enum):
     Bool = 20

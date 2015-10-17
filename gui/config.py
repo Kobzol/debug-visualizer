@@ -13,6 +13,7 @@ class Config(object):
         self.gui_main_window_menu = self.get_gui_builder("main_window_menu")
         self.gui_main_window_toolbar = self.get_gui_builder("main_window_toolbar")
         self.gui_io_console = self.get_gui_builder("io_console")
+        self.gui_memory_canvas_toolbar = self.get_gui_builder("memory_canvas_toolbar")
 
         provider = Gtk.CssProvider.new()
         screen = Gdk.Screen.get_default()

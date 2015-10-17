@@ -48,6 +48,8 @@ class Canvas(Gtk.EventBox):
         self.connect("draw", lambda canvas, cr: self._handle_draw(cr))
 
         self.mouse_click = None
+
+        self.zoom = 1.0
         self.cr = None
 
         self.drawables = []
@@ -59,11 +61,20 @@ class Canvas(Gtk.EventBox):
             self._draw(cr, rectangle.width, rectangle.height)
 
     def _draw(self, cr, width, height):
+        """
+        @type cr: cairo.Context
+        @type width: int
+        @type height: int
+        """
         self.cr = cr
+
+        self.cr.scale(1.0, 1.0)
 
         DrawingUtils.set_color(self, self.bg_color)
         cr.rectangle(0, 0, width, height)
         cr.fill()
+
+        self.cr.scale(self.zoom, self.zoom)
 
         for drawable in self.drawables:
             drawable.draw(self)
@@ -82,6 +93,14 @@ class Canvas(Gtk.EventBox):
 
     def redraw(self):
         self.queue_draw()
+
+    def zoom_in(self):
+        self.zoom += 0.1
+        self.redraw()
+
+    def zoom_out(self):
+        self.zoom -= 0.1
+        self.redraw()
 
 
 class MemoryCanvas(Canvas):
@@ -102,3 +121,19 @@ class MemoryCanvas(Canvas):
 
             if frame.IsValid():
                 self.set_drawables([self.memtoview.transform_frame(parsed_vars)])
+
+
+class CanvasToolbarWrapper(Gtk.VBox):
+    def __init__(self, canvas, toolbar):
+        """
+        Wrapper for a canvas with it's toolbar.
+        @type canvas: Canvas
+        @type toolbar: Gtk.Toolbar
+        """
+        super(CanvasToolbarWrapper, self).__init__()
+        
+        self.canvas = canvas
+        self.toolbar = toolbar
+
+        self.pack_start(self.toolbar, False, False, 0)
+        self.pack_start(self.canvas, True, True, 0)

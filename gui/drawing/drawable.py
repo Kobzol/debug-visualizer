@@ -240,6 +240,9 @@ class BoxedLabelDrawable(Drawable):
 
 class AbsValueDrawable(Drawable):
     def __init__(self, value):
+        """
+        @type value: variable.Variable
+        """
         super(AbsValueDrawable, self).__init__()
 
         self.value = value
@@ -293,8 +296,11 @@ class StackFrameDrawable(Drawable):
 
 
 class SimpleVarDrawable(AbsValueDrawable):
-    def __init__(self, var):
-        super(SimpleVarDrawable, self).__init__(var)
+    def __init__(self, value):
+        """
+        @type value: variable.Variable
+        """
+        super(SimpleVarDrawable, self).__init__(value)
 
         self.name_box = BoxedLabelDrawable(self.get_name(), Margin(10, 10, 10, 10))
         self.value_box = BoxedLabelDrawable(self.get_value(), Margin(10, 10, 10, 10))
@@ -317,6 +323,9 @@ class SimpleVarDrawable(AbsValueDrawable):
         self.name_box.draw(canvas)
         self.value_box.draw(canvas)
 
+    def get_name(self):
+        return "{0} {1}".format(self.value.type.name, self.value.name)
+
 
 class PointerDrawable(SimpleVarDrawable):
     pass
@@ -328,7 +337,11 @@ class VectorDrawable(SimpleVarDrawable):
 
 class StructDrawable(SimpleVarDrawable):
     def __init__(self, val):
+        """
+        @type val: variable.Variable
+        """
         super(StructDrawable, self).__init__(val)
+        self.struct_label = BoxedLabelDrawable("{0} {1}".format(val.type.type_category.nice_name(), val.name), Margin(5, 5, 5, 5))
         self.children = []
 
     def add_child(self, child):
@@ -338,8 +351,11 @@ class StructDrawable(SimpleVarDrawable):
         return 10
 
     def get_bbox(self, canvas):
-        bboxes = []
-        height = self.position.y
+        self.struct_label.set_position(self.position)
+        label_bbox = self.struct_label.get_bbox(canvas)
+
+        bboxes = [label_bbox]
+        height = self.position.y + label_bbox.height
 
         for index, var in enumerate(self.children):
             bbox = var.get_bbox(canvas).copy()
@@ -351,7 +367,12 @@ class StructDrawable(SimpleVarDrawable):
         return RectangleBBox.contain(bboxes)
 
     def draw(self, canvas):
-        height = self.position.y
+        self.struct_label.set_position(self.position)
+        label_bbox = self.struct_label.get_bbox(canvas)
+
+        height = self.position.y + label_bbox.height
+
+        self.struct_label.draw(canvas)
 
         for index, var in enumerate(self.children):
             var.position.y = height
