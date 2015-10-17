@@ -240,13 +240,43 @@ class PointerDrawable(SimpleVarDrawable):
     pass
 
 
-class StringDrawable(SimpleVarDrawable):
-    pass
-
-
 class VectorDrawable(SimpleVarDrawable):
     pass
 
 
 class StructDrawable(SimpleVarDrawable):
-    pass
+    def __init__(self, val):
+        super(StructDrawable, self).__init__(val)
+        self.children = []
+
+    def add_child(self, child):
+        self.children.append(child)
+
+    def get_bbox(self, canvas):
+        name_margins = self.get_name_margins()
+        value_margins = self.get_value_margins()
+        name_size = DrawingUtils.get_text_size(canvas, self.get_name())
+        value_size = DrawingUtils.get_text_size(canvas, self.get_value())
+
+        rect_size = Size(sum(name_margins) + sum(value_margins) + name_size.width + value_size.width,
+                         name_size.height + 10)
+
+        return RectangleBBox(self.position, rect_size)
+
+    def draw(self, canvas):
+        bbox = self.get_bbox(canvas)
+        name_margins = self.get_name_margins()
+        value_margins = self.get_value_margins()
+        name_size = DrawingUtils.get_text_size(canvas, self.get_name())
+
+        # rectangle
+        DrawingUtils.draw_rectangle(canvas, self.position, bbox.size, center=False)
+        # name
+        DrawingUtils.draw_text(canvas, self.get_name(), self.position.add((name_margins[0], bbox.height / 2)), y_center=True)
+        # divider
+        line_top = self.position.add((name_margins[0] + name_size.width + name_margins[1], 0))
+        DrawingUtils.draw_line(canvas,
+                              line_top,
+                              line_top.add((0, bbox.height)))
+        # value
+        DrawingUtils.draw_text(canvas, self.get_value(), line_top.add((value_margins[0], bbox.height / 2)), y_center=True)

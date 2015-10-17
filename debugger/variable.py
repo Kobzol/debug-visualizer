@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from _gobject import type_name
 from enums import BasicTypeCategory
 from enums import TypeCategory
 
@@ -33,6 +34,12 @@ class Type(object):
         self.type_category = type_category
         self.basic_type_category = basic_type_category
 
+    def is_composite(self):
+        return self.type_category in (TypeCategory.Struct, TypeCategory.Class)
+
+    def is_valid(self):
+        return self.type_category != TypeCategory.Invalid
+
 
 class Variable(object):
     @staticmethod
@@ -53,8 +60,9 @@ class Variable(object):
 
         var = Variable(address, name, value, type, path)
 
-        for i in xrange(lldb_var.num_children):
-            var.add_child(Variable.from_lldb(lldb_var.GetChildAtIndex(i)))
+        if type.is_composite():
+            for i in xrange(lldb_var.num_children):
+                var.add_child(Variable.from_lldb(lldb_var.GetChildAtIndex(i)))
 
         return var
 

@@ -6,35 +6,48 @@ from enums import TypeCategory
 
 class MemToViewTransformer(object):
     def __init__(self):
-        self.basic_drawable_map = {
-            TypeCategory.Builtin: drawable.SimpleVarDrawable,
-            TypeCategory.Pointer: drawable.PointerDrawable,
-            TypeCategory.Struct: drawable.StructDrawable,
-            TypeCategory.Vector: drawable.VectorDrawable
+        self.function_map = {
+            TypeCategory.Builtin: self.create_basic,
+            TypeCategory.Pointer: self.create_pointer,
+            TypeCategory.Struct: self.create_struct,
+            TypeCategory.Class: self.create_struct
         }
 
-        self.custom_drawable_map = {
-            "std::string": drawable.StringDrawable
-        }
+    def create_struct(self, var):
+        """
+        @type var: variable.Variable
+        @rtype: drawable.Drawable
+        """
+        container = drawable.StructDrawable(var)
 
-    def find_drawable(self, type):
-        if type.type_category == TypeCategory.Invalid:
-            return None
+        for child in var.children:
+            var = self.transform_var(child)
 
-        type_name = type.name
+            if var:
+                container.add_child(var)
 
-        if type_name in self.custom_drawable_map:
-            return self.custom_drawable_map[type_name]
-        elif type.type_category in self.basic_drawable_map:
-            return self.basic_drawable_map[type.type_category]
-        else:
-            return None
+        return container
+
+    def create_pointer(self, var):
+        return drawable.PointerDrawable(var)
+
+    def create_basic(self, var):
+        return drawable.SimpleVarDrawable(var)
 
     def transform_var(self, var):
-        drawable_class = self.find_drawable(var.type)
+        """
+        @type var: variable.Variable
+        @rtype drawable.Drawable
+        """
+        type = var.type
 
-        if drawable_class is not None:
-            return drawable_class(var)
+        if not type.is_valid():
+            return None
+
+        create_fn = self.function_map.get(type.type_category, None)
+
+        if create_fn:
+            return create_fn(var)
         else:
             return None
 
