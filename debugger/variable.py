@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from _gobject import type_name
+
 from enums import BasicTypeCategory
 from enums import TypeCategory
 

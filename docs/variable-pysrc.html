@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>variable</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th bgcolor="#70b0f0" class="navbar-select"
+          >&nbsp;&nbsp;&nbsp;Home&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        Module&nbsp;variable
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="variable-pysrc.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<h1 class="epydoc">Source Code for <a href="variable-module.html">Module variable</a></h1>
+<pre class="py-src">
+<a name="L1"></a><tt class="py-lineno"> 1</tt>  <tt class="py-line"><tt class="py-comment"># -*- coding: utf-8 -*-</tt> </tt>
+<a name="L2"></a><tt class="py-lineno"> 2</tt>  <tt class="py-line"> </tt>
+<a name="L3"></a><tt class="py-lineno"> 3</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt class="py-name">enums</tt> <tt class="py-keyword">import</tt> <tt class="py-name">BasicTypeCategory</tt> </tt>
+<a name="L4"></a><tt class="py-lineno"> 4</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt class="py-name">enums</tt> <tt class="py-keyword">import</tt> <tt class="py-name">TypeCategory</tt> </tt>
+<a name="Type"></a><div id="Type-def"><a name="L5"></a><tt class="py-lineno"> 5</tt>  <tt class="py-line"> </tt>
+<a name="L6"></a><tt class="py-lineno"> 6</tt>  <tt class="py-line"> </tt>
+<a name="L7"></a><tt class="py-lineno"> 7</tt> <a class="py-toggle" href="#" id="Type-toggle" onclick="return toggle('Type');">-</a><tt class="py-line"><tt class="py-keyword">class</tt> <a class="py-def-name" href="variable.Type-class.html">Type</a><tt class="py-op">(</tt><tt class="py-base-class">object</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="Type-collapsed" style="display:none;" pad="++" indent="++++"></div><div id="Type-expanded"><a name="L8"></a><tt class="py-lineno"> 8</tt>  <tt class="py-line">    <tt id="link-0" class="py-name" targets="Variable variable.Type.type_replacements=variable.Type-class.html#type_replacements"><a title="variable.Type.type_replacements" class="py-name" href="#" onclick="return doclink('link-0', 'type_replacements', 'link-0');">type_replacements</a></tt> <tt class="py-op">=</tt> <tt class="py-op">{</tt> </tt>
+<a name="L9"></a><tt class="py-lineno"> 9</tt>  <tt class="py-line">        <tt class="py-string">"std::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;"</tt><tt class="py-op">:</tt> <tt class="py-string">"std::string"</tt> </tt>
+<a name="L10"></a><tt class="py-lineno">10</tt>  <tt class="py-line">    <tt class="py-op">}</tt> </tt>
+<a name="L11"></a><tt class="py-lineno">11</tt>  <tt class="py-line"> </tt>
+<a name="L12"></a><tt class="py-lineno">12</tt>  <tt class="py-line">    <tt class="py-decorator">@</tt><tt class="py-decorator">staticmethod</tt> </tt>
+<a name="Type.from_lldb"></a><div id="Type.from_lldb-def"><a name="L13"></a><tt class="py-lineno">13</tt> <a class="py-toggle" href="#" id="Type.from_lldb-toggle" onclick="return toggle('Type.from_lldb');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="variable.Type-class.html#from_lldb">from_lldb</a><tt class="py-op">(</tt><tt class="py-param">lldb_type</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="Type.from_lldb-collapsed" style="display:none;" pad="++" indent="++++++++"></div><div id="Type.from_lldb-expanded"><a name="L14"></a><tt class="py-lineno">14</tt>  <tt class="py-line">        <tt class="py-docstring">"""</tt> </tt>
+<a name="L15"></a><tt class="py-lineno">15</tt>  <tt class="py-line"><tt class="py-docstring">        @type lldb_type: lldb.SBType</tt> </tt>
+<a name="L16"></a><tt class="py-lineno">16</tt>  <tt class="py-line"><tt class="py-docstring">        @rtype: Type</tt> </tt>
+<a name="L17"></a><tt class="py-lineno">17</tt>  <tt class="py-line"><tt class="py-docstring">        """</tt> </tt>
+<a name="L18"></a><tt class="py-lineno">18</tt>  <tt class="py-line"> </tt>
+<a name="L19"></a><tt class="py-lineno">19</tt>  <tt class="py-line">        <tt class="py-name">type_name</tt> <tt class="py-op">=</tt> <tt class="py-name">lldb_type</tt><tt class="py-op">.</tt><tt class="py-name">GetCanonicalType</tt><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">.</tt><tt class="py-name">name</tt><tt class="py-op">.</tt><tt class="py-name">replace</tt><tt class="py-op">(</tt><tt class="py-string">"::__1"</tt><tt class="py-op">,</tt> <tt class="py-string">""</tt><tt class="py-op">)</tt> </tt>
+<a name="L20"></a><tt class="py-lineno">20</tt>  <tt class="py-line"> </tt>
+<a name="L21"></a><tt class="py-lineno">21</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">type_name</tt> <tt class="py-keyword">in</tt> <tt id="link-1" class="py-name" targets="Class variable.Type=variable.Type-class.html"><a title="variable.Type" class="py-name" href="#" onclick="return doclink('link-1', 'Type', 'link-1');">Type</a></tt><tt class="py-op">.</tt><tt id="link-2" class="py-name"><a title="variable.Type.type_replacements" class="py-name" href="#" onclick="return doclink('link-2', 'type_replacements', 'link-0');">type_replacements</a></tt><tt class="py-op">:</tt> </tt>
+<a name="L22"></a><tt class="py-lineno">22</tt>  <tt class="py-line">            <tt class="py-name">type_name</tt> <tt class="py-op">=</tt> <tt id="link-3" class="py-name"><a title="variable.Type" class="py-name" href="#" onclick="return doclink('link-3', 'Type', 'link-1');">Type</a></tt><tt class="py-op">.</tt><tt id="link-4" class="py-name"><a title="variable.Type.type_replacements" class="py-name" href="#" onclick="return doclink('link-4', 'type_replacements', 'link-0');">type_replacements</a></tt><tt class="py-op">[</tt><tt class="py-name">type_name</tt><tt class="py-op">]</tt> </tt>
+<a name="L23"></a><tt class="py-lineno">23</tt>  <tt class="py-line"> </tt>
+<a name="L24"></a><tt class="py-lineno">24</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt id="link-5" class="py-name"><a title="variable.Type" class="py-name" href="#" onclick="return doclink('link-5', 'Type', 'link-1');">Type</a></tt><tt class="py-op">(</tt><tt class="py-name">type_name</tt><tt class="py-op">,</tt> <tt class="py-name">TypeCategory</tt><tt class="py-op">(</tt><tt class="py-name">lldb_type</tt><tt class="py-op">.</tt><tt class="py-name">type</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> <tt class="py-name">BasicTypeCategory</tt><tt class="py-op">(</tt><tt class="py-name">lldb_type</tt><tt class="py-op">.</tt><tt class="py-name">GetBasicType</tt><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L25"></a><tt class="py-lineno">25</tt>  <tt class="py-line"> </tt>
+<a name="Type.__init__"></a><div id="Type.__init__-def"><a name="L26"></a><tt class="py-lineno">26</tt> <a class="py-toggle" href="#" id="Type.__init__-toggle" onclick="return toggle('Type.__init__');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="variable.Type-class.html#__init__">__init__</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-param">name</tt><tt class="py-op">,</tt> <tt class="py-param">type_category</tt><tt class="py-op">,</tt> <tt class="py-param">basic_type_category</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="Type.__init__-collapsed" style="display:none;" pad="++" indent="++++++++"></div><div id="Type.__init__-expanded"><a name="L27"></a><tt class="py-lineno">27</tt>  <tt class="py-line">        <tt class="py-docstring">"""</tt> </tt>
+<a name="L28"></a><tt class="py-lineno">28</tt>  <tt class="py-line"><tt class="py-docstring">        @type name: str</tt> </tt>
+<a name="L29"></a><tt class="py-lineno">29</tt>  <tt class="py-line"><tt class="py-docstring">        @type type_category: enums.TypeCategory</tt> </tt>
+<a name="L30"></a><tt class="py-lineno">30</tt>  <tt class="py-line"><tt class="py-docstring">        @type basic_type_category: enums.BasicTypeCategory</tt> </tt>
+<a name="L31"></a><tt class="py-lineno">31</tt>  <tt class="py-line"><tt class="py-docstring">        @return:</tt> </tt>
+<a name="L32"></a><tt class="py-lineno">32</tt>  <tt class="py-line"><tt class="py-docstring">        """</tt> </tt>
+<a name="L33"></a><tt class="py-lineno">33</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">name</tt> <tt class="py-op">=</tt> <tt class="py-name">name</tt> </tt>
+<a name="L34"></a><tt class="py-lineno">34</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">type_category</tt> <tt class="py-op">=</tt> <tt class="py-name">type_category</tt> </tt>
+<a name="L35"></a><tt class="py-lineno">35</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">basic_type_category</tt> <tt class="py-op">=</tt> <tt class="py-name">basic_type_category</tt> </tt>
+</div><a name="L36"></a><tt class="py-lineno">36</tt>  <tt class="py-line"> </tt>
+<a name="Type.is_composite"></a><div id="Type.is_composite-def"><a name="L37"></a><tt class="py-lineno">37</tt> <a class="py-toggle" href="#" id="Type.is_composite-toggle" onclick="return toggle('Type.is_composite');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="variable.Type-class.html#is_composite">is_composite</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="Type.is_composite-collapsed" style="display:none;" pad="++" indent="++++++++"></div><div id="Type.is_composite-expanded"><a name="L38"></a><tt class="py-lineno">38</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">type_category</tt> <tt class="py-keyword">in</tt> <tt class="py-op">(</tt><tt class="py-name">TypeCategory</tt><tt class="py-op">.</tt><tt class="py-name">Struct</tt><tt class="py-op">,</tt> <tt class="py-name">TypeCategory</tt><tt class="py-op">.</tt><tt class="py-name">Class</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L39"></a><tt class="py-lineno">39</tt>  <tt class="py-line"> </tt>
+<a name="Type.is_valid"></a><div id="Type.is_valid-def"><a name="L40"></a><tt class="py-lineno">40</tt> <a class="py-toggle" href="#" id="Type.is_valid-toggle" onclick="return toggle('Type.is_valid');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="variable.Type-class.html#is_valid">is_valid</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="Type.is_valid-collapsed" style="display:none;" pad="++" indent="++++++++"></div><div id="Type.is_valid-expanded"><a name="L41"></a><tt class="py-lineno">41</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">type_category</tt> <tt class="py-op">!=</tt> <tt class="py-name">TypeCategory</tt><tt class="py-op">.</tt><tt class="py-name">Invalid</tt> </tt>
+</div><a name="L42"></a><tt class="py-lineno">42</tt>  <tt class="py-line"> </tt>
+<a name="Type.__repr__"></a><div id="Type.__repr__-def"><a name="L43"></a><tt class="py-lineno">43</tt> <a class="py-toggle" href="#" id="Type.__repr__-toggle" onclick="return toggle('Type.__repr__');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="variable.Type-class.html#__repr__">__repr__</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="Type.__repr__-collapsed" style="display:none;" pad="++" indent="++++++++"></div><div id="Type.__repr__-expanded"><a name="L44"></a><tt class="py-lineno">44</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-string">"{{{0}: {1}}}"</tt><tt class="py-op">.</tt><tt class="py-name">format</tt><tt class="py-op">(</tt><tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">type_category</tt><tt class="py-op">,</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">name</tt><tt class="py-op">)</tt> </tt>
+</div></div><a name="L45"></a><tt class="py-lineno">45</tt>  <tt class="py-line"> </tt>
+<a name="Variable"></a><div id="Variable-def"><a name="L46"></a><tt class="py-lineno">46</tt>  <tt class="py-line"> </tt>
+<a name="L47"></a><tt class="py-lineno">47</tt> <a class="py-toggle" href="#" id="Variable-toggle" onclick="return toggle('Variable');">-</a><tt class="py-line"><tt class="py-keyword">class</tt> <a class="py-def-name" href="variable.Variable-class.html">Variable</a><tt class="py-op">(</tt><tt class="py-base-class">object</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="Variable-collapsed" style="display:none;" pad="++" indent="++++"></div><div id="Variable-expanded"><a name="L48"></a><tt class="py-lineno">48</tt>  <tt class="py-line">    <tt class="py-decorator">@</tt><tt class="py-decorator">staticmethod</tt> </tt>
+<a name="Variable.from_lldb"></a><div id="Variable.from_lldb-def"><a name="L49"></a><tt class="py-lineno">49</tt> <a class="py-toggle" href="#" id="Variable.from_lldb-toggle" onclick="return toggle('Variable.from_lldb');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="variable.Variable-class.html#from_lldb">from_lldb</a><tt class="py-op">(</tt><tt class="py-param">lldb_var</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="Variable.from_lldb-collapsed" style="display:none;" pad="++" indent="++++++++"></div><div id="Variable.from_lldb-expanded"><a name="L50"></a><tt class="py-lineno">50</tt>  <tt class="py-line">        <tt class="py-docstring">"""</tt> </tt>
+<a name="L51"></a><tt class="py-lineno">51</tt>  <tt class="py-line"><tt class="py-docstring">        @type lldb_var: lldb.SBValue</tt> </tt>
+<a name="L52"></a><tt class="py-lineno">52</tt>  <tt class="py-line"><tt class="py-docstring">        @rtype: Variable</tt> </tt>
+<a name="L53"></a><tt class="py-lineno">53</tt>  <tt class="py-line"><tt class="py-docstring">        """</tt> </tt>
+<a name="L54"></a><tt class="py-lineno">54</tt>  <tt class="py-line">        <tt class="py-name">address</tt> <tt class="py-op">=</tt> <tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">lldb_var</tt><tt class="py-op">.</tt><tt class="py-name">addr</tt><tt class="py-op">)</tt> </tt>
+<a name="L55"></a><tt class="py-lineno">55</tt>  <tt class="py-line">        <tt class="py-name">name</tt> <tt class="py-op">=</tt> <tt class="py-name">lldb_var</tt><tt class="py-op">.</tt><tt class="py-name">name</tt> </tt>
+<a name="L56"></a><tt class="py-lineno">56</tt>  <tt class="py-line">        <tt class="py-name">value</tt> <tt class="py-op">=</tt> <tt class="py-name">lldb_var</tt><tt class="py-op">.</tt><tt class="py-name">value</tt> </tt>
+<a name="L57"></a><tt class="py-lineno">57</tt>  <tt class="py-line"> </tt>
+<a name="L58"></a><tt class="py-lineno">58</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">value</tt> <tt class="py-keyword">is</tt> <tt class="py-name">None</tt><tt class="py-op">:</tt> </tt>
+<a name="L59"></a><tt class="py-lineno">59</tt>  <tt class="py-line">            <tt class="py-name">value</tt> <tt class="py-op">=</tt> <tt class="py-name">lldb_var</tt><tt class="py-op">.</tt><tt class="py-name">summary</tt> </tt>
+<a name="L60"></a><tt class="py-lineno">60</tt>  <tt class="py-line"> </tt>
+<a name="L61"></a><tt class="py-lineno">61</tt>  <tt class="py-line">        <tt class="py-name">type</tt> <tt class="py-op">=</tt> <tt id="link-6" class="py-name"><a title="variable.Type" class="py-name" href="#" onclick="return doclink('link-6', 'Type', 'link-1');">Type</a></tt><tt class="py-op">.</tt><tt id="link-7" class="py-name" targets="Static Method variable.Type.from_lldb()=variable.Type-class.html#from_lldb,Static Method variable.Variable.from_lldb()=variable.Variable-class.html#from_lldb"><a title="variable.Type.from_lldb
+variable.Variable.from_lldb" class="py-name" href="#" onclick="return doclink('link-7', 'from_lldb', 'link-7');">from_lldb</a></tt><tt class="py-op">(</tt><tt class="py-name">lldb_var</tt><tt class="py-op">.</tt><tt class="py-name">type</tt><tt class="py-op">)</tt> </tt>
+<a name="L62"></a><tt class="py-lineno">62</tt>  <tt class="py-line">        <tt class="py-name">path</tt> <tt class="py-op">=</tt> <tt class="py-name">lldb_var</tt><tt class="py-op">.</tt><tt class="py-name">path</tt> </tt>
+<a name="L63"></a><tt class="py-lineno">63</tt>  <tt class="py-line"> </tt>
+<a name="L64"></a><tt class="py-lineno">64</tt>  <tt class="py-line">        <tt class="py-name">var</tt> <tt class="py-op">=</tt> <tt id="link-8" class="py-name" targets="Class variable.Variable=variable.Variable-class.html"><a title="variable.Variable" class="py-name" href="#" onclick="return doclink('link-8', 'Variable', 'link-8');">Variable</a></tt><tt class="py-op">(</tt><tt class="py-name">address</tt><tt class="py-op">,</tt> <tt class="py-name">name</tt><tt class="py-op">,</tt> <tt class="py-name">value</tt><tt class="py-op">,</tt> <tt class="py-name">type</tt><tt class="py-op">,</tt> <tt class="py-name">path</tt><tt class="py-op">)</tt> </tt>
+<a name="L65"></a><tt class="py-lineno">65</tt>  <tt class="py-line"> </tt>
+<a name="L66"></a><tt class="py-lineno">66</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">type</tt><tt class="py-op">.</tt><tt id="link-9" class="py-name" targets="Method variable.Type.is_composite()=variable.Type-class.html#is_composite"><a title="variable.Type.is_composite" class="py-name" href="#" onclick="return doclink('link-9', 'is_composite', 'link-9');">is_composite</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L67"></a><tt class="py-lineno">67</tt>  <tt class="py-line">            <tt class="py-keyword">for</tt> <tt class="py-name">i</tt> <tt class="py-keyword">in</tt> <tt class="py-name">xrange</tt><tt class="py-op">(</tt><tt class="py-name">lldb_var</tt><tt class="py-op">.</tt><tt class="py-name">num_children</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L68"></a><tt class="py-lineno">68</tt>  <tt class="py-line">                <tt class="py-name">var</tt><tt class="py-op">.</tt><tt id="link-10" class="py-name" targets="Method variable.Variable.add_child()=variable.Variable-class.html#add_child"><a title="variable.Variable.add_child" class="py-name" href="#" onclick="return doclink('link-10', 'add_child', 'link-10');">add_child</a></tt><tt class="py-op">(</tt><tt id="link-11" class="py-name"><a title="variable.Variable" class="py-name" href="#" onclick="return doclink('link-11', 'Variable', 'link-8');">Variable</a></tt><tt class="py-op">.</tt><tt id="link-12" class="py-name"><a title="variable.Type.from_lldb
+variable.Variable.from_lldb" class="py-name" href="#" onclick="return doclink('link-12', 'from_lldb', 'link-7');">from_lldb</a></tt><tt class="py-op">(</tt><tt class="py-name">lldb_var</tt><tt class="py-op">.</tt><tt class="py-name">GetChildAtIndex</tt><tt class="py-op">(</tt><tt class="py-name">i</tt><tt class="py-op">)</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L69"></a><tt class="py-lineno">69</tt>  <tt class="py-line"> </tt>
+<a name="L70"></a><tt class="py-lineno">70</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-name">var</tt> </tt>
+</div><a name="L71"></a><tt class="py-lineno">71</tt>  <tt class="py-line"> </tt>
+<a name="Variable.__init__"></a><div id="Variable.__init__-def"><a name="L72"></a><tt class="py-lineno">72</tt> <a class="py-toggle" href="#" id="Variable.__init__-toggle" onclick="return toggle('Variable.__init__');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="variable.Variable-class.html#__init__">__init__</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-param">address</tt><tt class="py-op">=</tt><tt class="py-name">None</tt><tt class="py-op">,</tt> <tt class="py-param">name</tt><tt class="py-op">=</tt><tt class="py-name">None</tt><tt class="py-op">,</tt> <tt class="py-param">value</tt><tt class="py-op">=</tt><tt class="py-name">None</tt><tt class="py-op">,</tt> <tt class="py-param">type</tt><tt class="py-op">=</tt><tt class="py-name">None</tt><tt class="py-op">,</tt> <tt class="py-param">path</tt><tt class="py-op">=</tt><tt class="py-name">None</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="Variable.__init__-collapsed" style="display:none;" pad="++" indent="++++++++"></div><div id="Variable.__init__-expanded"><a name="L73"></a><tt class="py-lineno">73</tt>  <tt class="py-line">        <tt class="py-docstring">"""</tt> </tt>
+<a name="L74"></a><tt class="py-lineno">74</tt>  <tt class="py-line"><tt class="py-docstring">        @type address: str</tt> </tt>
+<a name="L75"></a><tt class="py-lineno">75</tt>  <tt class="py-line"><tt class="py-docstring">        @type name: str</tt> </tt>
+<a name="L76"></a><tt class="py-lineno">76</tt>  <tt class="py-line"><tt class="py-docstring">        @type value: str</tt> </tt>
+<a name="L77"></a><tt class="py-lineno">77</tt>  <tt class="py-line"><tt class="py-docstring">        @type type: Type</tt> </tt>
+<a name="L78"></a><tt class="py-lineno">78</tt>  <tt class="py-line"><tt class="py-docstring">        @type path: str</tt> </tt>
+<a name="L79"></a><tt class="py-lineno">79</tt>  <tt class="py-line"><tt class="py-docstring">        """</tt> </tt>
+<a name="L80"></a><tt class="py-lineno">80</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">address</tt> <tt class="py-op">=</tt> <tt class="py-name">address</tt> </tt>
+<a name="L81"></a><tt class="py-lineno">81</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">name</tt> <tt class="py-op">=</tt> <tt class="py-name">name</tt> </tt>
+<a name="L82"></a><tt class="py-lineno">82</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">value</tt> <tt class="py-op">=</tt> <tt class="py-name">value</tt> </tt>
+<a name="L83"></a><tt class="py-lineno">83</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">type</tt> <tt class="py-op">=</tt> <tt class="py-name">type</tt> </tt>
+<a name="L84"></a><tt class="py-lineno">84</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">path</tt> <tt class="py-op">=</tt> <tt class="py-name">path</tt> </tt>
+<a name="L85"></a><tt class="py-lineno">85</tt>  <tt class="py-line"> </tt>
+<a name="L86"></a><tt class="py-lineno">86</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">children</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-op">]</tt> </tt>
+</div><a name="L87"></a><tt class="py-lineno">87</tt>  <tt class="py-line"> </tt>
+<a name="Variable.add_child"></a><div id="Variable.add_child-def"><a name="L88"></a><tt class="py-lineno">88</tt> <a class="py-toggle" href="#" id="Variable.add_child-toggle" onclick="return toggle('Variable.add_child');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="variable.Variable-class.html#add_child">add_child</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-param">child</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="Variable.add_child-collapsed" style="display:none;" pad="++" indent="++++++++"></div><div id="Variable.add_child-expanded"><a name="L89"></a><tt class="py-lineno">89</tt>  <tt class="py-line">        <tt class="py-docstring">"""</tt> </tt>
+<a name="L90"></a><tt class="py-lineno">90</tt>  <tt class="py-line"><tt class="py-docstring">        @type child: Variable</tt> </tt>
+<a name="L91"></a><tt class="py-lineno">91</tt>  <tt class="py-line"><tt class="py-docstring">        """</tt> </tt>
+<a name="L92"></a><tt class="py-lineno">92</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">children</tt><tt class="py-op">.</tt><tt class="py-name">append</tt><tt class="py-op">(</tt><tt class="py-name">child</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L93"></a><tt class="py-lineno">93</tt>  <tt class="py-line"> </tt>
+<a name="Variable.__repr__"></a><div id="Variable.__repr__-def"><a name="L94"></a><tt class="py-lineno">94</tt> <a class="py-toggle" href="#" id="Variable.__repr__-toggle" onclick="return toggle('Variable.__repr__');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="variable.Variable-class.html#__repr__">__repr__</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="Variable.__repr__-collapsed" style="display:none;" pad="++" indent="++++++++"></div><div id="Variable.__repr__-expanded"><a name="L95"></a><tt class="py-lineno">95</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-string">"({0} {1} = {2})"</tt><tt class="py-op">.</tt><tt class="py-name">format</tt><tt class="py-op">(</tt><tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">type</tt><tt class="py-op">.</tt><tt class="py-name">name</tt><tt class="py-op">,</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">path</tt><tt class="py-op">,</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">value</tt><tt class="py-op">)</tt> </tt>
+</div></div><a name="L96"></a><tt class="py-lineno">96</tt>  <tt class="py-line"> </tt><script type="text/javascript">
+<!--
+expandto(location.href);
+// -->
+</script>
+</pre>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th bgcolor="#70b0f0" class="navbar-select"
+          >&nbsp;&nbsp;&nbsp;Home&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Sat Oct 17 13:14:38 2015
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>
