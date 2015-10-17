@@ -38,6 +38,13 @@ class RectangleBBox(object):
     def copy(self):
         return RectangleBBox((self.x, self.y), (self.width, self.height))
 
+    def is_point_inside(self, point):
+        """
+        @type point: Vector
+        """
+        return (self.position.x <= point.x <= self.position.x + self.width and
+                self.position.y <= point.y <= self.position.y + self.height)
+
 
 class Margin(object):
     @staticmethod
