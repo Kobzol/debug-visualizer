@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 
 import abc
 
@@ -149,16 +150,17 @@ class Drawable(object):
         self.position = Vector(0, 0)
         self.children = []
         self.click_handler = ClickHandler(self)
+        self.click_handler.on_mouse_click.subscribe(lambda point: print(point))
 
     def set_position(self, position):
         self.position = Vector.vectorize(position)
 
     @abc.abstractmethod
-    def draw(self, canvas):
+    def draw(self):
         pass
 
     @abc.abstractmethod
-    def get_bbox(self, canvas):
+    def get_bbox(self):
         pass
 
 
@@ -173,25 +175,25 @@ class BoxedLabelDrawable(Drawable):
         self.label = label
         self.margin = margin if margin else Margin()
 
-    def get_bbox(self, canvas):
-        label_size = DrawingUtils.get_text_size(canvas, self.label)
+    def get_bbox(self):
+        label_size = DrawingUtils.get_text_size(self.canvas, self.label)
 
         width = self.margin.left + label_size.width + self.margin.right
         height = self.margin.top + label_size.height + self.margin.bottom
 
         return RectangleBBox(self.position, Size(width, height))
 
-    def draw(self, canvas):
-        bbox = self.get_bbox(canvas)
+    def draw(self):
+        bbox = self.get_bbox()
 
         # box
-        DrawingUtils.draw_rectangle(canvas, self.position, bbox.size, center=False)
+        DrawingUtils.draw_rectangle(self.canvas, self.position, bbox.size, center=False)
 
         text_x = self.position.x + self.margin.left
         text_y = self.position.y + self.margin.top
 
         # value
-        DrawingUtils.draw_text(canvas, self.label, Vector(text_x, text_y), y_center=False)
+        DrawingUtils.draw_text(self.canvas, self.label, Vector(text_x, text_y), y_center=False)
 
 
 class AbsValueDrawable(Drawable):
@@ -214,10 +216,10 @@ class AbsValueDrawable(Drawable):
         else:
             return value
 
-    def draw(self, canvas):
+    def draw(self):
         pass
 
-    def get_bbox(self, canvas):
+    def get_bbox(self):
         return None
 
 
@@ -230,25 +232,25 @@ class StackFrameDrawable(Drawable):
     def add_variable(self, var):
         self.variables.append(var)
 
-    def get_bbox(self, canvas):
+    def get_bbox(self):
         bboxes = []
         height = 0
 
         for index, var in enumerate(self.variables):
-            bbox = var.get_bbox(canvas).copy()
+            bbox = var.get_bbox().copy()
             bbox.y += height
             height += bbox.height
             bboxes.append(bbox)
 
         return RectangleBBox.contain(bboxes)
 
-    def draw(self, canvas):
+    def draw(self):
         height = self.position.y
 
         for index, var in enumerate(self.variables):
             var.position.y = height
-            height += var.get_bbox(canvas).height
-            var.draw(canvas)
+            height += var.get_bbox().height
+            var.draw()
 
 
 class SimpleVarDrawable(AbsValueDrawable):
@@ -256,28 +258,28 @@ class SimpleVarDrawable(AbsValueDrawable):
         """
         @type value: variable.Variable
         """
-        super(SimpleVarDrawable, self).__init__(value, canvas)
+        super(SimpleVarDrawable, self).__init__(canvas, value)
 
         self.name_box = BoxedLabelDrawable(canvas, self.get_name(), Margin.all(5.0))
         self.value_box = BoxedLabelDrawable(canvas, self.get_value(), Margin.all(5.0))
     
-    def get_bbox(self, canvas):
+    def get_bbox(self):
         self.name_box.set_position(self.position)
-        name_bbox = self.name_box.get_bbox(canvas)
+        name_bbox = self.name_box.get_bbox()
 
         self.value_box.set_position(self.position.add(Vector(name_bbox.width, 0)))
-        value_bbox = self.value_box.get_bbox(canvas)
+        value_bbox = self.value_box.get_bbox()
 
         return RectangleBBox.contain((name_bbox, value_bbox))
 
-    def draw(self, canvas):
+    def draw(self):
         self.name_box.set_position(self.position)
-        name_bbox = self.name_box.get_bbox(canvas)
+        name_bbox = self.name_box.get_bbox()
 
         self.value_box.set_position(self.position.add(Vector(name_bbox.width, 0)))
 
-        self.name_box.draw(canvas)
-        self.value_box.draw(canvas)
+        self.name_box.draw()
+        self.value_box.draw()
 
     def get_name(self):
         return "{0} {1}".format(self.value.type.name, self.value.name)
@@ -311,15 +313,15 @@ class StructDrawable(SimpleVarDrawable):
     def get_children_left_offset(self):
         return 10
 
-    def get_bbox(self, canvas):
+    def get_bbox(self):
         self.struct_label.set_position(self.position)
-        label_bbox = self.struct_label.get_bbox(canvas)
+        label_bbox = self.struct_label.get_bbox()
 
         bboxes = [label_bbox]
         height = self.position.y + label_bbox.height
 
         for index, var in enumerate(self.children):
-            bbox = var.get_bbox(canvas).copy()
+            bbox = var.get_bbox().copy()
             bbox.y = height
             bbox.x += self.position.x + self.get_children_left_offset()
             height += bbox.height
@@ -327,16 +329,16 @@ class StructDrawable(SimpleVarDrawable):
 
         return RectangleBBox.contain(bboxes)
 
-    def draw(self, canvas):
+    def draw(self):
         self.struct_label.set_position(self.position)
-        label_bbox = self.struct_label.get_bbox(canvas)
+        label_bbox = self.struct_label.get_bbox()
 
         height = self.position.y + label_bbox.height
 
-        self.struct_label.draw(canvas)
+        self.struct_label.draw()
 
         for index, var in enumerate(self.children):
             var.position.y = height
             var.position.x = self.position.x + self.get_children_left_offset()
-            height += var.get_bbox(canvas).height
-            var.draw(canvas)
+            height += var.get_bbox().height
+            var.draw()
