@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import lldb
 import re
-import subprocess
-from variable import Variable
-from type import Type
+
 
 class LldbHelper(object):
     def parse_var_description(self, data):

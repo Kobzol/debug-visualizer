@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 
-import gdb
-import traceback
 import sys
 
+import gdb
 from gdbc.gdb_helper import GdbHelper
 from gdbc.gdb_thread_manager import GdbThreadManager
 from gdbc.gdb_frame_manager import GdbFrameManager
 from gdbc.gdb_file_manager import GdbFileManager
 from gdbc.gdb_breakpoint_manager import GdbBreakpointManager
-from memory import Memory
+from gdbc.memory import Memory
 from debugger_state import DebuggerState
 
 

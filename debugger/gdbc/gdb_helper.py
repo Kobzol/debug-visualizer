@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
-import gdb
 import re
-import subprocess
-from variable import Variable
+
+import gdb
+from gdbc.variable import Variable
 from type import Type
+
 
 class GdbHelper(object):
     def parse_var_description(self, data):

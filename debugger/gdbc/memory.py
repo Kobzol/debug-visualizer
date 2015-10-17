@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import type
 import re
+
+from gdbc import type
+
 
 class MemoryBlock(object):
     def __init__(self, address, length, type=None):
