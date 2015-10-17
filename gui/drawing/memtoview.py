@@ -13,28 +13,28 @@ class MemToViewTransformer(object):
             TypeCategory.Class: self.create_struct
         }
 
-    def create_struct(self, var):
+    def create_struct(self, canvas, var):
         """
         @type var: variable.Variable
         @rtype: drawable.Drawable
         """
-        container = drawable.StructDrawable(var)
+        container = drawable.StructDrawable(canvas, var)
 
         for child in var.children:
-            var = self.transform_var(child)
+            var = self.transform_var(canvas, child)
 
             if var:
                 container.add_child(var)
 
         return container
 
-    def create_pointer(self, var):
-        return drawable.PointerDrawable(var)
+    def create_pointer(self, canvas, var):
+        return drawable.PointerDrawable(canvas, var)
 
-    def create_basic(self, var):
-        return drawable.SimpleVarDrawable(var)
+    def create_basic(self, canvas, var):
+        return drawable.SimpleVarDrawable(canvas, var)
 
-    def transform_var(self, var):
+    def transform_var(self, canvas, var):
         """
         @type var: variable.Variable
         @rtype drawable.Drawable
@@ -47,15 +47,15 @@ class MemToViewTransformer(object):
         create_fn = self.function_map.get(type.type_category, None)
 
         if create_fn:
-            return create_fn(var)
+            return create_fn(canvas, var)
         else:
             return None
 
-    def transform_frame(self, vars):
-        frame = drawable.StackFrameDrawable()
+    def transform_frame(self, canvas, vars):
+        frame = drawable.StackFrameDrawable(canvas)
 
         for var in vars:
-            transformed = self.transform_var(var)
+            transformed = self.transform_var(canvas, var)
 
             if transformed is not None:
                 frame.add_variable(transformed)

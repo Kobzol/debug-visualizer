@@ -5,6 +5,7 @@ from gi.repository import Gdk
 
 from drawing.drawable import DrawingUtils, Color
 from drawing.memtoview import MemToViewTransformer
+from drawing.vector import Vector
 from events import EventBroadcaster
 from enums import ProcessState
 from variable import Variable
@@ -46,6 +47,8 @@ class Canvas(Gtk.EventBox):
 
         self.add_events(Gdk.EventMask.POINTER_MOTION_MASK)
         self.connect("draw", lambda canvas, cr: self._handle_draw(cr))
+        self.connect("button-press-event", lambda widget, button_event: self._handle_press(button_event, True))
+        self.connect("button-release-event", lambda widget, button_event: self._handle_press(button_event, True))
 
         self.mouse_click = None
 
@@ -53,6 +56,19 @@ class Canvas(Gtk.EventBox):
         self.cr = None
 
         self.drawables = []
+
+    def _handle_press(self, button_event, mouse_down):
+        """
+        @type button_event: Gdk.EventButton
+        @type mouse_down: bool
+        """
+        for drawable in self.drawables:  # TODO: synchronize
+            if mouse_down:
+                drawable.click_handler.handle_mouse_down(Vector(button_event.x, button_event.y))
+            else:
+                drawable.click_handler.handle_mouse_up(Vector(button_event.x, button_event.y))
+
+        self.redraw()
 
     def _handle_draw(self, cr):
         should_draw, rectangle = Gdk.cairo_get_clip_rectangle(cr)
@@ -120,7 +136,7 @@ class MemoryCanvas(Canvas):
             parsed_vars = [Variable.from_lldb(var) for var in frame.vars]
 
             if frame.IsValid():
-                self.set_drawables([self.memtoview.transform_frame(parsed_vars)])
+                self.set_drawables([self.memtoview.transform_frame(self, parsed_vars)])
 
 
 class CanvasToolbarWrapper(Gtk.VBox):

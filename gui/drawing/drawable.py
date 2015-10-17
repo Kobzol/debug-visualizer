@@ -144,7 +144,8 @@ class DrawingUtils(object):
 
 
 class Drawable(object):
-    def __init__(self):
+    def __init__(self, canvas):
+        self.canvas = canvas
         self.position = Vector(0, 0)
         self.children = []
         self.click_handler = ClickHandler(self)
@@ -162,12 +163,12 @@ class Drawable(object):
 
 
 class BoxedLabelDrawable(Drawable):
-    def __init__(self, label, margin=None):
+    def __init__(self, canvas, label, margin=None):
         """
         @type label: str
         @type margin: Margin
         """
-        super(BoxedLabelDrawable, self).__init__()
+        super(BoxedLabelDrawable, self).__init__(canvas)
 
         self.label = label
         self.margin = margin if margin else Margin()
@@ -194,11 +195,11 @@ class BoxedLabelDrawable(Drawable):
 
 
 class AbsValueDrawable(Drawable):
-    def __init__(self, value):
+    def __init__(self, canvas, value):
         """
         @type value: variable.Variable
         """
-        super(AbsValueDrawable, self).__init__()
+        super(AbsValueDrawable, self).__init__(canvas)
 
         self.value = value
 
@@ -221,8 +222,8 @@ class AbsValueDrawable(Drawable):
 
 
 class StackFrameDrawable(Drawable):
-    def __init__(self):
-        super(StackFrameDrawable, self).__init__()
+    def __init__(self, canvas):
+        super(StackFrameDrawable, self).__init__(canvas)
 
         self.variables = []
 
@@ -251,14 +252,14 @@ class StackFrameDrawable(Drawable):
 
 
 class SimpleVarDrawable(AbsValueDrawable):
-    def __init__(self, value):
+    def __init__(self, canvas, value):
         """
         @type value: variable.Variable
         """
-        super(SimpleVarDrawable, self).__init__(value)
+        super(SimpleVarDrawable, self).__init__(value, canvas)
 
-        self.name_box = BoxedLabelDrawable(self.get_name(), Margin.all(5.0))
-        self.value_box = BoxedLabelDrawable(self.get_value(), Margin.all(5.0))
+        self.name_box = BoxedLabelDrawable(canvas, self.get_name(), Margin.all(5.0))
+        self.value_box = BoxedLabelDrawable(canvas, self.get_value(), Margin.all(5.0))
     
     def get_bbox(self, canvas):
         self.name_box.set_position(self.position)
@@ -291,12 +292,12 @@ class VectorDrawable(SimpleVarDrawable):
 
 
 class StructDrawable(SimpleVarDrawable):
-    def __init__(self, val):
+    def __init__(self, canvas, value):
         """
         @type val: variable.Variable
         """
-        super(StructDrawable, self).__init__(val)
-        self.struct_label = BoxedLabelDrawable("{0} {1}".format(val.type.type_category.nice_name(), val.name),
+        super(StructDrawable, self).__init__(canvas, value)
+        self.struct_label = BoxedLabelDrawable(canvas, "{0} {1}".format(value.type.type_category.nice_name(), value.name),
                                                Margin.all(6.0))
         self.children = []
 
