@@ -56,7 +56,8 @@ class MainWindow(Gtk.Window):
         canvas = MemoryCanvas(app.debugger)
         config.gui_memory_canvas_toolbar.connect_signals({
             "zoom-in": lambda *x: canvas.zoom_in(),
-            "zoom-out": lambda *x: canvas.zoom_out()
+            "zoom-out": lambda *x: canvas.zoom_out(),
+            "zoom-reset": lambda *x: canvas.zoom_reset()
         })
         canvas_toolbar = config.gui_memory_canvas_toolbar.get_object("toolbar")
         self.content.attach(CanvasToolbarWrapper(canvas, canvas_toolbar), 1, 0, 1, 2)

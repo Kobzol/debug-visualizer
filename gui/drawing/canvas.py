@@ -125,13 +125,26 @@ class Canvas(Gtk.EventBox):
         self.queue_draw()
 
     def zoom_in(self):
+        """
+        Zooms the canvas in by 10 %.
+        """
         self.zoom += 0.1
         self.zoom = min(self.zoom, self.zoom_limits[1])
         self.redraw()
 
     def zoom_out(self):
+        """
+        Zooms the canvas out by 10 %.
+        """
         self.zoom -= 0.1
         self.zoom = max(self.zoom, self.zoom_limits[0])
+        self.redraw()
+
+    def zoom_reset(self):
+        """
+        Resets the zoom of the canvas to 1.
+        """
+        self.zoom = 1.0
         self.redraw()
 
 

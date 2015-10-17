@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
 
 import abc
 
@@ -150,7 +149,6 @@ class Drawable(object):
         self.position = Vector(0, 0)
         self.children = []
         self.click_handler = ClickHandler(self)
-        self.click_handler.on_mouse_click.subscribe(lambda point: print(point))
 
     def set_position(self, position):
         self.position = Vector.vectorize(position)
