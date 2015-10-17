@@ -56,6 +56,7 @@ class Canvas(Gtk.EventBox):
         self.mouse_position = Vector(0, 0)
 
         self.zoom = 1.0
+        self.zoom_limits = (0.5, 2.0)
         self.cr = None
 
         self.drawables = []
@@ -125,10 +126,12 @@ class Canvas(Gtk.EventBox):
 
     def zoom_in(self):
         self.zoom += 0.1
+        self.zoom = min(self.zoom, self.zoom_limits[1])
         self.redraw()
 
     def zoom_out(self):
         self.zoom -= 0.1
+        self.zoom = max(self.zoom, self.zoom_limits[0])
         self.redraw()
 
 
