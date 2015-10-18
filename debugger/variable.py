@@ -94,6 +94,7 @@ class Variable(object):
         @type child: Variable
         """
         self.children.append(child)
+        child.on_value_changed.redirect(self.on_value_changed)
 
     def change_value(self, value):
         self.value = value
