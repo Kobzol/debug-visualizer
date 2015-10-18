@@ -8,9 +8,9 @@ from window import MainWindow
 
 
 class VisualiserApp(object):
-    def __init__(self, config):
+    def __init__(self):
         self.debugger = LldbDebugger()
-        self.main_window = MainWindow(self, config)
+        self.main_window = MainWindow(self)
 
     def quit(self):
         self.debugger.stop(True)

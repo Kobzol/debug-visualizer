@@ -5,6 +5,7 @@ from gi.repository import Gdk
 from gi.repository import GObject
 
 import os
+from config import Config
 
 from drawing.canvas import MemoryCanvas, CanvasToolbarWrapper
 from enums import ProcessState
@@ -15,7 +16,7 @@ from toolbar_manager import ToolbarManager
 
 
 class MainWindow(Gtk.Window):
-    def __init__(self, app, config):
+    def __init__(self, app):
         Gtk.Window.__init__(self, title="Visualizing debugger")
 
         self.app = app
@@ -29,18 +30,17 @@ class MainWindow(Gtk.Window):
         self.wrapper.set_row_homogeneous(False)
         self.add(self.wrapper)
 
-        self.menu = config.gui_main_window_menu.get_object("menu")
-
         menu_signals = {
             "menu-binary-load": lambda *x: self.binary_load_dialog(),
             "menu-source-open": lambda *x: self.source_open_dialog(),
             "menu-quit": lambda *x: self.quit()
         }
-        config.gui_main_window_menu.connect_signals(menu_signals)
+        Config.GUI_MAIN_WINDOW_MENU.connect_signals(menu_signals)
+        self.menu = Config.GUI_MAIN_WINDOW_MENU.get_object("menu")
 
         self._add_to_row(self.menu, 0)
 
-        self.toolbar_manager = ToolbarManager(config.gui_main_window_toolbar, app.debugger)
+        self.toolbar_manager = ToolbarManager(Config.GUI_MAIN_WINDOW_TOOLBAR, app.debugger)
         self._add_to_row(self.toolbar_manager.toolbar, 1)
 
         self.content = Gtk.Grid.new()
@@ -54,22 +54,22 @@ class MainWindow(Gtk.Window):
         self.add_shortcut(Gdk.KEY_space, self.source_manager.toggle_breakpoint, Gdk.ModifierType.CONTROL_MASK)
 
         canvas = MemoryCanvas(app.debugger)
-        config.gui_memory_canvas_toolbar.connect_signals({
+        Config.GUI_MEMORY_CANVAS_TOOLBAR.connect_signals({
             "zoom-in": lambda *x: canvas.zoom_in(),
             "zoom-out": lambda *x: canvas.zoom_out(),
             "zoom-reset": lambda *x: canvas.zoom_reset()
         })
-        canvas_toolbar = config.gui_memory_canvas_toolbar.get_object("toolbar")
+        canvas_toolbar = Config.GUI_MEMORY_CANVAS_TOOLBAR.get_object("toolbar")
         self.content.attach(CanvasToolbarWrapper(canvas, canvas_toolbar), 1, 0, 1, 2)
 
         self.console = IOConsole(height=150)
         self.console.watch(app.debugger)
 
-        config.gui_io_console.connect_signals({
+        Config.GUI_IO_CONSOLE.connect_signals({
             "filter-changed": lambda button: self.console.filter_toggle_io(button.get_label()),
             "console-clear": lambda button: self.console.clear()
         })
-        self.console_wrapper = config.gui_io_console.get_object("wrapper")
+        self.console_wrapper = Config.GUI_IO_CONSOLE.get_object("wrapper")
         self.console_wrapper.add(self.console)
 
         self.content.attach(self.console_wrapper, 0, 1, 1, 1)

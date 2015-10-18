@@ -12,6 +12,6 @@ from config import Config
 from app import VisualiserApp
  
 if __name__ == '__main__':
-    config = Config()
-    app = VisualiserApp(config)
+    Config.preload()
+    app = VisualiserApp()
     app.start()
