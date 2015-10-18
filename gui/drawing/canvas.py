@@ -63,7 +63,7 @@ class Canvas(Gtk.EventBox):
 
     def _notify_handlers(self):
         for drawable in self.drawables:  # TODO: synchronize
-            drawable.click_handler.handle_mouse_event(self.mouse_button_state, self.mouse_position)
+            drawable.click_handler.handle_mouse_event(self.mouse_button_state, self.mouse_position * (1 / self.zoom))
 
     def _handle_press(self, button_event, mouse_down):
         """
@@ -79,8 +79,6 @@ class Canvas(Gtk.EventBox):
         @type move_event: Gdk.EventMotion
         """
         self.mouse_position = Vector(move_event.x, move_event.y)
-        self.mouse_position *= (1 / self.zoom)
-
         self._notify_handlers()
         self.redraw()
 
