@@ -346,7 +346,7 @@ class VectorDrawable(SimpleVarDrawable):
     pass
 
 
-class StructDrawable(SimpleVarDrawable):
+class StructDrawable(AbsValueDrawable):
     def __init__(self, canvas, value):
         """
         @type val: variable.Variable
