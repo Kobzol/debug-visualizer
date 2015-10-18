@@ -1,0 +1,7 @@
+.value-entry {
+    background-color: #606060;
+    border: 1px solid #FFFFFF;
+}
+.value-entry > GtkLabel {
+    color: #FFFFFF;
+}

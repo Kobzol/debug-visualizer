@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import abc
+
 from gi.repository import Gtk
+from gi.repository import Gdk
 
 from drawing.geometry import Margin, RectangleBBox
 from drawing.size import Size
@@ -145,16 +147,25 @@ class DrawingUtils(object):
         cr.restore()
 
 
-class ValueEntry(Gtk.Box):
+class ValueEntry(Gtk.Frame):
     def __init__(self):
-        Gtk.Box.__init__(self)
+        Gtk.Frame.__init__(self)
 
-        self.set_orientation(Gtk.Orientation.HORIZONTAL)
+        self.set_label("Edit value")
+        self.set_label_align(0.0, 0.0)
+
+        self.box = Gtk.Box()
+        self.box.set_margin_bottom(5)
+        self.box.set_margin_left(2)
+        self.box.set_orientation(Gtk.Orientation.HORIZONTAL)
         self.text_entry = Gtk.Entry()
         self.confirm_button = Gtk.Button(label="Set")
 
-        self.add(self.text_entry)
-        self.add(self.confirm_button)
+        self.get_style_context().add_class("value-entry")
+
+        self.box.pack_start(self.text_entry, False, False, 0)
+        self.box.pack_start(self.confirm_button, False, False, 5)
+        self.add(self.box)
         self.show_all()
 
         self.confirm_button.connect("clicked", lambda btn: self._handle_confirm_click())
