@@ -172,6 +172,12 @@ class ValueEntry(Gtk.Frame):
 
         self.on_value_entered = EventBroadcaster()
 
+    def set_value(self, value):
+        """
+        @type value: str
+        """
+        self.text_entry.set_text(value)
+
     def _handle_confirm_click(self):
         value = self.text_entry.get_text()
         self.text_entry.set_text("")
@@ -320,12 +326,14 @@ class SimpleVarDrawable(AbsValueDrawable):
             self.canvas.fixed_wrapper.put(self.value_entry, point.x, point.y)
             self.canvas.fixed_wrapper.show_all()
             self.value_entry.on_value_entered.subscribe(self._handle_value_change)
+            self.value_entry.set_value(self.get_value())
         else:
             if self.value_entry.props.visible:
                 self.value_entry.hide()
             else:
                 self.value_entry.show()
                 self.canvas.fixed_wrapper.move(self.value_entry, point.x, point.y)
+                self.value_entry.set_value(self.get_value())
 
     def get_bbox(self):
         self.name_box.set_position(self.position)
