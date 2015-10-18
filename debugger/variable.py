@@ -2,6 +2,7 @@
 
 from enums import BasicTypeCategory
 from enums import TypeCategory
+from events import EventBroadcaster
 
 
 class Type(object):
@@ -17,7 +18,7 @@ class Type(object):
         @rtype: Type
         """
 
-        type_name = lldb_type.GetCanonicalType()
+        type_name = lldb_type.GetCanonicalType().name
 
         for original, replacement in Type.type_replacements.iteritems():
             type_name = type_name.replace(original, replacement)
@@ -86,11 +87,17 @@ class Variable(object):
 
         self.children = []
 
+        self.on_value_changed = EventBroadcaster()
+
     def add_child(self, child):
         """
         @type child: Variable
         """
         self.children.append(child)
+
+    def change_value(self, value):
+        self.value = value
+        self.on_value_changed.notify(self)
 
     def __repr__(self):
         return "({0} {1} = {2})".format(self.type.name, self.path, self.value)

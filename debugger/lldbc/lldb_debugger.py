@@ -187,6 +187,14 @@ class LldbDebugger(object):
         self.require_state(DebuggerState.Running)
         self.thread_manager.get_current_thread().StepOut()
 
+    def change_variable_in_frame(self, frame, variable):
+        """
+        @type frame: lldb.SBFrame
+        @type variable: variable.Variable
+        """
+        self.require_state(DebuggerState.Running)
+        frame.EvaluateExpression(variable.path + " = " + variable.value)
+
     def stop(self, kill_process=False):
         if not self.state.is_set(DebuggerState.Running):
             return

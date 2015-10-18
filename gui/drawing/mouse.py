@@ -44,7 +44,7 @@ class ClickHandler(object):
             self.state = ClickedState.Released
 
         for handler in self.propagated_handlers:
-            handler.handle_mouse_up(point)
+            handler._handle_mouse_up(point)
 
     def _handle_mouse_down(self, point):
         """
@@ -55,7 +55,7 @@ class ClickHandler(object):
                 self.state = ClickedState.Pressed
 
         for handler in self.propagated_handlers:
-            handler.handle_mouse_down(point)
+            handler._handle_mouse_down(point)
 
     def propagate_handler(self, handler):
         """

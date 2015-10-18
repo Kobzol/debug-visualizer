@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import abc
+from gi.repository import Gtk
 
 from drawing.geometry import Margin, RectangleBBox
 from drawing.size import Size
 from drawing.vector import Vector
+from events import EventBroadcaster
 from mouse import ClickHandler
 
 
@@ -143,6 +145,30 @@ class DrawingUtils(object):
         cr.restore()
 
 
+class ValueEntry(Gtk.Box):
+    def __init__(self):
+        Gtk.Box.__init__(self)
+
+        self.set_orientation(Gtk.Orientation.HORIZONTAL)
+        self.text_entry = Gtk.Entry()
+        self.confirm_button = Gtk.Button(label="Set")
+
+        self.add(self.text_entry)
+        self.add(self.confirm_button)
+        self.show_all()
+
+        self.confirm_button.connect("clicked", lambda btn: self._handle_confirm_click())
+
+        self.on_value_entered = EventBroadcaster()
+
+    def _handle_confirm_click(self):
+        value = self.text_entry.get_text()
+        self.text_entry.set_text("")
+
+        self.on_value_entered.notify(value)
+        self.hide()
+
+
 class Drawable(object):
     def __init__(self, canvas):
         self.canvas = canvas
@@ -165,7 +191,7 @@ class Drawable(object):
 class BoxedLabelDrawable(Drawable):
     def __init__(self, canvas, label, margin=None):
         """
-        @type label: str
+        @type label: str | callable
         @type margin: Margin
         """
         super(BoxedLabelDrawable, self).__init__(canvas)
@@ -173,8 +199,14 @@ class BoxedLabelDrawable(Drawable):
         self.label = label
         self.margin = margin if margin else Margin()
 
+    def get_label(self):
+        if isinstance(self.label, str):
+            return self.label
+        else:
+            return self.label()
+
     def get_bbox(self):
-        label_size = DrawingUtils.get_text_size(self.canvas, self.label)
+        label_size = DrawingUtils.get_text_size(self.canvas, self.get_label())
 
         width = self.margin.left + label_size.width + self.margin.right
         height = self.margin.top + label_size.height + self.margin.bottom
@@ -191,7 +223,7 @@ class BoxedLabelDrawable(Drawable):
         text_y = self.position.y + self.margin.top
 
         # value
-        DrawingUtils.draw_text(self.canvas, self.label, Vector(text_x, text_y), y_center=False)
+        DrawingUtils.draw_text(self.canvas, self.get_label(), Vector(text_x, text_y), y_center=False)
 
 
 class AbsValueDrawable(Drawable):
@@ -229,6 +261,7 @@ class StackFrameDrawable(Drawable):
 
     def add_variable(self, var):
         self.variables.append(var)
+        self.click_handler.propagate_handler(var.click_handler)
 
     def get_bbox(self):
         bboxes = []
@@ -258,9 +291,31 @@ class SimpleVarDrawable(AbsValueDrawable):
         """
         super(SimpleVarDrawable, self).__init__(canvas, value)
 
-        self.name_box = BoxedLabelDrawable(canvas, self.get_name(), Margin.all(5.0))
-        self.value_box = BoxedLabelDrawable(canvas, self.get_value(), Margin.all(5.0))
-    
+        self.name_box = BoxedLabelDrawable(canvas, self.get_name, Margin.all(5.0))
+        self.value_box = BoxedLabelDrawable(canvas, self.get_value, Margin.all(5.0))
+
+        self.value_entry = None
+        self.click_handler.on_mouse_click.subscribe(self._handle_mouse_click)
+
+    def _handle_value_change(self, value):
+        self.value.change_value(value)
+
+    def _handle_mouse_click(self, point):
+        """
+        @type point: drawing.vector.Vector
+        """
+        if self.value_entry is None:
+            self.value_entry = ValueEntry()
+            self.canvas.fixed_wrapper.put(self.value_entry, point.x, point.y)
+            self.canvas.fixed_wrapper.show_all()
+            self.value_entry.on_value_entered.subscribe(self._handle_value_change)
+        else:
+            if self.value_entry.props.visible:
+                self.value_entry.hide()
+            else:
+                self.value_entry.show()
+                self.canvas.fixed_wrapper.move(self.value_entry, point.x, point.y)
+
     def get_bbox(self):
         self.name_box.set_position(self.position)
         name_bbox = self.name_box.get_bbox()

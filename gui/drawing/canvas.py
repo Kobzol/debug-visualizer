@@ -12,28 +12,6 @@ from enums import ProcessState
 from variable import Variable
 
 
-class ValueEntry(Gtk.Box):
-    def __init__(self):
-        Gtk.Box.__init__(self)
-
-        self.set_orientation(Gtk.Orientation.HORIZONTAL)
-        self.text_entry = Gtk.Entry()
-        self.confirm_button = Gtk.Button(label="Set")
-
-        self.add(self.text_entry)
-        self.add(self.confirm_button)
-
-        self.confirm_button.connect("clicked", lambda btn: self._handle_confirm_click())
-
-        self.on_value_entered = EventBroadcaster()
-
-    def _handle_confirm_click(self):
-        value = self.text_entry.get_text()
-        self.text_entry.set_text("")
-
-        self.on_value_entered.notify(value)
-
-
 class Canvas(Gtk.EventBox):
     def __init__(self):
         super(Canvas, self).__init__()
@@ -154,13 +132,25 @@ class MemoryCanvas(Canvas):
         self.debugger.on_process_state_changed.subscribe(self._handle_process_state_change)
 
         self.memtoview = MemToViewTransformer()
+        self.active_frame = None
+
+    def _handle_var_change(self, variable):
+        self.debugger.change_variable_in_frame(self.active_frame, variable)
+        self.redraw()
 
     def _handle_process_state_change(self, state, event_data):
         if state == ProcessState.Stopped:
             thread = self.debugger.thread_manager.get_current_thread()
             frame = thread.GetSelectedFrame()
+            self.active_frame = frame
 
-            parsed_vars = [Variable.from_lldb(var) for var in frame.vars]
+            for widget in self.fixed_wrapper.get_children():
+                self.fixed_wrapper.remove(widget)
+
+            parsed_vars = [Variable.from_lldb(var) for var in frame.locals]
+
+            for var in parsed_vars:
+                var.on_value_changed.subscribe(self._handle_var_change)
 
             if frame.IsValid():
                 self.set_drawables([self.memtoview.transform_frame(self, parsed_vars)])
