@@ -135,7 +135,7 @@ class MemoryCanvas(Canvas):
         self.active_frame = None
 
     def _handle_var_change(self, variable):
-        self.debugger.change_variable_in_frame(self.active_frame, variable)
+        self.debugger.variable_editor.change_variable_in_frame(self.active_frame, variable)
         self.redraw()
 
     def _handle_process_state_change(self, state, event_data):

@@ -15,6 +15,7 @@ from lldbc.lldb_memory_manager import LldbMemoryManager
 from lldbc.lldb_thread_manager import LldbThreadManager
 from enums import ProcessState, StopReason
 from flags import Flags
+from lldbc.lldb_variable_editor import LldbVariableEditor
 
 
 class ProcessExitedEventData(object):
@@ -42,6 +43,7 @@ class LldbDebugger(object):
         self.file_manager = LldbFileManager(self)
         self.thread_manager = LldbThreadManager(self)
         self.memory_manager = LldbMemoryManager(self)
+        self.variable_editor = LldbVariableEditor(self)
         self.io_manager = LldbIOManager()
 
         self.target = None
@@ -186,14 +188,6 @@ class LldbDebugger(object):
     def exec_step_out(self):
         self.require_state(DebuggerState.Running)
         self.thread_manager.get_current_thread().StepOut()
-
-    def change_variable_in_frame(self, frame, variable):
-        """
-        @type frame: lldb.SBFrame
-        @type variable: variable.Variable
-        """
-        self.require_state(DebuggerState.Running)
-        frame.EvaluateExpression(variable.path + " = " + variable.value)
 
     def stop(self, kill_process=False):
         if not self.state.is_set(DebuggerState.Running):
