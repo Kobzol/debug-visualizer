@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
 
 ulimit -c unlimited
-python gui/initialize.py
+cd gui
+python initialize.py
