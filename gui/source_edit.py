@@ -238,7 +238,7 @@ class SourceManager(Gtk.Notebook):
 
         label = self._create_label(file_path, editor)
 
-        index = self.append_page(editor, label)
+        index = self.append_page_menu(editor, label, Gtk.Label(label=file_path))
 
         if index != -1:
             self.select_tab(index)
