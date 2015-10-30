@@ -12,11 +12,15 @@ from enums import ProcessState
 from source_edit import SourceManager
 from dialog import FileOpenDialog, MessageBox
 from console import IOConsole
+from tool_manager import ToolManager
 from toolbar_manager import ToolbarManager
 
 
 class MainWindow(Gtk.Window):
     def __init__(self, app):
+        """
+        @type app: app.VisualiserApp
+        """
         Gtk.Window.__init__(self, title="Visualizing debugger")
 
         self.app = app
@@ -26,56 +30,7 @@ class MainWindow(Gtk.Window):
 
         self.set_default_size(800, 600)
 
-        self.wrapper = Gtk.Grid.new()
-        self.wrapper.set_row_homogeneous(False)
-        self.add(self.wrapper)
-
-        menu_signals = {
-            "menu-binary-load": lambda *x: self.binary_load_dialog(),
-            "menu-source-open": lambda *x: self.source_open_dialog(),
-            "menu-quit": lambda *x: self.quit()
-        }
-        Config.GUI_MAIN_WINDOW_MENU.connect_signals(menu_signals)
-        self.menu = Config.GUI_MAIN_WINDOW_MENU.get_object("menu")
-
-        self._add_to_row(self.menu, 0)
-
-        self.toolbar_manager = ToolbarManager(Config.GUI_MAIN_WINDOW_TOOLBAR, app.debugger)
-        self._add_to_row(self.toolbar_manager.toolbar, 1)
-
-        self.content = Gtk.Grid.new()
-        self._add_to_row(self.content, 2)
-
-        self.source_manager = SourceManager(app.debugger)
-        scrolled_window = Gtk.ScrolledWindow()
-        scrolled_window.set_size_request(-1, 500)
-        scrolled_window.add(self.source_manager)
-        self.content.attach(scrolled_window, 0, 0, 1, 1)
-        self.add_shortcut(Gdk.KEY_space, self.source_manager.toggle_breakpoint, Gdk.ModifierType.CONTROL_MASK)
-
-        canvas = MemoryCanvas(app.debugger)
-        Config.GUI_MEMORY_CANVAS_TOOLBAR.connect_signals({
-            "zoom-in": lambda *x: canvas.zoom_in(),
-            "zoom-out": lambda *x: canvas.zoom_out(),
-            "zoom-reset": lambda *x: canvas.zoom_reset()
-        })
-        canvas_toolbar = Config.GUI_MEMORY_CANVAS_TOOLBAR.get_object("toolbar")
-        self.content.attach(CanvasToolbarWrapper(canvas, canvas_toolbar), 1, 0, 1, 2)
-
-        self.console = IOConsole(height=150)
-        self.console.watch(app.debugger)
-
-        Config.GUI_IO_CONSOLE.connect_signals({
-            "filter-changed": lambda button: self.console.filter_toggle_io(button.get_label()),
-            "console-clear": lambda button: self.console.clear()
-        })
-        self.console_wrapper = Config.GUI_IO_CONSOLE.get_object("wrapper")
-        self.console_wrapper.add(self.console)
-
-        self.content.attach(self.console_wrapper, 0, 1, 1, 1)
-
-        self.status_bar = Gtk.Statusbar.new()
-        self._add_to_row(self.status_bar, 3)
+        self._init_components(app)
 
         app.debugger.on_process_state_changed.subscribe(self._handle_process_state_change)
 
@@ -86,6 +41,71 @@ class MainWindow(Gtk.Window):
 
             if main_file:
                 self.source_manager.open_file(main_file)
+
+    def _init_components(self, app):
+        """
+        @type app: app.VisualiserApp
+        """
+        # wrapper
+        self.wrapper = Gtk.Grid.new()
+        self.wrapper.set_row_homogeneous(False)
+        self.add(self.wrapper)
+
+        # menu
+        menu_signals = {
+            "menu-binary-load": lambda *x: self.binary_load_dialog(),
+            "menu-source-open": lambda *x: self.source_open_dialog(),
+            "menu-quit": lambda *x: self.quit()
+        }
+        Config.GUI_MAIN_WINDOW_MENU.connect_signals(menu_signals)
+        self.menu = Config.GUI_MAIN_WINDOW_MENU.get_object("menu")
+        self._add_to_row(self.menu, 0)
+
+        # toolbar
+        self.toolbar_manager = ToolbarManager(Config.GUI_MAIN_WINDOW_TOOLBAR, app.debugger)
+        self._add_to_row(self.toolbar_manager.toolbar, 1)
+
+        # content
+        self.content = Gtk.Paned.new(Gtk.Orientation.HORIZONTAL)
+        self._add_to_row(self.content, 2)
+
+        self.source_manager = SourceManager(app.debugger)
+        scrolled_window = Gtk.ScrolledWindow()
+        scrolled_window.set_size_request(-1, 500)
+        scrolled_window.add(self.source_manager)
+        self.content.add1(scrolled_window)
+        self.add_shortcut(Gdk.KEY_space, self.source_manager.toggle_breakpoint, Gdk.ModifierType.CONTROL_MASK)
+
+        canvas = MemoryCanvas(app.debugger)
+        Config.GUI_MEMORY_CANVAS_TOOLBAR.connect_signals({
+            "zoom-in": lambda *x: canvas.zoom_in(),
+            "zoom-out": lambda *x: canvas.zoom_out(),
+            "zoom-reset": lambda *x: canvas.zoom_reset()
+        })
+        canvas_toolbar = Config.GUI_MEMORY_CANVAS_TOOLBAR.get_object("toolbar")
+        self.content.add2(CanvasToolbarWrapper(canvas, canvas_toolbar))
+
+        self.content.set_position(400)
+
+        # tools
+        self.console = IOConsole(height=150)
+        self.console.watch(app.debugger)
+
+        Config.GUI_IO_CONSOLE.connect_signals({
+            "filter-changed": lambda button: self.console.filter_toggle_io(button.get_label()),
+            "console-clear": lambda button: self.console.clear()
+        })
+        self.console_wrapper = Config.GUI_IO_CONSOLE.get_object("wrapper")
+        self.console_wrapper.add(self.console)
+
+        self.tool_manager = ToolManager()
+        self.tool_manager.add_tool("Console", self.console_wrapper)
+
+        self._add_to_row(self.tool_manager, 3)
+
+        # status bar
+        self.status_bar = Gtk.Statusbar.new()
+        self._add_to_row(self.status_bar, 4)
 
     def _add_to_row(self, widget, row_index):
         self.wrapper.attach(widget, 0, row_index, 1, 1)
