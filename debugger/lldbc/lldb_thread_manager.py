@@ -3,6 +3,9 @@
 
 class LldbThreadManager(object):
     def __init__(self, debugger):
+        """
+        @type debugger: lldbc.lldb_debugger.LldbDebugger
+        """
         self.debugger = debugger
     
     def get_current_thread(self):
@@ -16,3 +19,11 @@ class LldbThreadManager(object):
 
     def get_frames(self):
         return self.get_current_thread().frames
+
+    def change_frame(self, frameIndex):
+        """
+        @type frameIndex: int
+        """
+        frame = self.get_frames()[frameIndex]
+        self.get_current_thread().SetSelectedFrame(frameIndex)
+        self.debugger.on_frame_changed.notify(frame)

@@ -57,6 +57,7 @@ class LldbDebugger(object):
         self.on_debugger_state_changed = EventBroadcaster()
         self.state.on_value_changed.redirect(self.on_debugger_state_changed)
         self.on_process_state_changed = EventBroadcaster()
+        self.on_frame_changed = EventBroadcaster()
 
     def _check_events(self):
         event = lldb.SBEvent()

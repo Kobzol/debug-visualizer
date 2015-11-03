@@ -43,7 +43,7 @@ class StackFrameSelector(Gtk.ListBox):
         if row is None:
             return
 
-        print(str(row.frame))
+        self.debugger.thread_manager.change_frame(row.get_index())
 
     def clear_frames(self):
         for widget in self.get_children():

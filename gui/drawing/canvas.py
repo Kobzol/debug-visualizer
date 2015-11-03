@@ -126,10 +126,14 @@ class Canvas(Gtk.EventBox):
 
 class MemoryCanvas(Canvas):
     def __init__(self, debugger):
+        """
+        @type debugger: lldbc.lldb_debugger.LldbDebugger
+        """
         super(MemoryCanvas, self).__init__()
 
         self.debugger = debugger
         self.debugger.on_process_state_changed.subscribe(self._handle_process_state_change)
+        self.debugger.on_frame_changed.subscribe(self._handle_frame_change)
 
         self.memtoview = MemToViewTransformer()
         self.active_frame = None
@@ -138,23 +142,28 @@ class MemoryCanvas(Canvas):
         self.debugger.variable_editor.change_variable_in_frame(self.active_frame, variable)
         self.redraw()
 
+    def _handle_frame_change(self, frame):
+        self._set_frame(frame)
+
     def _handle_process_state_change(self, state, event_data):
         if state == ProcessState.Stopped:
             thread = self.debugger.thread_manager.get_current_thread()
             frame = thread.GetSelectedFrame()
-            self.active_frame = frame
+            self._set_frame(frame)
 
-            for widget in self.fixed_wrapper.get_children():
-                self.fixed_wrapper.remove(widget)
+    def _set_frame(self, frame):
+        self.active_frame = frame
 
-            parsed_vars = [Variable.from_lldb(var) for var in frame.locals]
+        for widget in self.fixed_wrapper.get_children():
+            self.fixed_wrapper.remove(widget)
 
-            for var in parsed_vars:
-                var.on_value_changed.subscribe(self._handle_var_change)
+        parsed_vars = [Variable.from_lldb(var) for var in frame.locals]
 
-            if frame.IsValid():
-                self.set_drawables([self.memtoview.transform_frame(self, parsed_vars)])
+        for var in parsed_vars:
+            var.on_value_changed.subscribe(self._handle_var_change)
 
+        if frame.IsValid():
+            self.set_drawables([self.memtoview.transform_frame(self, parsed_vars)])
 
 class CanvasToolbarWrapper(Gtk.VBox):
     def __init__(self, canvas, toolbar):
