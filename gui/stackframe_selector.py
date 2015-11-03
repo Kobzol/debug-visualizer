@@ -53,7 +53,7 @@ class StackFrameSelector(Gtk.ListBox):
         row = StackFrameListRow(frame)
 
         frame_desc = str(frame)
-        frame_desc_trunc = frame_desc[:50] + "..." if len(frame_desc) > 53 else frame_desc
+        frame_desc_trunc = (frame_desc[:50] + "...") if len(frame_desc) > 53 else frame_desc
 
         label = Gtk.Label(frame_desc_trunc)
         label.set_tooltip_text(frame_desc)
