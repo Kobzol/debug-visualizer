@@ -17,6 +17,9 @@ class LldbThreadManager(object):
     def set_thread_by_index(self, thread_index):
         self.debugger.process.SetSelectedThreadByIndexId(thread_index)
 
+    def get_current_frame(self):
+        return self.get_frames()[0]
+
     def get_frames(self):
         return self.get_current_thread().frames
 

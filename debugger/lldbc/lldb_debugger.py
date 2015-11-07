@@ -81,10 +81,10 @@ class LldbDebugger(object):
             return
         elif state == ProcessState.Stopped:
             thread = self.thread_manager.get_current_thread()
-            stop_reason = StopReason(thread.GetStopReason())
+            stop_reason = StopReason(thread.stop_reason)
             breakpoints = []
 
-            """if stop_reason == StopReason.Breakpoint:
+            if stop_reason == StopReason.Breakpoint:
                 for i in xrange(0, thread.GetStopReasonDataCount(), 2):
                     bp_id = thread.GetStopReasonDataAtIndex(i)
                     bp_loc_id = thread.GetStopReasonDataAtIndex(i + 1)
@@ -96,9 +96,10 @@ class LldbDebugger(object):
                 is_memory_bp = self.memory_manager.is_memory_bp(bp[0])
 
                 if is_memory_bp:
-                    self.memory_manager.handle_memory_bp(bp[0])
+                    self.memory_manager.handle_memory_bp(bp[0]) # TODO: catch exceptions and propagate them
                     self.exec_continue()
-                    return"""
+
+                    return
 
             self.on_process_state_changed.notify(state,
                  ProcessStoppedEventData(stop_reason, thread.GetStopDescription(100), breakpoints)
@@ -124,7 +125,7 @@ class LldbDebugger(object):
         if self.target is not None:
             self.state.set(DebuggerState.BinaryLoaded)
 
-            #self.memory_manager.create_memory_bps()
+            self.memory_manager.create_memory_bps()
 
             return True
         else:
