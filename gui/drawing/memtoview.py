@@ -9,6 +9,7 @@ class MemToViewTransformer(object):
         self.function_map = {
             TypeCategory.Builtin: self.create_basic,
             TypeCategory.Pointer: self.create_pointer,
+            TypeCategory.Reference: self.create_pointer,
             TypeCategory.Struct: self.create_struct,
             TypeCategory.Class: self.create_struct,
             TypeCategory.Array: self.create_vector,

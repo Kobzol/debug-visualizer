@@ -95,7 +95,14 @@ class DrawingUtils(object):
         cr.restore()
 
     @staticmethod
-    def draw_line(canvas, point_from, point_to, color=Color(), width=1):
+    def draw_line(canvas, point_from, point_to, color=Color(), width=1.0):
+        """
+        @type canvas: drawing.canvas.Canvas
+        @type point_from: drawing.vector.Vector
+        @type point_to: drawing.vector.Vector
+        @type color: Color
+        @type width: float
+        """
         cr = canvas.cr
         cr.save()
 
@@ -113,12 +120,19 @@ class DrawingUtils(object):
 
     @staticmethod
     def draw_arrow(canvas, point_from, point_to, color=Color(), width=1):
+        """
+        @type canvas: drawing.canvas.Canvas
+        @type point_from: vector.Vector
+        @type point_to: vector.Vector
+        @type color: Color
+        @type width: float
+        """
         point_from = Vector.vectorize(point_from)
         point_to = Vector.vectorize(point_to)
 
         DrawingUtils.draw_line(canvas, point_from, point_to, color, width)
 
-        vec_arrow = Vector.from_points(point_from, point_to)
+        vec_arrow = point_to.sub(point_from)
 
         wing = vec_arrow.inverse().normalized().scaled(10)
         wing_right = wing.copy().rotate(45)
@@ -126,6 +140,29 @@ class DrawingUtils(object):
 
         DrawingUtils.draw_line(canvas, point_to, wing_right.add(point_to).to_point(), color, width)
         DrawingUtils.draw_line(canvas, point_to, wing_left.add(point_to).to_point(), color, width)
+
+    @staticmethod
+    def draw_arrow_path(canvas, path, color=Color(), width=1):
+        """
+        @type canvas: drawing.canvas.Canvas
+        @type path: list of (drawing.vector.Vector)
+        @type color: Color
+        @type width: float
+        """
+        if len(path) < 2:
+            return
+
+        point_from = path[0]
+
+        for index, point in enumerate(path):
+            point_to = point
+
+            if index == len(path) - 1:  # draw arrow
+                DrawingUtils.draw_arrow(canvas, point_from, point_to, color, width)
+            else:  # draw connecting line
+                DrawingUtils.draw_line(canvas, point_from, point_to, color, width)
+
+            point_from = point_to
 
     @staticmethod
     def draw_rectangle(canvas, position, size, color=Color(), width=1, center=False):

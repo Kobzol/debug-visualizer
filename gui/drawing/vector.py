@@ -29,6 +29,11 @@ class Vector(object):
 
         return Vector(vector.x + self.x, vector.y + self.y)
 
+    def sub(self, vector):
+        vector = Vector.vectorize(vector)
+
+        return Vector(self.x - vector.x, self.y - vector.y)
+
     def dot(self, vector):
         vector = Vector.vectorize(vector)
 
