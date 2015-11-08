@@ -63,6 +63,9 @@ class LldbMemoryManager(object):
         thread = self.debugger.thread_manager.get_current_thread()
         frame = self.debugger.thread_manager.get_current_frame()
 
+        if len(frame.args) < 1 or frame.args[0] is None:
+            return
+
         bytes = frame.args[0].value
 
         self.debugger.exec_step_out()

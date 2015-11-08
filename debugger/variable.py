@@ -6,7 +6,7 @@ from events import EventBroadcaster
 
 
 class Type(object):
-    type_replacements = {
+    typename_replacements = {
         ":__1": "",
         "std::basic_string<char, std::char_traits<char>, std::allocator<char> >": "std::string"
     }
@@ -20,10 +20,15 @@ class Type(object):
 
         type_name = lldb_type.GetCanonicalType().name
 
-        for original, replacement in Type.type_replacements.iteritems():
+        for original, replacement in Type.typename_replacements.iteritems():
             type_name = type_name.replace(original, replacement)
 
-        return Type(type_name, TypeCategory(lldb_type.type), BasicTypeCategory(lldb_type.GetBasicType()))
+        type_category = TypeCategory(lldb_type.type)
+
+        if type_name.startswith("std::vector"):
+            type_category = TypeCategory.Vector
+
+        return Type(type_name, type_category, BasicTypeCategory(lldb_type.GetBasicType()))
 
     def __init__(self, name, type_category, basic_type_category):
         """
@@ -37,7 +42,7 @@ class Type(object):
         self.basic_type_category = basic_type_category
 
     def is_composite(self):
-        return self.type_category in (TypeCategory.Struct, TypeCategory.Class)
+        return self.type_category in (TypeCategory.Struct, TypeCategory.Class, TypeCategory.Vector, TypeCategory.Array)
 
     def is_valid(self):
         return self.type_category != TypeCategory.Invalid

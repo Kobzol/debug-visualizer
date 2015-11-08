@@ -377,18 +377,33 @@ class VectorDrawable(AbstractValueDrawable):
     def __init__(self, canvas, value):
         """
         @type canvas: drawing.canvas.Canvas
-        @param value: variable.Variable
+        @type value: variable.Variable
         """
         super(VectorDrawable, self).__init__(canvas, value)
 
+        for member in value.children:
+            drawable = SimpleVarDrawable(canvas, member)
+            self.children.append(drawable)
+            self.click_handler.propagate_handler(drawable.click_handler)
+
     def place_children(self):
-        pass
+        width = self.position.x
+
+        for member in self.children:
+            member.position.y = self.position.y
+            member.position.x = width
+            width += member.get_bbox().width
 
     def get_bbox(self):
-        pass
+        self.place_children()
+
+        return RectangleBBox.contain([member.get_bbox() for member in self.children])
 
     def draw(self):
-        pass
+        self.place_children()
+
+        for member in self.children:
+            member.draw()
 
 
 class StructDrawable(AbstractValueDrawable):

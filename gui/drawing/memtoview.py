@@ -10,7 +10,9 @@ class MemToViewTransformer(object):
             TypeCategory.Builtin: self.create_basic,
             TypeCategory.Pointer: self.create_pointer,
             TypeCategory.Struct: self.create_struct,
-            TypeCategory.Class: self.create_struct
+            TypeCategory.Class: self.create_struct,
+            TypeCategory.Array: self.create_vector,
+            TypeCategory.Vector: self.create_vector
         }
 
     def create_struct(self, canvas, var):
@@ -33,6 +35,9 @@ class MemToViewTransformer(object):
 
     def create_basic(self, canvas, var):
         return drawable.SimpleVarDrawable(canvas, var)
+
+    def create_vector(self, canvas, var):
+        return drawable.VectorDrawable(canvas, var)
 
     def transform_var(self, canvas, var):
         """
