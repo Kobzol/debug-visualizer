@@ -71,10 +71,8 @@ class MainWindow(Gtk.Window):
         self._add_to_row(self.content, 2)
 
         self.source_manager = SourceManager(app.debugger)
-        scrolled_window = Gtk.ScrolledWindow()
-        scrolled_window.set_size_request(-1, 500)
-        scrolled_window.add(self.source_manager)
-        self.content.add1(scrolled_window)
+        self.source_manager.set_size_request(-1, 500)
+        self.content.add1(self.source_manager)
         self.add_shortcut(Gdk.KEY_space, self.source_manager.toggle_breakpoint, Gdk.ModifierType.CONTROL_MASK)
 
         canvas = MemoryCanvas(app.debugger)

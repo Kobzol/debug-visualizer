@@ -17,6 +17,19 @@ class BreakpointChangeType(Enum):
     Delete = 2
 
 
+class SourceWindow(Gtk.ScrolledWindow):
+    def __init__(self, editor):
+        """
+        @type editor: SourceEditor
+        """
+        Gtk.ScrolledWindow.__init__(self)
+
+        self.editor = editor
+        self.add(editor)
+
+        self.show_all()
+
+
 class SourceEditor(GtkSource.View):
     @staticmethod
     def load_file(path):
@@ -175,40 +188,6 @@ class SourceManager(Gtk.Notebook):
         elif state == ProcessState.Exited:
             GObject.idle_add(lambda *x: self.unset_exec_line())
 
-    def get_tabs(self):
-        return [self.get_nth_page(i) for i in xrange(0, self.get_n_pages())]
-
-    def open_file(self, file_path):
-        for index, tab in enumerate(self.get_tabs()):
-            if tab.file == file_path:
-                self.select_tab(index)
-                return tab
-
-        return self._add_tab(file_path)
-
-    def set_exec_line(self, file_path, line_number):
-        tab = self.open_file(file_path)
-        tab.set_exec_line(line_number - 1)
-
-    def unset_exec_line(self):
-        for tab in self.get_tabs():
-            tab.unset_exec_line()
-
-    def get_selected_editor(self):
-        selected = self.get_current_page()
-
-        if selected != -1:
-            return self.get_nth_page(selected)
-        else:
-            return None
-
-    def toggle_breakpoint(self):
-        editor = self.get_selected_editor()
-        editor.breakpoint_toggle(editor.get_current_line())
-
-    def select_tab(self, index):
-        self.set_current_page(index)
-
     def _create_label(self, path, widget):
         content = Gtk.Box(Gtk.Orientation.HORIZONTAL)
 
@@ -236,14 +215,50 @@ class SourceManager(Gtk.Notebook):
         editor.set_vexpand(True)
         editor.show_all()
 
-        label = self._create_label(file_path, editor)
+        window = SourceWindow(editor)
 
-        index = self.append_page_menu(editor, label, Gtk.Label(label=file_path))
+        label = self._create_label(file_path, window)
+
+        index = self.append_page_menu(window, label, Gtk.Label(label=file_path))
 
         if index != -1:
             self.select_tab(index)
-            self.set_tab_reorderable(editor, True)
+            self.set_tab_reorderable(window, True)
             editor.on_breakpoint_changed.subscribe(lambda location, type: self.on_breakpoint_changed.notify(location, type))
             return editor
         else:
             return None
+
+    def get_tabs(self):
+        return [self.get_nth_page(i) for i in xrange(0, self.get_n_pages())]
+
+    def open_file(self, file_path):
+        for index, tab in enumerate(self.get_tabs()):
+            if tab.editor.file == file_path:
+                self.select_tab(index)
+                return tab.editor
+
+        return self._add_tab(file_path)
+
+    def set_exec_line(self, file_path, line_number):
+        tab = self.open_file(file_path)
+        tab.set_exec_line(line_number - 1)
+
+    def unset_exec_line(self):
+        for tab in self.get_tabs():
+            tab.editor.unset_exec_line()
+
+    def get_selected_editor(self):
+        selected = self.get_current_page()
+
+        if selected != -1:
+            return self.get_nth_page(selected).editor
+        else:
+            return None
+
+    def toggle_breakpoint(self):
+        editor = self.get_selected_editor()
+        editor.breakpoint_toggle(editor.get_current_line())
+
+    def select_tab(self, index):
+        self.set_current_page(index)
