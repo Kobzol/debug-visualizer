@@ -167,6 +167,7 @@ class ValueEntry(Gtk.Frame):
         self.box.pack_start(self.confirm_button, False, False, 5)
         self.add(self.box)
         self.show_all()
+        self.hide()
 
         self.confirm_button.connect("clicked", lambda btn: self._handle_confirm_click())
 
@@ -180,10 +181,16 @@ class ValueEntry(Gtk.Frame):
 
     def _handle_confirm_click(self):
         value = self.text_entry.get_text()
-        self.text_entry.set_text("")
+        self.set_value("")
 
         self.on_value_entered.notify(value)
         self.hide()
+
+    def toggle(self):
+        if self.props.visible:
+            self.hide()
+        else:
+            self.show()
 
 
 class Drawable(object):
@@ -323,7 +330,10 @@ class SimpleVarDrawable(AbstractValueDrawable):
         self.name_box = BoxedLabelDrawable(canvas, self.get_name, Margin.all(5.0))
         self.value_box = BoxedLabelDrawable(canvas, self.get_value, Margin.all(5.0))
 
-        self.value_entry = None
+        self.value_entry = ValueEntry()
+        self.value_entry.on_value_entered.subscribe(self._handle_value_change)
+        canvas.fixed_wrapper.put(self.value_entry, self.position.x, self.position.y)
+
         self.click_handler.on_mouse_click.subscribe(self._handle_mouse_click)
 
     def _handle_value_change(self, value):
@@ -333,19 +343,9 @@ class SimpleVarDrawable(AbstractValueDrawable):
         """
         @type point: drawing.vector.Vector
         """
-        if self.value_entry is None:
-            self.value_entry = ValueEntry()
-            self.canvas.fixed_wrapper.put(self.value_entry, point.x, point.y)
-            self.canvas.fixed_wrapper.show_all()
-            self.value_entry.on_value_entered.subscribe(self._handle_value_change)
-            self.value_entry.set_value(self.get_value())
-        else:
-            if self.value_entry.props.visible:
-                self.value_entry.hide()
-            else:
-                self.value_entry.show()
-                self.canvas.fixed_wrapper.move(self.value_entry, point.x, point.y)
-                self.value_entry.set_value(self.get_value())
+        self.value_entry.set_value(self.get_value())
+        self.value_entry.toggle()
+        self.canvas.fixed_wrapper.move(self.value_entry, point.x, point.y)
 
     def place_children(self):
         self.name_box.set_position(self.position)
