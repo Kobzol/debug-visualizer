@@ -54,6 +54,8 @@ class LldbDebugger(object):
         self.state = Flags(DebuggerState, DebuggerState.Started)
         self.process_state = ProcessState.Invalid
 
+        self.exit_lock = threading.Lock()
+
         self.on_debugger_state_changed = EventBroadcaster()
         self.state.on_value_changed.redirect(self.on_debugger_state_changed)
         self.on_process_state_changed = EventBroadcaster()
@@ -192,29 +194,34 @@ class LldbDebugger(object):
         self.thread_manager.get_current_thread().StepOut()
 
     def stop(self, kill_process=False):
+        self.exit_lock.acquire()
+
         if not self.state.is_set(DebuggerState.Running):
             return
 
-        self.state.unset(DebuggerState.Running)
+        try:
+            if self.process is not None:
+                if kill_process:
+                    self.process.Kill()
+                else:
+                    while self.process_state != ProcessState.Exited:
+                        time.sleep(0.1)
 
-        if self.process is not None:
-            if kill_process:
-                self.process.Kill()
-            else:
-                while self.process_state != ProcessState.Exited:
-                    time.sleep(0.1)
+                return_code = self.process.GetExitStatus()
+                return_desc = self.process.GetExitDescription()
 
-            return_code = self.process.GetExitStatus()
-            return_desc = self.process.GetExitDescription()
+                self.on_process_state_changed.notify(ProcessState.Exited, ProcessExitedEventData(return_code, return_desc))
+                self.process = None
 
-            self.on_process_state_changed.notify(ProcessState.Exited, ProcessExitedEventData(return_code, return_desc))
-            self.process = None
+            self.state.unset(DebuggerState.Running)
 
-        if self.event_thread is not None:
-            self.event_thread_stop_flag.set()
-            self.event_thread = None
+            if self.event_thread is not None:
+                self.event_thread_stop_flag.set()
+                self.event_thread = None
 
-        self.io_manager.stop_io()
+            self.io_manager.stop_io()
+        finally:
+            self.exit_lock.release()
 
     def quit(self):
         self.debugger.Terminate()
