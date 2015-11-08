@@ -381,13 +381,16 @@ class VectorDrawable(AbstractValueDrawable):
         """
         super(VectorDrawable, self).__init__(canvas, value)
 
+        self.label = BoxedLabelDrawable(canvas, value.name, Margin.all(5.0))
+
         for member in value.children:
-            drawable = SimpleVarDrawable(canvas, member)
+            drawable = BoxedLabelDrawable(canvas, member.value, Margin.all(5.0))
             self.children.append(drawable)
             self.click_handler.propagate_handler(drawable.click_handler)
 
     def place_children(self):
-        width = self.position.x
+        self.label.position = self.position.copy()
+        width = self.position.x + self.label.get_bbox().width
 
         for member in self.children:
             member.position.y = self.position.y
@@ -397,10 +400,12 @@ class VectorDrawable(AbstractValueDrawable):
     def get_bbox(self):
         self.place_children()
 
-        return RectangleBBox.contain([member.get_bbox() for member in self.children])
+        return RectangleBBox.contain([self.label.get_bbox()] + [member.get_bbox() for member in self.children])
 
     def draw(self):
         self.place_children()
+
+        self.label.draw()
 
         for member in self.children:
             member.draw()
