@@ -84,7 +84,10 @@ class LldbMemoryManager(object):
         self.breakpoints.append((self.debugger.breakpoint_manager.add_breakpoint("malloc"), self._handle_malloc))
 
     def is_memory_bp(self, bp):
-        return filter(lambda x: x[0] == bp, self.breakpoints) > 0
+        for x in self.breakpoints:
+            if x[0] == bp:
+                return True
+        return False
 
     def handle_memory_bp(self, bp):
         for x in self.breakpoints:
