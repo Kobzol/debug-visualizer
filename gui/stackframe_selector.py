@@ -34,7 +34,8 @@ class StackFrameSelector(Gtk.ListBox):
             for frame in frames:
                 self.add_frame(frame)
 
-            self.select_row(self.get_row_at_index(0))
+            if len(self.get_children()) > 0:
+                self.select_row(self.get_row_at_index(0))
 
     def _handle_frame_selected(self, row):
         """
