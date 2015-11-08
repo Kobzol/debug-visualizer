@@ -8,7 +8,7 @@ class RectangleBBox(object):
     @staticmethod
     def contain(bboxes):
         if len(bboxes) < 1:
-            return None
+            return RectangleBBox(Vector(0, 0), Size(0, 0))
 
         min_x = bboxes[0].x
         max_x = bboxes[0].x + bboxes[0].width

@@ -165,6 +165,7 @@ class MemoryCanvas(Canvas):
         if frame.IsValid():
             self.set_drawables([self.memtoview.transform_frame(self, parsed_vars)])
 
+
 class CanvasToolbarWrapper(Gtk.VBox):
     def __init__(self, canvas, toolbar):
         """
