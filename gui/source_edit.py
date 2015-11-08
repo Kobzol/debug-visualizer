@@ -141,6 +141,7 @@ class SourceEditor(GtkSource.View):
         self.unset_exec_line()
         line_iters = self.get_line_iters(line_number)
         self.get_buffer().apply_tag(self.tag_exec, line_iters[0], line_iters[1])
+        self.scroll_to_iter(line_iters[0], 0.0, True, 0.5, 0.5)
 
     def unset_exec_line(self):
         buffer = self.get_buffer()
