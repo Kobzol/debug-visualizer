@@ -59,28 +59,31 @@ class LldbMemoryManager(object):
 
     def _handle_malloc(self, bp):
         self.debugger.debugger.SetAsync(False)
+        self.debugger.fire_events = False
 
-        thread = self.debugger.thread_manager.get_current_thread()
-        frame = self.debugger.thread_manager.get_current_frame()
+        try:
+            thread = self.debugger.thread_manager.get_current_thread()
+            frame = self.debugger.thread_manager.get_current_frame()
 
-        if len(frame.args) < 1 or frame.args[0] is None:
-            return
+            if len(frame.args) < 1 or frame.args[0] is None:
+                return
 
-        bytes = frame.args[0].value
+            bytes = frame.args[0].value
 
-        self.debugger.exec_step_out()
-        address = thread.return_value.value
+            self.debugger.exec_step_out()
+            address = thread.return_value.value
 
-        block = self._find_block_by_address(address)
+            block = self._find_block_by_address(address)
 
-        if block is not None:
-            raise MemoryException("Memory block allocated twice ({0} - {1} bytes, originally {2} bytes)".format(
-                address, bytes, block.bytes
-            ))
-        else:
-            self.memory_blocks.append(MemoryBlock(address, bytes))
-
-        self.debugger.debugger.SetAsync(True)
+            if block is not None:
+                raise MemoryException("Memory block allocated twice ({0} - {1} bytes, originally {2} bytes)".format(
+                    address, bytes, block.bytes
+                ))
+            else:
+                self.memory_blocks.append(MemoryBlock(address, bytes))
+        finally:
+            self.debugger.fire_events = True
+            self.debugger.debugger.SetAsync(True)
 
     def create_memory_bps(self):
         self.breakpoints.append((self.debugger.breakpoint_manager.add_breakpoint("free"), self._handle_free))

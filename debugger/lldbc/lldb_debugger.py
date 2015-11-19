@@ -53,6 +53,7 @@ class LldbDebugger(object):
         self.process = None
         self.event_thread = None
         self.event_thread_stop_flag = threading.Event()
+        self.fire_events = True
 
         self.state = Flags(DebuggerState, DebuggerState.Started)
         self.process_state = ProcessState.Invalid
@@ -73,14 +74,13 @@ class LldbDebugger(object):
                 if lldb.SBProcess.EventIsProcessEvent(event):
                     state = ProcessState(lldb.SBProcess.GetStateFromEvent(event))
 
-                    self._handle_process_state(state)
+                    if self.fire_events:
+                        self._handle_process_state(state)
 
         self.event_thread = None
 
     def _handle_process_state(self, state):
         self.process_state = state
-
-        logging.info("Process state changed: " + str(state))
 
         if state == ProcessState.Exited:
             self.stop(False)
@@ -91,7 +91,7 @@ class LldbDebugger(object):
             stop_reason = StopReason(thread.stop_reason)
             breakpoints = []
 
-            if stop_reason == StopReason.Breakpoint:
+            """if stop_reason == StopReason.Breakpoint:
                 for i in xrange(0, thread.GetStopReasonDataCount(), 2):
                     bp_id = thread.GetStopReasonDataAtIndex(i)
                     bp_loc_id = thread.GetStopReasonDataAtIndex(i + 1)
@@ -106,10 +106,10 @@ class LldbDebugger(object):
                     self.memory_manager.handle_memory_bp(bp[0]) # TODO: catch exceptions and propagate them
                     self.exec_continue()
 
-                    return
+                    return"""
 
             self.on_process_state_changed.notify(state,
-                 ProcessStoppedEventData(stop_reason, thread.GetStopDescription(100), breakpoints)
+                ProcessStoppedEventData(stop_reason, thread.GetStopDescription(100), breakpoints)
             )
 
             return
@@ -132,7 +132,7 @@ class LldbDebugger(object):
         if self.target is not None:
             self.state.set(DebuggerState.BinaryLoaded)
 
-            self.memory_manager.create_memory_bps()
+            #self.memory_manager.create_memory_bps()
 
             return True
         else:
