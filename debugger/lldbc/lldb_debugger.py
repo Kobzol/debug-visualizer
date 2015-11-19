@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+import logging
+logging.basicConfig(level=logging.INFO)
+
 import threading
 import os
 import time
@@ -76,6 +79,8 @@ class LldbDebugger(object):
 
     def _handle_process_state(self, state):
         self.process_state = state
+
+        logging.info("Process state changed: " + str(state))
 
         if state == ProcessState.Exited:
             self.stop(False)
@@ -196,10 +201,10 @@ class LldbDebugger(object):
     def stop(self, kill_process=False):
         self.exit_lock.acquire()
 
-        if not self.state.is_set(DebuggerState.Running):
-            return
-
         try:
+            if not self.state.is_set(DebuggerState.Running):
+                return
+
             if self.process is not None:
                 if kill_process:
                     self.process.Kill()
