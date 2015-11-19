@@ -187,9 +187,8 @@ class SourceManager(Gtk.Notebook):
             if not frame.IsValid() or "__GI___libc_" in frame.name:
                 return
 
-            print(frame)
             location = self.debugger.file_manager.get_current_location()
-            print(location)
+
             if location[0]:
                 GObject.idle_add(lambda *x: self.set_exec_line(location[0], location[1]))
         elif state == ProcessState.Exited:

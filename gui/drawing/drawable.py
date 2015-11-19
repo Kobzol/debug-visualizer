@@ -261,7 +261,7 @@ class BoxedLabelDrawable(Drawable):
         """
         super(BoxedLabelDrawable, self).__init__(canvas)
 
-        self.label = label
+        self.label = label if label is not None else ""
         self.margin = margin if margin else Margin()
 
     def get_label(self):
