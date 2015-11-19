@@ -27,6 +27,9 @@ class LldbThreadManager(object):
         """
         @type frameIndex: int
         """
+        if frameIndex >= len(self.get_frames()):
+            return
+
         frame = self.get_frames()[frameIndex]
         self.get_current_thread().SetSelectedFrame(frameIndex)
         self.debugger.on_frame_changed.notify(frame)
