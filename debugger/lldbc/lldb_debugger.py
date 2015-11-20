@@ -9,7 +9,7 @@ import time
 
 import lldb
 from events import EventBroadcaster
-import lldbc.exceptions as exceptions
+import exceptions as exceptions
 from debugger_state import DebuggerState
 from lldbc.lldb_breakpoint_manager import LldbBreakpointManager
 from lldbc.lldb_file_manager import LldbFileManager
