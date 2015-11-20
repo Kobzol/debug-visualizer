@@ -53,7 +53,9 @@ class Parser(object):
         # remove array labels
         data = self._remove_array_labels(data)
         data = re.sub("((?:\w|-)+)=", r'"\1":', data)
-        data = "{" + data + "}"
+
+        if data[0] != "{":
+            data = "{" + data + "}"
 
         return data
 
