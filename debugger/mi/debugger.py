@@ -3,9 +3,11 @@
 import os
 import threading
 
+import time
+
 import exceptions
 from debugger_state import DebuggerState
-from enums import ProcessState
+from enums import ProcessState, StopReason
 from events import EventBroadcaster
 from flags import Flags
 from mi.communicator import Communicator
@@ -31,11 +33,6 @@ class ProcessStoppedEventData(object):
 class Debugger(object):
     def __init__(self):
         self.communicator = Communicator()
-        self.target = None
-        self.process = None
-        self.event_thread = None
-        self.event_thread_stop_flag = threading.Event()
-        self.fire_events = True
 
         self.io_manager = IOManager()
 
@@ -48,20 +45,6 @@ class Debugger(object):
         self.state.on_value_changed.redirect(self.on_debugger_state_changed)
         self.on_process_state_changed = EventBroadcaster()
         self.on_frame_changed = EventBroadcaster()
-
-    def _check_events(self):
-        """event = lldb.SBEvent()
-        listener = self.debugger.GetListener()
-
-        while not self.event_thread_stop_flag.is_set():
-            if listener.WaitForEvent(1, event):
-                if lldb.SBProcess.EventIsProcessEvent(event):
-                    state = ProcessState(lldb.SBProcess.GetStateFromEvent(event))
-
-                    if self.fire_events:
-                        self._handle_process_state(state)"""
-
-        self.event_thread = None
 
     def _handle_process_state(self, state):
         self.process_state = state
@@ -126,10 +109,6 @@ class Debugger(object):
     def launch(self):
         self.require_state(DebuggerState.BinaryLoaded)
 
-        self.event_thread_stop_flag.clear()
-        self.event_thread = threading.Thread(target=self._check_events)
-        self.event_thread.start()
-
         stdin, stdout, stderr = self.io_manager.handle_io()
 
         self.communicator.send("run 1>{0} 2>{1} <{2}".format(stdout, stderr, stdin))
@@ -138,23 +117,23 @@ class Debugger(object):
 
     def exec_continue(self):
         self.require_state(DebuggerState.Running)
-        self.process.Continue()
+        self.communicator.send("-exec-continue")
 
     def exec_pause(self):
         self.require_state(DebuggerState.Running)
-        self.process.Stop()
+        self.communicator.send("-exec-interrupt")
 
     def exec_step_over(self):
         self.require_state(DebuggerState.Running)
-        self.thread_manager.get_current_thread().StepOver()
+        self.communicator.send("-exec-next")
 
     def exec_step_in(self):
         self.require_state(DebuggerState.Running)
-        self.thread_manager.get_current_thread().StepInto()
+        self.communicator.send("-exec-next-instruction")
 
     def exec_step_out(self):
         self.require_state(DebuggerState.Running)
-        self.thread_manager.get_current_thread().StepOut()
+        self.communicator.send("-exec-finish")
 
     def stop(self, kill_process=False):
         self.exit_lock.acquire()
@@ -163,28 +142,20 @@ class Debugger(object):
             if not self.state.is_set(DebuggerState.Running):
                 return
 
-            if self.process is not None:
-                if kill_process:
-                    self.process.Kill()
-                else:
-                    while self.process_state != ProcessState.Exited:
-                        time.sleep(0.1)
+            if kill_process:
+                self.communicator.kill()
+            else:
+                while self.process_state != ProcessState.Exited:
+                    time.sleep(0.1)
 
-                return_code = self.process.GetExitStatus()
+                """return_code = self.process.GetExitStatus() TODO
                 return_desc = self.process.GetExitDescription()
 
                 self.on_process_state_changed.notify(ProcessState.Exited, ProcessExitedEventData(return_code, return_desc))
-                self.process = None
+                self.process = None"""
 
             self.state.unset(DebuggerState.Running)
-
-            if self.event_thread is not None:
-                self.event_thread_stop_flag.set()
-                self.event_thread = None
 
             self.io_manager.stop_io()
         finally:
             self.exit_lock.release()
-
-    def quit(self):
-        self.debugger.Terminate()

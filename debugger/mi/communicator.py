@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 
-import os
-import subprocess
-
-import fcntl
-
+import re
 import select
+import subprocess
 import threading
 
 from enum import Enum
+
+from util import RepeatTimer
 
 
 class ResultType(Enum):
@@ -20,28 +19,65 @@ class ResultType(Enum):
 class CommandResult(object):
     result_map = {
         "done": ResultType.Success,
+        "running": ResultType.Success,
         "error": ResultType.Error,
         "exit": ResultType.Exit
     }
 
     @staticmethod
-    def parse_result_type(data):
-        data = data[1:]
+    def parse(response):
+        match = re.match("^(\d)+", response)
+        token = None
+
+        if match:
+            digits = match.group(0)
+            response = response[len(digits):]
+            token = int(digits)
+
+        assert response[0] == Communicator.RESPONSE_START
+
+        data = response[1:]
 
         if data in CommandResult.result_map:
-            return CommandResult.result_map[data]
+            result_type = CommandResult.result_map[data]
+            return CommandResult(result_type, token)
         else:
             raise Exception("No result found for type: " + data)
 
-    def __init__(self, result_type, data=""):
+    def __init__(self, result_type, token=None, data=""):
+        """
+        @type result_type: ResultType
+        @type token: int
+        """
         self.result_type = result_type
+        self.token = token
         self.data = data
 
     def is_success(self):
         return self.result_type == ResultType.Success
 
     def __repr__(self):
-        return "[{0}: {1}]".format(self.result_type, self.data)
+        return "[CMD_RESULT: {0} ({1}): {2}]".format(self.result_type, self.token, self.data)
+
+
+class OutputType(Enum):
+    CommandResult = 1
+    AsyncStatus = 2
+    AsyncExec = 3
+    Separator = 4
+    Unknown = 5
+
+
+class OutputMessage(object):
+    def __init__(self, type, data=None):
+        """
+        @type type: OutputType
+        """
+        self.type = type
+        self.data = data
+
+    def __repr__(self):
+        return "[MSG: {0}, {1}]".format(self.type, self.data)
 
 
 class Communicator(object):
@@ -51,12 +87,17 @@ class Communicator(object):
     def __init__(self):
         self.process = None
         self.io_lock = threading.RLock()
+
         self.token = 0
-        self.pty = None
+
+        self.read_timer = None
 
     def start_gdb(self):
         if self.process is not None:
             self.kill()
+
+        if self.read_timer is not None:
+            self.read_timer.stop()
 
         self.token = 0
 
@@ -76,20 +117,78 @@ class Communicator(object):
 
         self._skip_to_separator()
 
-        #self.send("-gdb-set mi-async on")
+        self.send("-gdb-set mi-async on")
+        self.send("set non-stop on")
+
+        self.read_timer = RepeatTimer(0.1, self._read_thread)
+        self.read_timer.start()
 
         #fl = fcntl.fcntl(self.process.stdout, fcntl.F_GETFL)
         #fcntl.fcntl(self.process.stdout, fcntl.F_SETFL, fl | os.O_NONBLOCK)
 
-    def readline(self, block=False):
+    def send(self, command):
+        self.io_lock.acquire()
+        response = ""
+
+        token = self.token
+        self.token += 1
+
+        try:
+            self.process.stdin.write(str(token) + command + "\n")
+            self.process.stdin.flush()
+
+            while True:
+                output = self._parse_output(self._readline(True))
+                if output.type == OutputType.CommandResult and output.data.token == token:
+                    response = output.data
+                elif output.type == OutputType.Separator:
+                    break
+                else:
+                    self._handle_output(output)
+
+        except IOError as e:
+            print(e)
+
+        self.io_lock.release()
+
+        return response
+
+    def finish(self):
+        self.send("-gdb-exit")
+        self.process.wait()
+        self._reset()
+
+    def kill(self):
+        self.process.kill()
+        self._reset()
+
+    def _timer_read_output(self):
+        self.io_lock.acquire()
+
+        output = self._parse_output(self._readline(False))
+        self._handle_output(output)
+
+        self.io_lock.release()
+
+    def _reset(self):
+        self.process = None
+
+        if self.read_timer is not None:
+            self.read_timer.stop()
+        self.read_timer = None
+
+    def _handle_output(self, output):
+        pass
+
+    def _readline(self, block=False):
         self.io_lock.acquire()
 
         process = self.process
         input = ""
 
         try:
-            if block:
-                if select.select([process.stdout], [], [], 0.1):
+            if not block:
+                if select.select([process.stdout], [], [], 0.05):
                     input = process.stdout.readline()
             else:
                 input = process.stdout.readline()
@@ -101,48 +200,20 @@ class Communicator(object):
         print(input)
         return input.strip()
 
-    def send(self, command):
-        self.io_lock.acquire()
-        response = ""
-
-        try:
-            self.process.stdin.write(command + "\n")
-            response = self.readline(True)
-        except IOError as e:
-            print(e)
-
-        self.io_lock.release()
-
-        return self._parse_response(response)
-
-    def finish(self):
-        self.send("-gdb-exit")
-        self.process.wait()
-        self.process = None
-
-    def kill(self):
-        self.process.kill()
-        self.process = None
-
-    def prepare_inferior_tty(self):
-        pid = os.getpid()
-        (master, slave) = os.openpty()
-        slave_node = "/proc/%d/fd/%d" % (pid, slave)
-
-        self.send("-inferior-tty-set " + slave_node)
-
-        return master
+    def _read_thread(self):
+        pass
 
     def _skip_to_separator(self):
         data = ""
 
         while data != Communicator.GROUP_SEPARATOR:
-            data = self.readline(True)
+            data = self._readline(True)
 
-    def _parse_response(self, response):
+    def _parse_output(self, response):
         if response == Communicator.GROUP_SEPARATOR:
-            return True
-        elif response[0] == Communicator.RESPONSE_START:
-            return CommandResult(CommandResult.parse_result_type(response))
+            return OutputMessage(OutputType.Separator)
+        elif response[0].isdigit() or response[0] == Communicator.RESPONSE_START:
+            return OutputMessage(OutputType.CommandResult, CommandResult.parse(response))
         else:
             print("UNKNOWN: " + response)
+            return OutputMessage(OutputType.Unknown)
