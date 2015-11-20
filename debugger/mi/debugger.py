@@ -119,10 +119,6 @@ class Debugger(object):
         if result.is_success():
             self.state.set(DebuggerState.BinaryLoaded)
 
-            master = self.communicator.prepare_inferior_tty()
-            print(master)
-            self.io_manager.handle_io(master)
-
             return True
         else:
             return False
@@ -134,7 +130,9 @@ class Debugger(object):
         self.event_thread = threading.Thread(target=self._check_events)
         self.event_thread.start()
 
-        self.communicator.send("-exec-run")
+        stdin, stdout, stderr = self.io_manager.handle_io()
+
+        self.communicator.send("run 1>{0} 2>{1} <{2}".format(stdout, stderr, stdin))
 
         self.state.set(DebuggerState.Running)
 
