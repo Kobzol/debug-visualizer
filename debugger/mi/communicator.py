@@ -281,7 +281,6 @@ class Communicator(object):
         if not input:
             return None
 
-        print(input.strip())
         return input.strip()
 
     def _skip_to_separator(self):
