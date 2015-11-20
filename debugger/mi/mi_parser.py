@@ -9,10 +9,13 @@ class MiParser(object):
         pass
 
     def parse_breakpoint(self, data):
-        return self._parse(data)["bkpt"]
+        return self.parse(data)["bkpt"]
 
     def parse_breakpoints(self, data):
         pass
+
+    def parse(self, data):
+        return self._parse_json(self._prep_json(data))
 
     def _prep_json(self, data):
         data = re.sub("((?:\w|-)+)=", r'"\1":', data)
@@ -22,6 +25,3 @@ class MiParser(object):
 
     def _parse_json(self, data):
         return json.loads(data)
-
-    def _parse(self, data):
-        return self._parse_json(self._prep_json(data))

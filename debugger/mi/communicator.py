@@ -7,7 +7,19 @@ import threading
 
 from enum import Enum
 
+from enums import ProcessState
+from events import EventBroadcaster
+from mi.mi_parser import MiParser
 from util import RepeatTimer
+
+
+class OutputParser(object):
+    @staticmethod
+    def get_name_until_param(data):
+        if "," in data:
+            return data[:data.index(",")]
+        else:
+            return data
 
 
 class ResultType(Enum):
@@ -37,11 +49,8 @@ class CommandResult(object):
         assert response[0] == Communicator.RESPONSE_START
 
         data = response[1:]  # skip ^
-        status = data
-
-        if "," in data:
-            status = data[:data.index(",")]
-            data = data[len(status) + 1:]
+        status = OutputParser.get_name_until_param(data)
+        data = data[len(status) + 1:]
 
         if status in CommandResult.result_map:
             result_type = CommandResult.result_map[status]
@@ -66,6 +75,40 @@ class CommandResult(object):
 
     def __nonzero__(self):
         return self.is_success()
+
+
+class StateOutput(object):
+    parser = MiParser()
+
+    @staticmethod
+    def parse(data):
+        assert data[0] == Communicator.EXEC_ASYNC_START
+
+        data = data[1:]
+        state = OutputParser.get_name_until_param(data)
+
+        if state == "running":
+            return StateOutput(ProcessState.Running)
+        elif state == "stopped":
+            data = data[len(state) + 1:]
+            data = StateOutput.parser.parse(data)
+
+            state = ProcessState.Stopped
+
+            if "exited" in data["reason"]:
+                state = ProcessState.Exited
+
+            return StateOutput(state)
+        else:
+            raise Exception("No state found for data: {0}".format(data))
+
+    def __init__(self, state, reason=None):
+        """
+        @type state: enums.ProcessState
+        @type reason: enums.StopReason
+        """
+        self.state = state
+        self.reason = reason
 
 
 class OutputType(Enum):
@@ -102,6 +145,8 @@ class Communicator(object):
 
         self.read_timer = None
 
+        self.on_process_change = EventBroadcaster()
+
     def start_gdb(self):
         if self.process is not None:
             self.kill()
@@ -130,7 +175,7 @@ class Communicator(object):
         self.send("-gdb-set mi-async on")
         self.send("set non-stop on")
 
-        self.read_timer = RepeatTimer(0.1, self._read_thread)
+        self.read_timer = RepeatTimer(0.1, self._timer_read_output)
         self.read_timer.start()
 
         #fl = fcntl.fcntl(self.process.stdout, fcntl.F_GETFL)
@@ -175,10 +220,16 @@ class Communicator(object):
     def _timer_read_output(self):
         self.io_lock.acquire()
 
-        output = self._parse_output(self._readline(False))
-        self._handle_output(output)
+        try:
+            output = self._readline(False)
 
-        self.io_lock.release()
+            if output:
+                output = self._parse_output(output)
+                self._handle_output(output)
+        except Exception as e:
+            print(e)
+        finally:
+            self.io_lock.release()
 
     def _reset(self):
         self.process = None
@@ -189,7 +240,7 @@ class Communicator(object):
 
     def _handle_output(self, output):
         if output.type == OutputType.AsyncExec:
-            pass
+            self.on_process_change.notify(StateOutput.parse(output.data))
         elif output.type == OutputType.AsyncNotify:
             pass
 
@@ -197,11 +248,11 @@ class Communicator(object):
         self.io_lock.acquire()
 
         process = self.process
-        input = ""
+        input = None
 
         try:
             if not block:
-                if select.select([process.stdout], [], [], 0.05):
+                if len(select.select([process.stdout], [], [], 0.05)[0]) > 0:
                     input = process.stdout.readline()
             else:
                 input = process.stdout.readline()
@@ -210,11 +261,11 @@ class Communicator(object):
 
         self.io_lock.release()
 
-        print(input)
-        return input.strip()
+        if not input:
+            return None
 
-    def _read_thread(self):
-        pass
+        print(input.strip())
+        return input.strip()
 
     def _skip_to_separator(self):
         data = ""

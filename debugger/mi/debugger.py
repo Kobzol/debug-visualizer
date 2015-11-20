@@ -34,6 +34,7 @@ class ProcessStoppedEventData(object):
 class Debugger(object):
     def __init__(self):
         self.communicator = Communicator()
+        self.communicator.on_process_change.subscribe(self._handle_process_state)
 
         self.io_manager = IOManager()
         self.breakpoint_manager = BreakpointManager(self)
@@ -49,6 +50,10 @@ class Debugger(object):
         self.on_frame_changed = EventBroadcaster()
 
     def _handle_process_state(self, state):
+        state = state.state
+        print(state)
+        return
+
         self.process_state = state
 
         if state == ProcessState.Exited:
