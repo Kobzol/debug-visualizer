@@ -143,7 +143,7 @@ class Debugger(object):
                 return
 
             if kill_process:
-                self.communicator.kill()
+                self.communicator.finish()
             else:
                 while self.process_state != ProcessState.Exited:
                     time.sleep(0.1)

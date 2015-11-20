@@ -62,8 +62,8 @@ class CommandResult(object):
 
 class OutputType(Enum):
     CommandResult = 1
-    AsyncStatus = 2
-    AsyncExec = 3
+    AsyncExec = 2
+    AsyncNotify = 3
     Separator = 4
     Unknown = 5
 
@@ -83,6 +83,8 @@ class OutputMessage(object):
 class Communicator(object):
     GROUP_SEPARATOR = "(gdb)"
     RESPONSE_START = "^"
+    EXEC_ASYNC_START = "*"
+    NOTIFY_ASYNC_START = "="
 
     def __init__(self):
         self.process = None
@@ -178,7 +180,10 @@ class Communicator(object):
         self.read_timer = None
 
     def _handle_output(self, output):
-        pass
+        if output.type == OutputType.AsyncExec:
+            pass
+        elif output.type == OutputType.AsyncNotify:
+            pass
 
     def _readline(self, block=False):
         self.io_lock.acquire()
@@ -214,6 +219,9 @@ class Communicator(object):
             return OutputMessage(OutputType.Separator)
         elif response[0].isdigit() or response[0] == Communicator.RESPONSE_START:
             return OutputMessage(OutputType.CommandResult, CommandResult.parse(response))
+        elif response[0] == Communicator.EXEC_ASYNC_START:
+            return OutputMessage(OutputType.AsyncExec, response)
+        elif response[0] == Communicator.NOTIFY_ASYNC_START:
+            return OutputMessage(OutputType.AsyncNotify, response)
         else:
-            print("UNKNOWN: " + response)
             return OutputMessage(OutputType.Unknown)
