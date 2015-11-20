@@ -4,6 +4,8 @@ import json
 import re
 
 from breakpoint import Breakpoint
+from enums import ThreadState
+from inferior_thread import InferiorThread
 
 
 class Parser(object):
@@ -16,8 +18,48 @@ class Parser(object):
     def parse_breakpoints(self, data):
         return [self._parse_breakpoint(bp) for bp in self.parse(data)["BreakpointTable"]["body"]]
 
+    def parse_thread_info(self, data):
+        """
+        @type data: str
+        @return: tuple of (int, thread.Thread)
+        """
+        data = self.parse(data)
+        current_thread_id = int(data["current-thread-id"])
+        threads = []
+
+        for thread in data["threads"]:
+            threads.append(self._parse_thread(thread))
+
+        return (current_thread_id, threads)
+
     def parse(self, data):
         return self._parse_json(self._prep_json(data))
+
+    def _parse_thread(self, thread):
+        return InferiorThread(thread["id"], thread["name"], self._parse_thread_state(thread["state"]), self._parse_frame(thread["frame"]))
+
+    def _parse_frame(self, frame):
+        """
+        @type frame: dict
+        @return: frame.Frame
+        """
+        pass  # TODO
+
+    def _parse_thread_state(self, state):
+        """
+        @type state: str
+        @return: enums.ThreadState | None
+        """
+        map = {
+            "running": ThreadState.Running,
+            "stopped": ThreadState.Stopped,
+            "exited": ThreadState.Exited
+        }
+
+        if state in map:
+            return map[state]
+        else:
+            return None
 
     def _parse_breakpoint(self, bp):
         return Breakpoint(int(bp["number"]), bp["fullname"], int(bp["line"]))

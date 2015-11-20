@@ -17,14 +17,7 @@ class BreakpointManager(object):
         if line is not None:
             location += ":" + str(line)
 
-        result = self.debugger.communicator.send("-break-insert {0}".format(location))
-
-        if result:
-            self.breakpoints.append(self.parser.parse_breakpoint(result.data))
-
-            return True
-        else:
-            return False
+        return self.debugger.communicator.send("-break-insert {0}".format(location)).is_success()
 
     def get_breakpoints(self):
         """
