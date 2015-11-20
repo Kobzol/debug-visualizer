@@ -14,3 +14,6 @@ class InferiorThread(object):
         self.name = name
         self.state = state
         self.frame = frame
+
+    def __repr__(self):
+        return "Thread #{0} ({1}): {2}".format(self.id, self.name, self.state)

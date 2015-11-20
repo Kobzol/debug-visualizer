@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from threading import Event,Thread
+from threading import Event, Thread
 
 
 class RepeatTimer(Thread):

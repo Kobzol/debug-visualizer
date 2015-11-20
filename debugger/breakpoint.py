@@ -11,3 +11,6 @@ class Breakpoint(object):
         self.number = number
         self.location = location
         self.line = line
+
+    def __repr__(self):
+        return "BP #{0}: {1}:{2}".format(self.number, self.location, self.line)
