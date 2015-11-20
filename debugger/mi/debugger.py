@@ -12,23 +12,18 @@ from events import EventBroadcaster
 from flags import Flags
 from mi.breakpoint_manager import BreakpointManager
 from mi.communicator import Communicator
+from mi.file_manager import FileManager
 from mi.io_manager import IOManager
 
 
 class ProcessExitedEventData(object):
-    def __init__(self, return_code, return_desc):
+    def __init__(self, return_code):
         self.return_code = return_code
-        self.return_desc = return_desc
 
 
 class ProcessStoppedEventData(object):
-    def __init__(self, stop_reason, stop_desc=None, breakpoints=None):
-        if breakpoints is None:
-            breakpoints = []
-
+    def __init__(self, stop_reason):
         self.stop_reason = stop_reason
-        self.stop_desc = stop_desc
-        self.breakpoints = breakpoints
 
 
 class Debugger(object):
@@ -38,6 +33,7 @@ class Debugger(object):
 
         self.io_manager = IOManager()
         self.breakpoint_manager = BreakpointManager(self)
+        self.file_manager = FileManager(self)
 
         self.state = Flags(DebuggerState, DebuggerState.Started)
         self.process_state = ProcessState.Invalid
@@ -49,46 +45,20 @@ class Debugger(object):
         self.on_process_state_changed = EventBroadcaster()
         self.on_frame_changed = EventBroadcaster()
 
-    def _handle_process_state(self, state):
-        state = state.state
-        print(state)
-        return
+    def _handle_process_state(self, output):
+        """
+        @type output: mi.communicator.StateOutput
+        """
+        self.process_state = output.state
 
-        self.process_state = state
-
-        if state == ProcessState.Exited:
-            self.stop(False)
-
-            return
-        elif state == ProcessState.Stopped:
-            thread = self.thread_manager.get_current_thread()
-            stop_reason = StopReason(thread.stop_reason)
-            breakpoints = []
-
-            """if stop_reason == StopReason.Breakpoint:
-                for i in xrange(0, thread.GetStopReasonDataCount(), 2):
-                    bp_id = thread.GetStopReasonDataAtIndex(i)
-                    bp_loc_id = thread.GetStopReasonDataAtIndex(i + 1)
-                    bp = self.breakpoint_manager.find_breakpoint(bp_id)
-
-                    breakpoints.append((bp, bp.FindLocationByID(bp_loc_id)))
-
-            for bp in breakpoints:
-                is_memory_bp = self.memory_manager.is_memory_bp(bp[0])
-
-                if is_memory_bp:
-                    self.memory_manager.handle_memory_bp(bp[0]) # TODO: catch exceptions and propagate them
-                    self.exec_continue()
-
-                    return"""
-
-            self.on_process_state_changed.notify(state,
-                ProcessStoppedEventData(stop_reason, thread.GetStopDescription(100), breakpoints)
+        if output.state == ProcessState.Exited:
+            self.stop(False, output.exit_code)
+        elif output.state == ProcessState.Stopped:
+            self.on_process_state_changed.notify(output.state,
+                ProcessStoppedEventData(output.reason)
             )
-
-            return
-
-        self.on_process_state_changed.notify(state, None)
+        else:
+            self.on_process_state_changed.notify(output.state, None)
 
     def require_state(self, required_state):
         if not self.get_state().is_set(required_state):
@@ -142,7 +112,7 @@ class Debugger(object):
         self.require_state(DebuggerState.Running)
         self.communicator.send("-exec-finish")
 
-    def stop(self, kill_process=False):
+    def stop(self, kill_process=False, return_code=None):
         self.exit_lock.acquire()
 
         try:
@@ -155,11 +125,7 @@ class Debugger(object):
                 while self.process_state != ProcessState.Exited:
                     time.sleep(0.1)
 
-                """return_code = self.process.GetExitStatus() TODO
-                return_desc = self.process.GetExitDescription()
-
-                self.on_process_state_changed.notify(ProcessState.Exited, ProcessExitedEventData(return_code, return_desc))
-                self.process = None"""
+                self.on_process_state_changed.notify(ProcessState.Exited, ProcessExitedEventData(return_code))
 
             self.state.unset(DebuggerState.Running)
 

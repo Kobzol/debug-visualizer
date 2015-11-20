@@ -62,10 +62,12 @@ class CommandResult(object):
         """
         @type result_type: ResultType
         @type token: int
+        @type data: str
         """
         self.result_type = result_type
         self.token = token
         self.data = data
+        self.cli_data = []
 
     def is_success(self):
         return self.result_type == ResultType.Success
@@ -94,29 +96,36 @@ class StateOutput(object):
             data = StateOutput.parser.parse(data)
 
             state = ProcessState.Stopped
+            exit_code = None
 
             if "exited" in data["reason"]:
                 state = ProcessState.Exited
 
-            return StateOutput(state)
+                if "exit-code" in data:
+                    exit_code = int(data["exit-code"])
+
+            return StateOutput(state, data["reason"], exit_code)
         else:
             raise Exception("No state found for data: {0}".format(data))
 
-    def __init__(self, state, reason=None):
+    def __init__(self, state, reason=None, exit_code=None):
         """
         @type state: enums.ProcessState
         @type reason: enums.StopReason
+        @type exit_code: int
         """
         self.state = state
         self.reason = reason
+        self.exit_code = exit_code
 
 
 class OutputType(Enum):
     CommandResult = 1
     AsyncExec = 2
     AsyncNotify = 3
-    Separator = 4
-    Unknown = 5
+    CliResponse = 4
+    Separator = 5
+    Unknown = 6
 
 
 class OutputMessage(object):
@@ -136,6 +145,7 @@ class Communicator(object):
     RESPONSE_START = "^"
     EXEC_ASYNC_START = "*"
     NOTIFY_ASYNC_START = "="
+    CLI_START = "~"
 
     def __init__(self):
         self.process = None
@@ -188,6 +198,9 @@ class Communicator(object):
         token = self.token
         self.token += 1
 
+        cli = command[0] != "-"
+        cli_data = []
+
         try:
             self.process.stdin.write(str(token) + command + "\n")
             self.process.stdin.flush()
@@ -196,6 +209,8 @@ class Communicator(object):
                 output = self._parse_output(self._readline(True))
                 if output.type == OutputType.CommandResult and output.data.token == token:
                     response = output.data
+                elif cli and output.type == OutputType.CliResponse:
+                    cli_data.append(output.data[2:-1].rstrip("\\n").strip())
                 elif output.type == OutputType.Separator:
                     break
                 else:
@@ -205,6 +220,8 @@ class Communicator(object):
             print(e)
 
         self.io_lock.release()
+
+        response.cli_data = cli_data
 
         return response
 
@@ -282,5 +299,7 @@ class Communicator(object):
             return OutputMessage(OutputType.AsyncExec, response)
         elif response[0] == Communicator.NOTIFY_ASYNC_START:
             return OutputMessage(OutputType.AsyncNotify, response)
+        elif response[0] == Communicator.CLI_START:
+            return OutputMessage(OutputType.CliResponse, response)
         else:
             return OutputMessage(OutputType.Unknown)

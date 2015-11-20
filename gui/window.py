@@ -117,7 +117,7 @@ class MainWindow(Gtk.Window):
 
     def _handle_process_state_change(self, state, event_data):
         if state == ProcessState.Exited:
-            self.add_status_message("Process exited with code {0} ({1}).".format(event_data.return_code, event_data.return_desc))
+            self.add_status_message("Process exited with code {0}.".format(event_data.return_code))
         elif state == ProcessState.Stopped:
             location = self.app.debugger.file_manager.get_current_location()
             if location[0]:
