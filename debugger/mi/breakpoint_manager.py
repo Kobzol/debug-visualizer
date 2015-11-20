@@ -27,6 +27,9 @@ class BreakpointManager(object):
             return False
 
     def get_breakpoints(self):
+        """
+        @return: debugger.Breakpoint[] | None
+        """
         bps = self.debugger.communicator.send("-break-list")
 
         if bps:
@@ -39,9 +42,10 @@ class BreakpointManager(object):
         @type location: str
         @type line: int
         """
+        location = os.path.abspath(location)
+
         for bp in self.get_breakpoints():
-            if (os.path.abspath(bp["fullname"]) == os.path.abspath(location) and
-                int(bp["line"]) == line):
+            if bp.location == location and bp.line == line:
                 return bp
 
         return None
@@ -56,6 +60,6 @@ class BreakpointManager(object):
         bp = self.find_breakpoint(location, line)
 
         if bp:
-            return self.debugger.communicator.send("-break-delete {0}".format(bp["number"])).is_success()
+            return self.debugger.communicator.send("-break-delete {0}".format(bp.number)).is_success()
         else:
             return False

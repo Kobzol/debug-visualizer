@@ -3,19 +3,24 @@
 import json
 import re
 
+from breakpoint import Breakpoint
+
 
 class Parser(object):
     def __init__(self):
         pass
 
     def parse_breakpoint(self, data):
-        return self.parse(data)["bkpt"]
+        return self._parse_breakpoint(self.parse(data)["bkpt"])
 
     def parse_breakpoints(self, data):
-        return self.parse(data)["BreakpointTable"]["body"]
+        return [self._parse_breakpoint(bp) for bp in self.parse(data)["BreakpointTable"]["body"]]
 
     def parse(self, data):
         return self._parse_json(self._prep_json(data))
+
+    def _parse_breakpoint(self, bp):
+        return Breakpoint(int(bp["number"]), bp["fullname"], int(bp["line"]))
 
     def _remove_array_labels(self, data):
         in_array = []
