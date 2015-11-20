@@ -4,7 +4,7 @@ import json
 import re
 
 
-class MiParser(object):
+class Parser(object):
     def __init__(self):
         pass
 
@@ -43,11 +43,8 @@ class MiParser(object):
                         j += 1
 
                     if j > i:
-                        changed_str = list(data)
-                        changed_str[i:j] = " " * (j - i)
-                        data = "".join(changed_str)
-                        i += (j - i - 1)
-
+                        data = data[:i] + data[j:]
+                        i -= 1
             i += 1
 
         return data

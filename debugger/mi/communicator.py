@@ -9,7 +9,7 @@ from enum import Enum
 
 from enums import ProcessState
 from events import EventBroadcaster
-from mi.mi_parser import MiParser
+from mi.parser import Parser
 from util import RepeatTimer
 
 
@@ -80,7 +80,7 @@ class CommandResult(object):
 
 
 class StateOutput(object):
-    parser = MiParser()
+    parser = Parser()
 
     @staticmethod
     def parse(data):
