@@ -16,6 +16,12 @@ class ProcessState(Enum):
     Unloaded = 1
 
 
+class ThreadState(Enum):
+    Running = 1
+    Stopped = 2
+    Exited = 3
+
+
 class StopReason(Enum):
     Breakpoint = 3
     Exception = 6
