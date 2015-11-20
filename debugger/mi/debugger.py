@@ -10,6 +10,7 @@ from debugger_state import DebuggerState
 from enums import ProcessState, StopReason
 from events import EventBroadcaster
 from flags import Flags
+from mi.breakpoint_manager import BreakpointManager
 from mi.communicator import Communicator
 from mi.io_manager import IOManager
 
@@ -35,6 +36,7 @@ class Debugger(object):
         self.communicator = Communicator()
 
         self.io_manager = IOManager()
+        self.breakpoint_manager = BreakpointManager(self)
 
         self.state = Flags(DebuggerState, DebuggerState.Started)
         self.process_state = ProcessState.Invalid

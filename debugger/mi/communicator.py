@@ -36,13 +36,18 @@ class CommandResult(object):
 
         assert response[0] == Communicator.RESPONSE_START
 
-        data = response[1:]
+        data = response[1:]  # skip ^
+        status = data
 
-        if data in CommandResult.result_map:
-            result_type = CommandResult.result_map[data]
-            return CommandResult(result_type, token)
+        if "," in data:
+            status = data[:data.index(",")]
+            data = data[len(status) + 1:]
+
+        if status in CommandResult.result_map:
+            result_type = CommandResult.result_map[status]
+            return CommandResult(result_type, token, data)
         else:
-            raise Exception("No result found for type: " + data)
+            raise Exception("No result found for type: " + status)
 
     def __init__(self, result_type, token=None, data=""):
         """
@@ -58,6 +63,9 @@ class CommandResult(object):
 
     def __repr__(self):
         return "[CMD_RESULT: {0} ({1}): {2}]".format(self.result_type, self.token, self.data)
+
+    def __nonzero__(self):
+        return self.is_success()
 
 
 class OutputType(Enum):
