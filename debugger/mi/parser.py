@@ -5,6 +5,7 @@ import re
 
 from breakpoint import Breakpoint
 from enums import ThreadState
+from frame import Frame
 from inferior_thread import InferiorThread
 
 
@@ -13,10 +14,10 @@ class Parser(object):
         pass
 
     def parse_breakpoint(self, data):
-        return self._parse_breakpoint(self.parse(data)["bkpt"])
+        return self._instantiate_breakpoint(self.parse(data)["bkpt"])
 
     def parse_breakpoints(self, data):
-        return [self._parse_breakpoint(bp) for bp in self.parse(data)["BreakpointTable"]["body"]]
+        return [self._instantiate_breakpoint(bp) for bp in self.parse(data)["BreakpointTable"]["body"]]
 
     def parse_thread_info(self, data):
         """
@@ -28,24 +29,40 @@ class Parser(object):
         threads = []
 
         for thread in data["threads"]:
-            threads.append(self._parse_thread(thread))
+            threads.append(self._instantiate_thread(thread))
 
         return (current_thread_id, threads)
+
+    def parse_stack_frames(self, data):
+        """
+        @type data: str
+        @return: list of frame.Frame
+        """
+        data = self.parse(data)["stack"]
+        frames = []
+
+        for frame in data:
+            frames.append(self._instantiate_frame(frame))
+
+        return frames
+
+    def parse_stack_frame(self, data):
+        return self._instantiate_frame(self.parse(data)["frame"])
 
     def parse(self, data):
         return self._parse_json(self._prep_json(data))
 
-    def _parse_thread(self, thread):
-        return InferiorThread(thread["id"], thread["name"], self._parse_thread_state(thread["state"]), self._parse_frame(thread["frame"]))
+    def _instantiate_thread(self, thread):
+        return InferiorThread(thread["id"], thread["name"], self._instantiate_thread_state(thread["state"]), self._instantiate_frame(thread["frame"]))
 
-    def _parse_frame(self, frame):
+    def _instantiate_frame(self, frame):
         """
         @type frame: dict
         @return: frame.Frame
         """
-        pass  # TODO
+        return Frame(int(frame["level"]), frame["func"], frame["fullname"], int(frame["line"]))
 
-    def _parse_thread_state(self, state):
+    def _instantiate_thread_state(self, state):
         """
         @type state: str
         @return: enums.ThreadState | None
@@ -61,7 +78,7 @@ class Parser(object):
         else:
             return None
 
-    def _parse_breakpoint(self, bp):
+    def _instantiate_breakpoint(self, bp):
         return Breakpoint(int(bp["number"]), bp["fullname"], int(bp["line"]))
 
     def _remove_array_labels(self, data):

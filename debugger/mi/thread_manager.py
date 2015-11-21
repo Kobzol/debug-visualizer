@@ -26,7 +26,7 @@ class ThreadManager(object):
     def get_thread_info(self):
         """
         Returns (active_thread_id, all_threads).
-        @return: tuple of (int, thread.Thread) | None
+        @return: tuple of (int, list of thread.Thread) | None
         """
         output = self.debugger.communicator.send("-thread-info")
 
@@ -35,22 +35,40 @@ class ThreadManager(object):
         else:
             return None
 
-    def set_thread_by_index(self, thread_index):
-        self.debugger.process.SetSelectedThreadByIndexId(thread_index)
+    def set_thread_by_index(self, thread_id):
+        """
+        @type thread_id: int
+        """
+        return self.debugger.communicator.send("-thread-select").is_success()
 
     def get_current_frame(self):
-        return self.get_frames()[0]
+        """
+        @return: frame.Frame | None
+        """
+        output = self.debugger.communicator.send("-stack-info-frame")
+
+        if output:
+            return self.parser.parse_stack_frame(output.data)
+        else:
+            return None
 
     def get_frames(self):
-        return self.get_current_thread().frames
-
-    def change_frame(self, frameIndex):
         """
-        @type frameIndex: int
+        @return: list of frame.Frame | None
         """
-        if frameIndex >= len(self.get_frames()):
-            return
+        output = self.debugger.communicator.send("-stack-list-frames")
 
-        frame = self.get_frames()[frameIndex]
-        self.get_current_thread().SetSelectedFrame(frameIndex)
-        self.debugger.on_frame_changed.notify(frame)
+        if output:
+            return self.parser.parse_stack_frames(output.data)
+        else:
+            return None
+
+    def change_frame(self, frame_index):
+        """
+        @type frame_index: int
+        @return: bool
+        """
+        if frame_index >= len(self.get_frames()):
+            return False
+
+        return self.debugger.communicator.send("-stack-select-frame {0}".format(frame_index)).is_success()
