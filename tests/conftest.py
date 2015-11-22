@@ -5,15 +5,15 @@ import time
 
 import sys
 
-from mi.debugger import Debugger
-from mi.parser import Parser
-
 TEST_DIR = os.path.dirname(__file__)
 TEST_SRC_DIR = os.path.join(TEST_DIR, "src")
 ROOT_DIR = os.path.dirname(TEST_DIR)
 SRC_DIR = os.path.join(ROOT_DIR, "debugger")
 
 sys.path.append(SRC_DIR)
+
+from mi.debugger import Debugger
+from mi.parser import Parser
 
 
 @pytest.fixture(scope="function")

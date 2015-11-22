@@ -56,6 +56,19 @@ class Parser(object):
         """
         return data[7:]
 
+    def parse_print_expression(self, data):
+        data = "".join(data)
+        data = data[data.find("=") + 2:].replace("\\\"", "\"")
+
+        return data
+
+    def parse_struct(self, data):
+        """
+        @type data: str
+        @return: dict
+        """
+        return self.parse(data)
+
     def parse(self, data):
         return self._parse_json(self._prep_json(data))
 
@@ -123,7 +136,7 @@ class Parser(object):
     def _prep_json(self, data):
         # remove array labels
         data = self._remove_array_labels(data)
-        data = re.sub("((?:\w|-)+)=", r'"\1":', data)
+        data = re.sub("((?:\w|-)+)\s*=", r'"\1":', data)
 
         if data[0] != "{":
             data = "{" + data + "}"

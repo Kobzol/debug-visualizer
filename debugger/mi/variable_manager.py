@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
+import re
 
 from enums import BasicTypeCategory, TypeCategory
 from mi.parser import Parser
-from variable import Type
+from variable import Type, Variable
 
 basic_type_map = {
     "bool" : BasicTypeCategory.Bool,
@@ -138,3 +139,64 @@ class VariableManager(object):
             return Type(type_name, type_category, basic_type_category)
         else:
             return None
+
+    def get_variable(self, expression):
+        """
+        @type expression: str
+        @return: variable.Variable
+        """
+        type = self.get_type(expression)
+        output = self.debugger.communicator.send("p {0}".format(expression))
+
+        if output and type:
+            data = self.parser.parse_print_expression(output.cli_data)
+            address = None
+
+            address_output = self.debugger.communicator.send("p &{0}".format(expression))
+            if address_output:
+                address = self.parser.parse_print_expression(address_output.cli_data)
+                address = address[address.rfind(" ") + 1:]
+
+            name = self._get_name(expression)
+            value = None
+            children = []
+
+            if type.type_category in (TypeCategory.Builtin, TypeCategory.Pointer,
+                                      TypeCategory.Reference, TypeCategory.Function,
+                                      TypeCategory.String):
+                value = data
+            elif type.type_category in (TypeCategory.Class, TypeCategory.Struct):
+                members = self.parser.parse_struct(data)
+                for member in members:
+                    children.append(self.get_variable("{0}.{1}".format(expression, member)))
+            elif type.type_category == TypeCategory.Vector:
+                members = self.parser.parse(data)
+                index = 0
+                for key in members:
+                    expr = "*({0}._M_impl._M_start + {1})".format(expression, index)
+                    children.append(self.get_variable(expr))
+                    index += 1
+            else:
+                pass  # TODO
+
+            variable = Variable(address, name, value, type, expression)
+
+            for child in children:
+                variable.add_child(child)
+
+            return variable
+
+        else:
+            return None
+
+    def _get_name(self, expression):
+        """
+        @type expression: str
+        @return: str
+        """
+        match = re.search("([a-zA-Z_$]+)$", expression)
+
+        if match:
+            return match.group(0)
+        else:
+            return expression

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import os
 import re
 import select
 import subprocess
@@ -11,6 +12,9 @@ from enums import ProcessState
 from events import EventBroadcaster
 from mi.parser import Parser
 from util import RepeatTimer
+
+
+gdb_pretty_print_file = os.path.join(os.path.dirname(__file__), "gdb_pretty_print.py")
 
 
 class OutputParser(object):
@@ -169,11 +173,11 @@ class Communicator(object):
         self.process = subprocess.Popen(
             bufsize=0,
             args=["gdb",
-                    "--return-child-result",
-                    "--quiet",
-                    "--nx",  # ignore .gdbinit
-                    '--nw',  # inhibit window interface
-                    '--interpreter=mi2',  # use GDB/MI v2
+                    "-return-child-result",
+                    "-quiet",
+                    "-nx",  # ignore .gdbinit
+                    '-nw',  # inhibit window interface
+                    '-interpreter=mi2',  # use GDB/MI v2
                   ],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
@@ -184,6 +188,7 @@ class Communicator(object):
 
         self.send("-gdb-set mi-async on")
         self.send("set non-stop on")
+        self.send("source {0}".format(gdb_pretty_print_file))
 
         self.read_timer = RepeatTimer(0.1, self._timer_read_output)
         self.read_timer.start()

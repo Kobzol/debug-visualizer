@@ -48,7 +48,7 @@ class Type(object):
         return self.type_category != TypeCategory.Invalid
 
     def __repr__(self):
-        return "{{{0}: {1}}}".format(self.type_category, self.name)
+        return "Type {0}: {1}".format(self.type_category, self.name)
 
 
 class Variable(object):
@@ -106,4 +106,4 @@ class Variable(object):
         self.on_value_changed.notify(self)
 
     def __repr__(self):
-        return "({0} {1} = {2})".format(self.type.name, self.path, self.value)
+        return "Variable: {0} ({1}) = {2}".format(self.type.name, self.path, self.value)
