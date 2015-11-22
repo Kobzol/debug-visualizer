@@ -24,3 +24,6 @@ def test_types(debugger):
     check_variable(debugger, "c", "true")
     check_variable(debugger, "d", "hello")
     check_variable(debugger, "strA.x", "5")
+
+    vec = debugger.variable_manager.get_variable("vec")
+    assert map(lambda child: int(child.value), vec.children) == [1, 2, 3]

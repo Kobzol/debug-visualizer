@@ -162,9 +162,10 @@ class VariableManager(object):
             children = []
 
             if type.type_category in (TypeCategory.Builtin, TypeCategory.Pointer,
-                                      TypeCategory.Reference, TypeCategory.Function,
-                                      TypeCategory.String):
+                                      TypeCategory.Reference, TypeCategory.Function):
                 value = data
+            elif type.type_category == TypeCategory.String:
+                value = data.strip("\"")
             elif type.type_category in (TypeCategory.Class, TypeCategory.Struct):
                 members = self.parser.parse_struct(data)
                 for member in members:

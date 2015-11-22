@@ -18,6 +18,7 @@ public:
 
 int main()
 {
+    std::vector<int> vec = { 1, 2, 3 };
     int a = 5;
     float b = 5.5f;
     bool c = true;
