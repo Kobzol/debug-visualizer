@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from debugger_state import DebuggerState
+from enums import DebuggerState
 
 
 class BreakpointInfo(object):

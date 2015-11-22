@@ -5,7 +5,7 @@ import sys
 import os
 import time
 
-from enums import ProcessState
+from enums import ProcessState, DebuggerState
 
 sys.path.append("../debugger")
 
@@ -13,7 +13,7 @@ from net.server import Server
 from net.client import Client
 from net.helper import NetHelper
 from lldbc.lldb_debugger import LldbDebugger
-from debugger_state import DebuggerState
+from enums import DebuggerState
 
 
 class AsyncSequence(object):

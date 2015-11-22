@@ -6,8 +6,8 @@ import threading
 import time
 
 import exceptions
-from debugger_state import DebuggerState
-from enums import ProcessState
+from enums import DebuggerState
+from enums import ProcessState, DebuggerState
 from events import EventBroadcaster
 from flags import Flags
 from mi.breakpoint_manager import BreakpointManager

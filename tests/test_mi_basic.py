@@ -1,6 +1,5 @@
 import os
-
-from debugger_state import DebuggerState
+from enums import DebuggerState
 from conftest import TEST_SRC_DIR
 
 

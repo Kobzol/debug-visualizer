@@ -9,7 +9,7 @@ from gdbc.gdb_frame_manager import GdbFrameManager
 from gdbc.gdb_file_manager import GdbFileManager
 from gdbc.gdb_breakpoint_manager import GdbBreakpointManager
 from gdbc.memory import Memory
-from debugger_state import DebuggerState
+from enums import DebuggerState
 
 
 class GdbDebugger(object):

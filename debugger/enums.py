@@ -1,6 +1,12 @@
 from enum import Enum
 
 
+class DebuggerState(Enum):
+    Started = 1
+    BinaryLoaded = 2
+    Running = 3
+
+
 class ProcessState(Enum):
     Attaching = 3
     Connected = 2

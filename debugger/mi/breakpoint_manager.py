@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
-
-from debugger_state import DebuggerState
+from enums import DebuggerState
 from mi.parser import Parser
 
 

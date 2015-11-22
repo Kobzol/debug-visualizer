@@ -2,8 +2,8 @@
 
 from gi.repository import GObject
 
-from debugger_state import DebuggerState
-from enums import ProcessState
+from enums import DebuggerState
+from enums import ProcessState, DebuggerState
 
 
 class ToolbarManager(object):
