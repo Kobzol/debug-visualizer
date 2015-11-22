@@ -63,6 +63,7 @@ class TypeCategory(Enum):
     Typedef = 32768
     Union = 65536
     Vector = 131072
+    String = 42
 
     def nice_name(self):
         name_mappings = {

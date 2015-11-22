@@ -49,6 +49,13 @@ class Parser(object):
     def parse_stack_frame(self, data):
         return self._instantiate_frame(self.parse(data)["frame"])
 
+    def parse_variable_type(self, data):
+        """
+        @type data: str
+        @return: str
+        """
+        return data[7:]
+
     def parse(self, data):
         return self._parse_json(self._prep_json(data))
 

@@ -6,7 +6,6 @@ import threading
 import time
 
 import exceptions
-from enums import DebuggerState
 from enums import ProcessState, DebuggerState
 from events import EventBroadcaster
 from flags import Flags
@@ -15,6 +14,7 @@ from mi.communicator import Communicator
 from mi.file_manager import FileManager
 from mi.io_manager import IOManager
 from mi.thread_manager import ThreadManager
+from mi.variable_manager import VariableManager
 
 
 class ProcessExitedEventData(object):
@@ -36,6 +36,7 @@ class Debugger(object):
         self.breakpoint_manager = BreakpointManager(self)
         self.file_manager = FileManager(self)
         self.thread_manager = ThreadManager(self)
+        self.variable_manager = VariableManager(self)
 
         self.state = Flags(DebuggerState, DebuggerState.Started)
         self.process_state = ProcessState.Invalid
