@@ -374,7 +374,7 @@ class SimpleVarDrawable(AbstractValueDrawable):
         self.click_handler.on_mouse_click.subscribe(self._handle_mouse_click)
 
     def _handle_value_change(self, value):
-        self.value.change_value(value)
+        self.value.value = value
 
     def _handle_mouse_click(self, point):
         """

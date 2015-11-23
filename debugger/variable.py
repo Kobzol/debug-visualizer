@@ -86,7 +86,7 @@ class Variable(object):
         """
         self.address = address
         self.name = name
-        self.value = value
+        self._value = value
         self.type = type
         self.path = path
 
@@ -101,8 +101,13 @@ class Variable(object):
         self.children.append(child)
         child.on_value_changed.redirect(self.on_value_changed)
 
-    def change_value(self, value):
-        self.value = value
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, value):
+        self._value = value
         self.on_value_changed.notify(self)
 
     def __repr__(self):

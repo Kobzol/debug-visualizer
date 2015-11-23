@@ -32,6 +32,16 @@ def test_update_variable(debugger):
     prepare_debugger(debugger)
 
     a = debugger.variable_manager.get_variable("a")
-    a.change_value("8")
+    a.value = "8"
 
     assert debugger.variable_manager.get_variable("a").value == "8"
+
+    d = debugger.variable_manager.get_variable("d")
+    d.value = "hi"
+
+    assert debugger.variable_manager.get_variable("d").value == "hi"
+
+    vec = debugger.variable_manager.get_variable("vec")
+    vec.children[0].value = "10"
+
+    assert debugger.variable_manager.get_variable("vec").children[0].value == "10"

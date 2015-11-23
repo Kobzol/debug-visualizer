@@ -181,6 +181,7 @@ class VariableManager(object):
                 pass  # TODO
 
             variable = Variable(address, name, value, type, expression)
+            variable.on_value_changed.subscribe(self.update_variable)
 
             for child in children:
                 variable.add_child(child)
@@ -189,6 +190,14 @@ class VariableManager(object):
 
         else:
             return None
+
+    def update_variable(self, variable):
+        format = "set variable {0} = {1}"
+
+        if variable.type.type_category == TypeCategory.String:
+            format = "call {0}.assign(\"{1}\")"
+
+        self.debugger.communicator.send(format.format(variable.path, variable.value))
 
     def _get_name(self, expression):
         """
