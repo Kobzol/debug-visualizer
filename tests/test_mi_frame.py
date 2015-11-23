@@ -1,8 +1,5 @@
 import os
 
-from conftest import wait_until_state
-from enums import ProcessState
-
 FRAME_FILE = "src/test_frame.cpp"
 FRAME_LINE = 3
 
@@ -11,7 +8,7 @@ def prepare_frame_program(debugger):
     debugger.load_binary("src/test_frame")
     debugger.breakpoint_manager.add_breakpoint(FRAME_FILE, FRAME_LINE)
     debugger.launch()
-    wait_until_state(debugger, ProcessState.Stopped)
+    debugger.wait_for_stop()
 
 
 def test_frame_list(debugger):

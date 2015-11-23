@@ -1,12 +1,11 @@
-from conftest import wait_until_state
-from enums import ProcessState, TypeCategory, BasicTypeCategory
+from enums import TypeCategory, BasicTypeCategory
 
 
 def prepare_debugger(debugger):
     debugger.load_binary("src/test_type")
     debugger.breakpoint_manager.add_breakpoint("src/test_type.cpp", 51)
     debugger.launch()
-    wait_until_state(debugger, ProcessState.Stopped)
+    debugger.wait_for_stop()
 
 
 def check_type(debugger, variable_name, type_name, type_category, basic_type_category=BasicTypeCategory.Invalid):

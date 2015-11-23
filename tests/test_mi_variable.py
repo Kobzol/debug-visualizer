@@ -1,12 +1,11 @@
-from conftest import wait_until_state
-from enums import ProcessState, TypeCategory, BasicTypeCategory
+from enums import ProcessState
 
 
 def prepare_debugger(debugger):
     debugger.load_binary("src/test_variable")
     debugger.breakpoint_manager.add_breakpoint("src/test_variable.cpp", 35)
     debugger.launch()
-    wait_until_state(debugger, ProcessState.Stopped)
+    debugger.wait_for_stop()
 
 
 def check_variable(debugger, expression, value):
@@ -16,7 +15,7 @@ def check_variable(debugger, expression, value):
     assert variable.value == value
 
 
-def test_types(debugger):
+def test_values(debugger):
     prepare_debugger(debugger)
 
     check_variable(debugger, "a", "5")
@@ -27,3 +26,12 @@ def test_types(debugger):
 
     vec = debugger.variable_manager.get_variable("vec")
     assert map(lambda child: int(child.value), vec.children) == [1, 2, 3]
+
+
+def test_update_variable(debugger):
+    prepare_debugger(debugger)
+
+    a = debugger.variable_manager.get_variable("a")
+    a.change_value("8")
+
+    assert debugger.variable_manager.get_variable("a").value == "8"

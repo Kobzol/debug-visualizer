@@ -11,6 +11,7 @@ ROOT_DIR = os.path.dirname(TEST_DIR)
 SRC_DIR = os.path.join(ROOT_DIR, "debugger")
 
 sys.path.append(SRC_DIR)
+os.chdir(TEST_DIR)
 
 from mi.debugger import Debugger
 from mi.parser import Parser
@@ -24,11 +25,3 @@ def debugger():
 @pytest.fixture(scope="module")
 def parser():
     return Parser()
-
-
-def wait_until_state(debugger, state):
-    """
-    @type state: enums.ProcessState
-    """
-    while debugger.get_process_state() != state:
-        time.sleep(0.1)
