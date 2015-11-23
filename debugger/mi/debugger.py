@@ -6,6 +6,8 @@ import threading
 import time
 
 import exceptions
+
+import util
 from enums import ProcessState, DebuggerState
 from events import EventBroadcaster
 from flags import Flags
@@ -65,7 +67,7 @@ class Debugger(object):
 
     def require_state(self, required_state):
         if not self.get_state().is_set(required_state):
-            raise exceptions.BadStateError(required_state, self.state)
+            raise util.BadStateError(required_state, self.state)
 
     def get_state(self):
         return self.state
