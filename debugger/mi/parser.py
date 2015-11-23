@@ -69,6 +69,13 @@ class Parser(object):
         """
         return self.parse(data)
 
+    def parse_frame_variables(self, data):
+        """
+        @type data: str
+        @return: dict
+        """
+        return self.parse(data)["variables"]
+
     def parse(self, data):
         return self._parse_json(self._prep_json(data))
 

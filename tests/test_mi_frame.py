@@ -1,7 +1,7 @@
 import os
 
 FRAME_FILE = "src/test_frame.cpp"
-FRAME_LINE = 3
+FRAME_LINE = 6
 
 
 def prepare_frame_program(debugger):
@@ -36,3 +36,13 @@ def test_frame_select(debugger):
     frame = debugger.thread_manager.get_current_frame()
 
     assert frame.func == "main"
+
+
+def test_frame_locals(debugger):
+    prepare_frame_program(debugger)
+    frame = debugger.thread_manager.get_current_frame()
+
+    assert len(frame.variables) == 4
+
+    var_names = [var.name for var in frame.variables]
+    assert set(var_names) == {"a", "b", "c", "d"}

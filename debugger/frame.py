@@ -13,6 +13,7 @@ class Frame(object):
         self.func = func
         self.file = file
         self.line = line
+        self.variables = []
 
     def __repr__(self):
         return "Frame #{0} ({1} at {2}:{3}".format(self.level, self.func, self.file, self.line)

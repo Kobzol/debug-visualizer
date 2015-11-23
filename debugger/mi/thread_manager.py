@@ -48,7 +48,16 @@ class ThreadManager(object):
         output = self.debugger.communicator.send("-stack-info-frame")
 
         if output:
-            return self.parser.parse_stack_frame(output.data)
+            frame = self.parser.parse_stack_frame(output.data)
+            variables_info = self.parser.parse_frame_variables(
+                self.debugger.communicator.send("-stack-list-variables --skip-unavailable 0").data
+            )
+
+            for variable in variables_info:
+                frame.variables.append(self.debugger.variable_manager.get_variable(variable["name"]))
+
+            return frame
+
         else:
             return None
 
