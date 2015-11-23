@@ -265,7 +265,7 @@ class BoxedLabelDrawable(Drawable):
         self.margin = margin if margin else Margin()
 
     def get_label(self):
-        if isinstance(self.label, str):
+        if isinstance(self.label, basestring):
             return self.label
         else:
             return self.label()

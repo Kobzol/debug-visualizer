@@ -52,6 +52,7 @@ class Debugger(object):
         """
         @type output: mi.communicator.StateOutput
         """
+        util.Logger.debug("Process state changed: {0}".format(output.state))
         self.process_state = output.state
 
         if output.state == ProcessState.Exited:
@@ -130,7 +131,7 @@ class Debugger(object):
                 return
 
             if kill_process:
-                self.communicator.finish()
+                self.communicator.kill()
             else:
                 while self.process_state != ProcessState.Exited:
                     time.sleep(0.1)

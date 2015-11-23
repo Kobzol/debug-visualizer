@@ -59,6 +59,7 @@ class StdVectorPrinter:
                     raise StopIteration
                 elt = self.item.dereference()
                 self.item = self.item + 1
+
                 return ("v{0}".format(count), elt)
 
     def __init__(self, typename, val):
@@ -92,6 +93,5 @@ def register_printers(objfile):
 
 gdb.events.new_objfile.connect(lambda event: register_printers(event.new_objfile))
 """gdb.execute("file test", False)
-gdb.execute("break test.cpp:36", False)
-gdb.execute("run", False)
-gdb.execute("next", False)"""
+gdb.execute("break main", False)
+gdb.execute("run", False)"""

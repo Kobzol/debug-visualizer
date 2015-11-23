@@ -54,7 +54,9 @@ class ThreadManager(object):
             )
 
             for variable in variables_info:
-                frame.variables.append(self.debugger.variable_manager.get_variable(variable["name"]))
+                variable = self.debugger.variable_manager.get_variable(variable["name"])
+                if variable:
+                    frame.variables.append(variable)
 
             return frame
 

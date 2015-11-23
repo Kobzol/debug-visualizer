@@ -28,17 +28,17 @@ class RepeatTimer(Thread):
         @type callback: callable
         """
         Thread.__init__(self, target=self._callback)
-        self.stop = Event()
+        self.stop_event = Event()
         self.wait_time = time
         self.callback = callback
         self.daemon = True
 
     def _callback(self):
-        while not self.stop.wait(self.wait_time):
+        while not self.stop_event.wait(self.wait_time):
             self.callback()
 
-    def stop(self):
-        self.stop.set()
+    def stop_repeating(self):
+        self.stop_event.set()
 
 
 class BadStateError(Exception):

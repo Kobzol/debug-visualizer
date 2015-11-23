@@ -139,7 +139,6 @@ class MemoryCanvas(Canvas):
         self.active_frame = None
 
     def _handle_var_change(self, variable):
-        self.debugger.variable_editor.change_variable_in_frame(self.active_frame, variable)
         self.redraw()
 
     def _handle_frame_change(self, frame):
@@ -147,8 +146,7 @@ class MemoryCanvas(Canvas):
 
     def _handle_process_state_change(self, state, event_data):
         if state == ProcessState.Stopped:
-            thread = self.debugger.thread_manager.get_current_thread()
-            frame = thread.GetSelectedFrame()
+            frame = self.debugger.thread_manager.get_current_frame()
             self._set_frame(frame)
 
     def _set_frame(self, frame):
@@ -157,13 +155,10 @@ class MemoryCanvas(Canvas):
         for widget in self.fixed_wrapper.get_children():
             self.fixed_wrapper.remove(widget)
 
-        parsed_vars = [Variable.from_lldb(var) for var in frame.locals]
-
-        for var in parsed_vars:
+        for var in frame.variables:
             var.on_value_changed.subscribe(self._handle_var_change)
 
-        if frame.IsValid():
-            self.set_drawables([self.memtoview.transform_frame(self, parsed_vars)])
+        self.set_drawables([self.memtoview.transform_frame(self, frame.variables)])
 
 
 class CanvasToolbarWrapper(Gtk.VBox):

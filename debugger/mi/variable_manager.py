@@ -167,16 +167,23 @@ class VariableManager(object):
             elif type.type_category == TypeCategory.String:
                 value = data.strip("\"")
             elif type.type_category in (TypeCategory.Class, TypeCategory.Struct):
-                members = self.parser.parse_struct(data)
-                for member in members:
-                    children.append(self.get_variable("{0}.{1}".format(expression, member)))
+                result = self.debugger.communicator.send(
+                    "python print([field.name for field in gdb.lookup_type(\"{0}\").fields()])".format(type.name)
+                )
+
+                if result:
+                    members = self.parser.parse_struct_member_names(result.cli_data[0])
+                    for member in members:
+                        children.append(self.get_variable("{0}.{1}".format(expression, member)))
+
             elif type.type_category == TypeCategory.Vector:
-                members = self.parser.parse(data)
-                index = 0
-                for key in members:
-                    expr = "*({0}._M_impl._M_start + {1})".format(expression, index)
-                    children.append(self.get_variable(expr))
-                    index += 1
+                length = self.debugger.communicator.send("call {0}.size()".format(expression))
+
+                if length:
+                    length = int(self.parser.parse_print_expression(length.cli_data))
+                    for i in xrange(length):
+                        expr = "*({0}._M_impl._M_start + {1})".format(expression, i)
+                        children.append(self.get_variable(expr))
             else:
                 pass  # TODO
 
@@ -184,7 +191,8 @@ class VariableManager(object):
             variable.on_value_changed.subscribe(self.update_variable)
 
             for child in children:
-                variable.add_child(child)
+                if child:
+                    variable.add_child(child)
 
             return variable
 

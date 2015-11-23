@@ -5,6 +5,7 @@ import re
 import select
 import subprocess
 import threading
+import traceback
 
 from enum import Enum
 
@@ -249,16 +250,16 @@ class Communicator(object):
                 output = self._parse_output(output)
                 self._handle_output(output)
         except Exception as e:
-            print(e)
+            traceback.print_exc()
         finally:
             self.io_lock.release()
 
     def _reset(self):
-        self.process = None
-
         if self.read_timer is not None:
-            self.read_timer.stop()
+            self.read_timer.stop_repeating()
         self.read_timer = None
+
+        self.process = None
 
     def _handle_output(self, output):
         if output.type == OutputType.AsyncExec:
@@ -295,6 +296,9 @@ class Communicator(object):
             data = self._readline(True)
 
     def _parse_output(self, response):
+        if response is None:
+            return OutputMessage(OutputType.Unknown)
+
         if response == Communicator.GROUP_SEPARATOR:
             return OutputMessage(OutputType.Separator)
         elif response[0].isdigit() or response[0] == Communicator.RESPONSE_START:

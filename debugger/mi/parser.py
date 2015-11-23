@@ -76,6 +76,14 @@ class Parser(object):
         """
         return self.parse(data)["variables"]
 
+    def parse_struct_member_names(self, data):
+        """
+        @type data: str
+        @return: list of str
+        """
+        data = data.replace("'", "\"")
+        return self._parse_json(data)
+
     def parse(self, data):
         return self._parse_json(self._prep_json(data))
 
@@ -138,14 +146,21 @@ class Parser(object):
                         i -= 1
             i += 1
 
+        for parentheses in in_array:
+            if parentheses == 1:
+                data += "]"
+            elif parentheses == 0:
+                data += "}"
+
         return data
 
     def _prep_json(self, data):
         # remove array labels
         data = self._remove_array_labels(data)
         data = re.sub("((?:\w|-)+)\s*=", r'"\1":', data)
+        data = re.sub("<error reading variable[^>]*>", "\"\"", data)
 
-        if data[0] != "{":
+        if data[0] not in ("{", "["):
             data = "{" + data + "}"
 
         return data

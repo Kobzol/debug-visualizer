@@ -184,9 +184,6 @@ class SourceManager(Gtk.Notebook):
     def _handle_process_state_change(self, state, event_data):
         if state == ProcessState.Stopped:
             frame = self.debugger.thread_manager.get_current_frame()
-            if not frame.IsValid() or "__GI___libc_" in frame.name:
-                return
-
             location = self.debugger.file_manager.get_current_location()
 
             if location[0]:
