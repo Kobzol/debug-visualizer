@@ -5,8 +5,6 @@ import threading
 
 import time
 
-import exceptions
-
 import util
 from enums import ProcessState, DebuggerState
 from events import EventBroadcaster
@@ -81,6 +79,8 @@ class Debugger(object):
         self.communicator.start_gdb()
         result = self.communicator.send("-file-exec-and-symbols {0}".format(binary_path))
 
+        util.Logger.debug("Loading program binary {0} succeeded: {1}".format(binary_path, result.is_success()))
+
         if result.is_success():
             self.state.set(DebuggerState.BinaryLoaded)
 
@@ -93,9 +93,14 @@ class Debugger(object):
 
         stdin, stdout, stderr = self.io_manager.handle_io()
 
-        self.communicator.send("run 1>{0} 2>{1} <{2}".format(stdout, stderr, stdin))
+        result = self.communicator.send("run 1>{0} 2>{1} <{2}".format(stdout, stderr, stdin))
 
-        self.state.set(DebuggerState.Running)
+        util.Logger.debug("Launching program: {0}".format(result))
+
+        if result:
+            self.state.set(DebuggerState.Running)
+
+        return result.is_success()
 
     def exec_continue(self):
         self.require_state(DebuggerState.Running)
@@ -132,6 +137,7 @@ class Debugger(object):
 
                 self.on_process_state_changed.notify(ProcessState.Exited, ProcessExitedEventData(return_code))
 
+            util.Logger.debug("Debugger process ended")
             self.state.unset(DebuggerState.Running)
 
             self.io_manager.stop_io()
