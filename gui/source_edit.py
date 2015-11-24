@@ -10,6 +10,7 @@ from enum import Enum
 from analysis.source_analyser import SourceAnalyzer
 from events import EventBroadcaster
 from enums import ProcessState
+from util import Logger
 
 
 class BreakpointChangeType(Enum):
@@ -183,8 +184,9 @@ class SourceManager(Gtk.Notebook):
 
     def _handle_process_state_change(self, state, event_data):
         if state == ProcessState.Stopped:
-            frame = self.debugger.thread_manager.get_current_frame()
             location = self.debugger.file_manager.get_current_location()
+
+            Logger.debug("Stop at {0}".format(location))
 
             if location[0]:
                 GObject.idle_add(lambda *x: self.set_exec_line(location[0], location[1]))

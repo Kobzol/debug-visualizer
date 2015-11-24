@@ -32,7 +32,7 @@ class FileManager(object):
                 cli_data = output.cli_data[2]
                 return cli_data[11:]
         except Exception as e:
-            print(e)
+            traceback.print_exc()
 
         return None
 
