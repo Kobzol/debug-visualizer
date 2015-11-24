@@ -4,6 +4,7 @@ from gi.repository import GObject
 
 from enums import DebuggerState
 from enums import ProcessState, DebuggerState
+from util import Logger
 
 
 class ToolbarManager(object):
@@ -57,12 +58,13 @@ class ToolbarManager(object):
             self._state_running()
 
     def _handle_debugger_state_change(self, state, old_value):
-        if state.is_set(DebuggerState.BinaryLoaded):
+        if state.is_set(DebuggerState.BinaryLoaded) and not state.is_set(DebuggerState.Running):
             self._change_state("run", True)
         else:
             self._change_state("run", False)
 
     def _change_state(self, item_name, sensitive=True):
+        Logger.debug("Changing toolbar state of {0} to {1}".format(item_name, "true" if sensitive else "false"))
         GObject.idle_add(lambda *x: self._change_state_ui(item_name, sensitive))
 
     def _change_grp_state(self, group, sensitive=True):
