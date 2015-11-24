@@ -7,6 +7,7 @@ import subprocess
 import threading
 import traceback
 
+import signal
 from enum import Enum
 
 from enums import ProcessState
@@ -167,7 +168,7 @@ class Communicator(object):
             self.kill()
 
         if self.read_timer is not None:
-            self.read_timer.stop()
+            self.read_timer.stop_repeating()
 
         self.token = 0
 
@@ -231,6 +232,13 @@ class Communicator(object):
 
         return response
 
+    def quit_program(self):
+        self.pause_program()
+        self.send("kill")
+
+    def pause_program(self):
+        os.kill(self.process.pid, signal.SIGINT)
+
     def finish(self):
         self.send("-gdb-exit")
         self.process.wait()
@@ -279,7 +287,7 @@ class Communicator(object):
                     input = process.stdout.readline()
             else:
                 input = process.stdout.readline()
-        except IOError as e:
+        except Exception as e:
             print(e)
 
         self.io_lock.release()

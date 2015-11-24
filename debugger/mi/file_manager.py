@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
+import traceback
 
 
 class FileManager(object):
@@ -19,7 +20,7 @@ class FileManager(object):
 
                 return int(match.group(0))
         except Exception as e:
-            print(e)
+            traceback.print_exc()
 
         return None
 

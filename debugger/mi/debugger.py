@@ -109,7 +109,8 @@ class Debugger(object):
 
     def exec_pause(self):
         self.require_state(DebuggerState.Running)
-        self.communicator.send("-exec-interrupt")
+        self.communicator.pause_program()
+        self.communicator.send("interrupt")
 
     def exec_step_over(self):
         self.require_state(DebuggerState.Running)
@@ -117,13 +118,13 @@ class Debugger(object):
 
     def exec_step_in(self):
         self.require_state(DebuggerState.Running)
-        self.communicator.send("-exec-next-instruction")
+        self.communicator.send("-exec-step")
 
     def exec_step_out(self):
         self.require_state(DebuggerState.Running)
         self.communicator.send("-exec-finish")
 
-    def stop(self, kill_process=False, return_code=None):
+    def kill(self, kill_process=False):
         self.exit_lock.acquire()
 
         try:
@@ -136,8 +137,24 @@ class Debugger(object):
                 while self.process_state != ProcessState.Exited:
                     time.sleep(0.1)
 
-                self.on_process_state_changed.notify(ProcessState.Exited, ProcessExitedEventData(return_code))
+            self.process_state = ProcessState.Exited
+            self.state.unset(DebuggerState.Running)
 
+            self.io_manager.stop_io()
+        finally:
+            self.exit_lock.release()
+
+    def stop_program(self, return_code=1):
+        self.exit_lock.acquire()
+
+        try:
+            if not self.state.is_set(DebuggerState.Running):
+                return
+
+            self.communicator.quit_program()
+
+            self.process_state = ProcessState.Exited
+            self.on_process_state_changed.notify(ProcessState.Exited, ProcessExitedEventData(return_code))
             util.Logger.debug("Debugger process ended")
             self.state.unset(DebuggerState.Running)
 
