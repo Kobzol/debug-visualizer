@@ -95,7 +95,12 @@ class Parser(object):
         @type frame: dict
         @return: frame.Frame
         """
-        return Frame(int(frame["level"]), frame["func"], frame["fullname"], int(frame["line"]))
+        level = int(frame.get("level", "0"))
+        func = frame.get("func", "")
+        fullname = frame.get("fullname", "")
+        line = int(frame.get("line", "0"))
+
+        return Frame(level, func, fullname, line)
 
     def _instantiate_thread_state(self, state):
         """
