@@ -189,7 +189,6 @@ class Communicator(object):
         self._skip_to_separator()
 
         self.send("-gdb-set mi-async on")
-        self.send("set non-stop on")
         self.send("source {0}".format(gdb_pretty_print_file))
 
         self.read_timer = RepeatTimer(0.1, self._timer_read_output)
