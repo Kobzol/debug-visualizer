@@ -11,6 +11,7 @@ from analysis.source_analyser import SourceAnalyzer
 from events import EventBroadcaster
 from enums import ProcessState
 from util import Logger
+from utils import run_on_gui
 
 
 class BreakpointChangeType(Enum):
@@ -187,7 +188,7 @@ class SourceManager(Gtk.Notebook):
         if state == ProcessState.Stopped:
             self._set_debugger_location()
         elif state == ProcessState.Exited:
-            GObject.idle_add(lambda *x: self.unset_exec_line())
+            run_on_gui(self.unset_exec_line)
 
     def _handle_frame_change(self, frame):
         """
@@ -201,7 +202,7 @@ class SourceManager(Gtk.Notebook):
         Logger.debug("Stop at {0}".format(location))
 
         if location[0]:
-            GObject.idle_add(lambda *x: self.set_exec_line(location[0], location[1]))
+            run_on_gui(self.set_exec_line, location[0], location[1])
 
     def _create_label(self, path, widget):
         content = Gtk.Box(Gtk.Orientation.HORIZONTAL)

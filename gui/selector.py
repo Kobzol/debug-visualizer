@@ -3,7 +3,10 @@
 import abc
 
 from gi.repository import Gtk
+from gi.repository import GObject
+
 from enums import ProcessState
+from utils import run_on_gui
 
 
 class FrameListRow(Gtk.ListBoxRow):
@@ -68,6 +71,9 @@ class Selector(Gtk.ListBox):
 
     def _select_row_auto(self, row):
         self.auto_select = True
+        run_on_gui(self._select_row_auto_callback, row)
+
+    def _select_row_auto_callback(self, row):
         self.select_row(row)
         self.auto_select = False
 
@@ -95,10 +101,10 @@ class FrameSelector(Selector):
         return row
 
     def _handle_frame_change(self, frame):
-        self._load_frames()
+        run_on_gui(self._load_frames)
 
     def _handle_thread_change(self, thread):
-        self._load_frames()
+        run_on_gui(self._load_frames)
 
     def _handle_row_selected(self, row):
         """
@@ -111,9 +117,9 @@ class FrameSelector(Selector):
 
     def _handle_process_change(self, state, event):
         if state == ProcessState.Exited:
-            self.clear_children()
+            run_on_gui(self.clear_children)
         elif state == ProcessState.Stopped:
-            self._load_frames()
+            run_on_gui(self._load_frames)
 
     def _load_frames(self):
         self.clear_children()
@@ -152,16 +158,16 @@ class ThreadSelector(Selector):
 
     def _handle_process_change(self, state, event):
         if state == ProcessState.Exited:
-            self.clear_children()
+            run_on_gui(self.clear_children)
         elif state == ProcessState.Stopped:
-            self._load_threads()
+            run_on_gui(self._load_threads)
 
     def _handle_frame_change(self, frame):
         pass
 
     @abc.abstractmethod
     def _handle_thread_change(self, thread):
-        self._load_threads()
+        run_on_gui(self._load_threads)
 
     @abc.abstractmethod
     def _handle_row_selected(self, row):
