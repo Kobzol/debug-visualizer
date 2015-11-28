@@ -6,7 +6,7 @@ import re
 from breakpoint import Breakpoint
 from enums import ThreadState
 from frame import Frame
-from inferior_thread import InferiorThread
+from inferior_thread import InferiorThread, ThreadInfo
 
 
 class Parser(object):
@@ -22,16 +22,21 @@ class Parser(object):
     def parse_thread_info(self, data):
         """
         @type data: str
-        @return: tuple of (int, thread.Thread)
+        @return: inferior_thread.ThreadInfo
         """
         data = self.parse(data)
         current_thread_id = int(data["current-thread-id"])
+        current_thread = None
         threads = []
 
         for thread in data["threads"]:
-            threads.append(self._instantiate_thread(thread))
+            th = self._instantiate_thread(thread)
+            threads.append(th)
 
-        return (current_thread_id, threads)
+            if th.id == current_thread_id:
+                current_thread = th
+
+        return ThreadInfo(current_thread, threads)
 
     def parse_stack_frames(self, data):
         """
@@ -88,7 +93,7 @@ class Parser(object):
         return self._parse_json(self._prep_json(data))
 
     def _instantiate_thread(self, thread):
-        return InferiorThread(thread["id"], thread["name"], self._instantiate_thread_state(thread["state"]), self._instantiate_frame(thread["frame"]))
+        return InferiorThread(int(thread["id"]), thread["name"], self._instantiate_thread_state(thread["state"]), self._instantiate_frame(thread["frame"]))
 
     def _instantiate_frame(self, frame):
         """
