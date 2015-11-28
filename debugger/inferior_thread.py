@@ -1,6 +1,19 @@
 # -*- coding: utf-8 -*-
 
 
+class ThreadInfo(object):
+    def __init__(self, selected_thread, threads):
+        """
+        @type selected_thread: InferiorThread
+        @type threads: list of InferiorThread
+        """
+        self.selected_thread = selected_thread
+        self.threads = threads
+
+    def __repr__(self):
+        return "Thread info: active: {0}, threads: {1}".format(str(self.selected_thread), str(self.threads))
+
+
 class InferiorThread(object):
     def __init__(self, id, name, state, frame=None):
         """
