@@ -47,6 +47,7 @@ class Debugger(object):
         self.state.on_value_changed.redirect(self.on_debugger_state_changed)
         self.on_process_state_changed = EventBroadcaster()
         self.on_frame_changed = EventBroadcaster()
+        self.on_thread_changed = EventBroadcaster()
 
     def _handle_process_state(self, output):
         """

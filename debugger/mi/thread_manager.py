@@ -14,19 +14,15 @@ class ThreadManager(object):
 
     def get_current_thread(self):
         """
-        @return: thread.Thread | None
+        @return: inferior_thread.Thread
         """
         thread_info = self.get_thread_info()
-        for thread in thread_info[1]:
-            if thread.id == thread_info[0]:
-                return thread
-
-        return None
+        return thread_info.selected_thread
 
     def get_thread_info(self):
         """
         Returns (active_thread_id, all_threads).
-        @return: tuple of (int, list of thread.Thread) | None
+        @return: inferior_thread.ThreadInfo | None
         """
         output = self.debugger.communicator.send("-thread-info")
 
@@ -39,7 +35,7 @@ class ThreadManager(object):
         """
         @type thread_id: int
         """
-        return self.debugger.communicator.send("-thread-select").is_success()
+        return self.debugger.communicator.send("-thread-select {0}".format(thread_id)).is_success()
 
     def get_current_frame(self):
         """
