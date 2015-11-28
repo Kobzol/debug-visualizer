@@ -2,6 +2,7 @@
 
 from mi.parser import Parser
 from inferior_thread import InferiorThread
+from util import Logger
 
 
 class ThreadManager(object):
@@ -41,6 +42,8 @@ class ThreadManager(object):
         if result:
             self.debugger.on_thread_changed.notify(self.get_thread_info().selected_thread)
             self.debugger.on_frame_changed.notify(self.get_current_frame())
+
+            Logger.debug("Changed to thread with id {0}".format(thread_id))
 
             return True
         else:
@@ -91,6 +94,9 @@ class ThreadManager(object):
 
         if result:
             self.debugger.on_frame_changed.notify(self.get_current_frame())
+
+            Logger.debug("Changed to frame with id {0}".format(frame_index))
+
             return True
         else:
             return False

@@ -2,6 +2,8 @@
 import re
 import traceback
 
+from util import Logger
+
 
 class FileManager(object):
     def __init__(self, debugger):
@@ -46,7 +48,11 @@ class FileManager(object):
             return None
 
     def get_current_location(self):
-        line = self._get_current_line()
-        location = self._get_current_file()
+        frame = self.debugger.thread_manager.get_current_frame()
+
+        line = frame.line
+        location = frame.file
+
+        Logger.debug("Getting current location: ({0}, {1})".format(location, line))
 
         return (location, line)
