@@ -44,7 +44,7 @@ def test_thread_location(debugger):
 
     select_other_thread(debugger)
 
-    assert debugger.file_manager.get_current_location()[1] in range(7, 10)
+    assert debugger.file_manager.get_current_location()[1] in range(7, 11)
 
 
 def test_thread_frame(debugger):
