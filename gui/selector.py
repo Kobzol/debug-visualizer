@@ -6,7 +6,7 @@ from gi.repository import Gtk
 from gi.repository import GObject
 
 from enums import ProcessState
-from utils import run_on_gui
+from gui_util import run_on_gui, require_gui_thread
 
 
 class FrameListRow(Gtk.ListBoxRow):
@@ -46,6 +46,7 @@ class Selector(Gtk.ListBox):
 
         self.auto_select = False
 
+    @require_gui_thread
     def clear_children(self):
         for widget in self.get_children():
             self.remove(widget)
@@ -73,6 +74,7 @@ class Selector(Gtk.ListBox):
         self.auto_select = True
         run_on_gui(self._select_row_auto_callback, row)
 
+    @require_gui_thread
     def _select_row_auto_callback(self, row):
         self.select_row(row)
         self.auto_select = False
@@ -85,6 +87,7 @@ class FrameSelector(Selector):
         """
         super(FrameSelector, self).__init__(debugger)
 
+    @require_gui_thread
     def add_frame(self, frame):
         row = FrameListRow(frame)
 
@@ -121,6 +124,7 @@ class FrameSelector(Selector):
         elif state == ProcessState.Stopped:
             run_on_gui(self._load_frames)
 
+    @require_gui_thread
     def _load_frames(self):
         self.clear_children()
         frames = self.debugger.thread_manager.get_frames()
@@ -137,6 +141,7 @@ class ThreadSelector(Selector):
     def __init__(self, debugger):
         super(ThreadSelector, self).__init__(debugger)
 
+    @require_gui_thread
     def add_thread(self, thread):
         """
         @type thread: inferior_thread.InferiorThread
@@ -179,6 +184,7 @@ class ThreadSelector(Selector):
 
         self.debugger.thread_manager.set_thread_by_index(row.thread.id)
 
+    @require_gui_thread
     def _load_threads(self):
         self.clear_children()
         thread_info = self.debugger.thread_manager.get_thread_info()

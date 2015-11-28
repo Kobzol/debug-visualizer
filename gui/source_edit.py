@@ -2,7 +2,6 @@
 
 from gi.repository import Gtk
 from gi.repository import GtkSource
-from gi.repository import GObject
 import os
 
 from enum import Enum
@@ -11,7 +10,7 @@ from analysis.source_analyser import SourceAnalyzer
 from events import EventBroadcaster
 from enums import ProcessState
 from util import Logger
-from utils import run_on_gui
+from gui_util import run_on_gui, require_gui_thread
 
 
 class BreakpointChangeType(Enum):
@@ -77,6 +76,7 @@ class SourceEditor(GtkSource.View):
     def get_file(self):
         return self.file
 
+    @require_gui_thread
     def set_language(self, key):
         manager = GtkSource.LanguageManager()
         language = manager.get_language(key)
@@ -85,12 +85,15 @@ class SourceEditor(GtkSource.View):
         self.get_buffer().set_language(language)
         self.stop_undoable()
 
+    @require_gui_thread
     def start_undoable(self):
         self.get_buffer().begin_not_undoable_action()
 
+    @require_gui_thread
     def stop_undoable(self):
         self.get_buffer().end_not_undoable_action()
 
+    @require_gui_thread
     def set_content_from_file(self, path):
         content = SourceEditor.load_file(path)
 
@@ -101,26 +104,32 @@ class SourceEditor(GtkSource.View):
             self.stop_undoable()
             self.analyser.set_file(path)
 
+    @require_gui_thread
     def get_cursor_iter(self):
         cursor_rectangle = self.get_cursor_locations(None)[0]
         return self.get_iter_at_location(cursor_rectangle.x, cursor_rectangle.y)
 
+    @require_gui_thread
     def get_current_column(self):
         return self.get_cursor_iter().get_line_offset()
 
+    @require_gui_thread
     def get_current_line(self):
         return self.get_cursor_iter().get_line()
 
+    @require_gui_thread
     def get_line_iters(self, line_number):
         start_line = self.get_buffer().get_iter_at_line(line_number)
         end_line = start_line.copy()
         end_line.forward_to_line_end()
         return (start_line, end_line)
 
+    @require_gui_thread
     def _create_bp_event(self, line, create=True):
         # +1 because the lines are usually addressed starting from 1
         return ((self.file, line + 1), BreakpointChangeType.Create if create else BreakpointChangeType.Delete)
 
+    @require_gui_thread
     def breakpoint_change(self, line_number, enable=True):
         line_iters = self.get_line_iters(line_number)
 
@@ -131,6 +140,7 @@ class SourceEditor(GtkSource.View):
 
         self.on_breakpoint_changed.notify(*self._create_bp_event(line_number, enable))
 
+    @require_gui_thread
     def breakpoint_toggle(self, line_number):
         line_iters = self.get_line_iters(line_number)
 
@@ -139,16 +149,19 @@ class SourceEditor(GtkSource.View):
         else:
             self.breakpoint_change(line_number, True)
 
+    @require_gui_thread
     def set_exec_line(self, line_number):
         self.unset_exec_line()
         line_iters = self.get_line_iters(line_number)
         self.get_buffer().apply_tag(self.tag_exec, line_iters[0], line_iters[1])
         self.scroll_to_iter(line_iters[0], 0.0, True, 0.5, 0.5)
 
+    @require_gui_thread
     def unset_exec_line(self):
         buffer = self.get_buffer()
         buffer.remove_tag(self.tag_exec, buffer.get_start_iter(), buffer.get_end_iter())
 
+    @require_gui_thread
     def undo(self):
         if self.get_buffer().can_undo():
             self.get_buffer().undo()
@@ -156,6 +169,7 @@ class SourceEditor(GtkSource.View):
         else:
             return False
 
+    @require_gui_thread
     def redo(self):
         if self.get_buffer().can_redo():
             self.get_buffer().redo()
@@ -204,6 +218,7 @@ class SourceManager(Gtk.Notebook):
         if location[0]:
             run_on_gui(self.set_exec_line, location[0], location[1])
 
+    @require_gui_thread
     def _create_label(self, path, widget):
         content = Gtk.Box(Gtk.Orientation.HORIZONTAL)
 
@@ -221,9 +236,11 @@ class SourceManager(Gtk.Notebook):
 
         return content
 
+    @require_gui_thread
     def _close_tab(self, widget):
         self.remove_page(self.get_tabs().index(widget))
 
+    @require_gui_thread
     def _add_tab(self, file_path):
         editor = SourceEditor()
         editor.set_content_from_file(file_path)
@@ -245,9 +262,11 @@ class SourceManager(Gtk.Notebook):
         else:
             return None
 
+    @require_gui_thread
     def get_tabs(self):
         return [self.get_nth_page(i) for i in xrange(0, self.get_n_pages())]
 
+    @require_gui_thread
     def open_file(self, file_path):
         for index, tab in enumerate(self.get_tabs()):
             if tab.editor.file == file_path:
@@ -256,14 +275,17 @@ class SourceManager(Gtk.Notebook):
 
         return self._add_tab(file_path)
 
+    @require_gui_thread
     def set_exec_line(self, file_path, line_number):
         tab = self.open_file(file_path)
         tab.set_exec_line(line_number - 1)
 
+    @require_gui_thread
     def unset_exec_line(self):
         for tab in self.get_tabs():
             tab.editor.unset_exec_line()
 
+    @require_gui_thread
     def get_selected_editor(self):
         selected = self.get_current_page()
 
@@ -272,9 +294,11 @@ class SourceManager(Gtk.Notebook):
         else:
             return None
 
+    @require_gui_thread
     def toggle_breakpoint(self):
         editor = self.get_selected_editor()
         editor.breakpoint_toggle(editor.get_current_line())
 
+    @require_gui_thread
     def select_tab(self, index):
         self.set_current_page(index)

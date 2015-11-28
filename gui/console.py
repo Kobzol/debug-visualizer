@@ -11,6 +11,7 @@ from gi.repository import Pango
 from gi.repository import GObject
 
 from enums import ProcessState
+from gui_util import require_gui_thread, run_on_gui
 
 
 class Console(Gtk.ScrolledWindow):
@@ -37,22 +38,27 @@ class Console(Gtk.ScrolledWindow):
 
         self.show_all()
 
+    @require_gui_thread
     def get_buffer(self):
         return self.textview.get_buffer()
 
+    @require_gui_thread
     def get_cursor_iter(self):
         cursor_rectangle = self.textview.get_cursor_locations(None)[0]
         return self.textview.get_iter_at_location(cursor_rectangle.x, cursor_rectangle.y)
 
+    @require_gui_thread
     def get_current_line(self):
         return self.get_cursor_iter().get_line()
 
+    @require_gui_thread
     def get_line_iters(self, line_number):
         start_line = self.textview.get_buffer().get_iter_at_line(line_number)
         end_line = start_line.copy()
         end_line.forward_to_line_end()
         return (start_line, end_line)
 
+    @require_gui_thread
     def clear(self):
         self.get_buffer().set_text("")
 
@@ -88,14 +94,16 @@ class IOConsole(Console):
 
     def _handle_process_state_change(self, state, event_data):
         if state == ProcessState.Running:
-            self.textview.set_editable(True)
+            run_on_gui(self.textview.set_editable, True)
         else:
-            self.textview.set_editable(False)
+            run_on_gui(self.textview.set_editable, False)
 
+    @require_gui_thread
     def _handle_key(self, key):
         if key.keyval == Gdk.KEY_Return:
             self._emit_buffer()
 
+    @require_gui_thread
     def _handle_input_char(self, start_iter):
         if not start_iter.has_tag(self.tag_handled):
             buffer = self.get_buffer()
@@ -110,6 +118,7 @@ class IOConsole(Console):
         else:
             return None
 
+    @require_gui_thread
     def _collect_buffer(self):
         input_buffer = ""
         buffer = self.get_buffer()
@@ -131,6 +140,7 @@ class IOConsole(Console):
 
         return input_buffer
 
+    @require_gui_thread
     def _emit_buffer(self):
         input_buffer = self._collect_buffer()
 
@@ -140,6 +150,7 @@ class IOConsole(Console):
             print(traceback.format_exc())
             sys.stdout.flush()
 
+    @require_gui_thread
     def _write_on_ui(self, text, tag_name=None):
         if tag_name:
             self.write(text, tag_name)
@@ -153,7 +164,7 @@ class IOConsole(Console):
             data = stream_file.readline()
 
             if len(data) > 0:
-                    GObject.idle_add(lambda *x: self._write_on_ui(data, data_tag))
+                run_on_gui(self._write_on_ui, data, data_tag)
 
     def _watch_file_thread(self, debugger):
         while not self.stop_thread.is_set():
@@ -176,6 +187,7 @@ class IOConsole(Console):
         self.watch_thread = threading.Thread(target=self._watch_file_thread, args=[debugger])
         self.watch_thread.start()
 
+    @require_gui_thread
     def clear(self):
         Console.clear(self)
 
@@ -189,6 +201,7 @@ class IOConsole(Console):
 
         self._watch_output(debugger)
 
+    @require_gui_thread
     def write(self, text, tag_name="stdout"):
         buffer = self.get_buffer()
         buffer.insert_with_tags_by_name(buffer.get_end_iter(), text, tag_name, "handled")
@@ -197,6 +210,7 @@ class IOConsole(Console):
         self._stop_watch_thread()
         self.debugger.on_process_state_changed.unsubscribe(self._handle_process_state_change)
 
+    @require_gui_thread
     def filter_toggle_io(self, type):
         tag = self.get_buffer().get_tag_table().lookup(type)
 

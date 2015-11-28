@@ -9,6 +9,7 @@ from config import Config
 
 from drawing.canvas import MemoryCanvas, CanvasToolbarWrapper
 from enums import ProcessState
+from gui_util import require_gui_thread, run_on_gui
 from source_edit import SourceManager
 from dialog import FileOpenDialog, MessageBox
 from console import IOConsole
@@ -123,24 +124,26 @@ class MainWindow(Gtk.Window):
 
     def _handle_process_state_change(self, state, event_data):
         if state == ProcessState.Exited:
-            self.add_status_message("Process exited with code {0}.".format(event_data.return_code))
+            run_on_gui(self.add_status_message, "Process exited with code {0}.".format(event_data.return_code))
         elif state == ProcessState.Stopped:
             location = self.app.debugger.file_manager.get_current_location()
             if location[0]:
-                self.add_status_message("Process stopped at {0}:{1} - {2}"
+                run_on_gui(self.add_status_message, "Process stopped at {0}:{1} - {2}"
                                         .format(location[0], location[1], event_data.stop_reason))
             else:
-                self.add_status_message("Process stopped - {0} ({1})"
+                run_on_gui(self.add_status_message, "Process stopped - {0} ({1})"
                                         .format(event_data.stop_reason, event_data.stop_desc))
         elif state == ProcessState.Running:
-            self.add_status_message("Process is running...")
+            run_on_gui(self.add_status_message, "Process is running...")
 
+    @require_gui_thread
     def add_status_message(self, text):
         self.status_bar.push(1, text)
 
     def add_shortcut(self, key, callback, mask=0):
         self.accel_group.connect(key, mask, Gtk.AccelFlags.VISIBLE, lambda *x: callback())
 
+    @require_gui_thread
     def binary_load_dialog(self):
         file_path = FileOpenDialog.open_file("Choose a binary file", self, os.path.abspath("../debugger/"))
 
@@ -160,6 +163,7 @@ class MainWindow(Gtk.Window):
             else:
                 MessageBox.show("This file couldn't be loaded.", "Binary load", self, Gtk.MessageType.ERROR)
 
+    @require_gui_thread
     def source_open_dialog(self):
         file_path = FileOpenDialog.open_file("Choose a source file", self)
 

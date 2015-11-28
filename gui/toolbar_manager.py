@@ -4,6 +4,7 @@ from gi.repository import GObject
 
 from enums import DebuggerState
 from enums import ProcessState, DebuggerState
+from gui_util import require_gui_thread, run_on_gui
 from util import Logger
 
 
@@ -30,6 +31,7 @@ class ToolbarManager(object):
         self.grp_halt_control = ["stop", "pause"]
         self.grp_step = ["continue", "step_over", "step_in", "step_out"]
 
+    @require_gui_thread
     def _get_items(self):
         return [self.toolbar.get_nth_item(i) for i in xrange(0, self.toolbar.get_n_items())]
 
@@ -65,12 +67,13 @@ class ToolbarManager(object):
 
     def _change_state(self, item_name, sensitive=True):
         Logger.debug("Changing toolbar state of {0} to {1}".format(item_name, "true" if sensitive else "false"))
-        GObject.idle_add(lambda *x: self._change_state_ui(item_name, sensitive))
+        run_on_gui(self._change_state_ui, item_name, sensitive)
 
     def _change_grp_state(self, group, sensitive=True):
         for item in group:
             self._change_state(item, sensitive)
 
+    @require_gui_thread
     def _change_state_ui(self, item_name, sensitive=True):
         item = self.toolbar_builder.get_object(item_name)
         item.set_sensitive(sensitive)
