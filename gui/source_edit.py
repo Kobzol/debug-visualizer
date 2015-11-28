@@ -175,6 +175,7 @@ class SourceManager(Gtk.Notebook):
         self.on_breakpoint_changed.subscribe(self._handle_breakpoint_change)
 
         self.debugger.on_process_state_changed.subscribe(self._handle_process_state_change)
+        self.debugger.on_frame_changed.subscribe(self._handle_frame_change)
 
     def _handle_breakpoint_change(self, location, change_type):
         if change_type == BreakpointChangeType.Create:
@@ -184,14 +185,23 @@ class SourceManager(Gtk.Notebook):
 
     def _handle_process_state_change(self, state, event_data):
         if state == ProcessState.Stopped:
-            location = self.debugger.file_manager.get_current_location()
-
-            Logger.debug("Stop at {0}".format(location))
-
-            if location[0]:
-                GObject.idle_add(lambda *x: self.set_exec_line(location[0], location[1]))
+            self._set_debugger_location()
         elif state == ProcessState.Exited:
             GObject.idle_add(lambda *x: self.unset_exec_line())
+
+    def _handle_frame_change(self, frame):
+        """
+        @param frame: frame.Frame
+        """
+        self._set_debugger_location()
+
+    def _set_debugger_location(self):
+        location = self.debugger.file_manager.get_current_location()
+
+        Logger.debug("Stop at {0}".format(location))
+
+        if location[0]:
+            GObject.idle_add(lambda *x: self.set_exec_line(location[0], location[1]))
 
     def _create_label(self, path, widget):
         content = Gtk.Box(Gtk.Orientation.HORIZONTAL)

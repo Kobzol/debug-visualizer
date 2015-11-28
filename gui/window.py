@@ -12,7 +12,7 @@ from enums import ProcessState
 from source_edit import SourceManager
 from dialog import FileOpenDialog, MessageBox
 from console import IOConsole
-from stackframe_selector import StackFrameSelector
+from selector import FrameSelector, ThreadSelector
 from tool_manager import ToolManager
 from toolbar_manager import ToolbarManager
 
@@ -100,11 +100,17 @@ class MainWindow(Gtk.Window):
         self.console_wrapper.add(self.console)
         self.tool_manager.add_tool("Console", self.console_wrapper)
 
-        self.stackframe_selector = StackFrameSelector(app.debugger)
+        self.frame_selector = FrameSelector(app.debugger)
         window = Gtk.ScrolledWindow()
-        window.add_with_viewport(self.stackframe_selector)
+        window.add_with_viewport(self.frame_selector)
         window.set_size_request(-1, 100)
         self.tool_manager.add_tool("Call stack", window)
+
+        self.thread_selector = ThreadSelector(app.debugger)
+        window = Gtk.ScrolledWindow()
+        window.add_with_viewport(self.thread_selector)
+        window.set_size_request(-1, 100)
+        self.tool_manager.add_tool("Threads", window)
 
         self._add_to_row(self.tool_manager, 3)
 

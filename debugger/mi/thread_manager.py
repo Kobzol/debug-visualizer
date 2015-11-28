@@ -34,8 +34,17 @@ class ThreadManager(object):
     def set_thread_by_index(self, thread_id):
         """
         @type thread_id: int
+        @return: bool
         """
-        return self.debugger.communicator.send("-thread-select {0}".format(thread_id)).is_success()
+        result = self.debugger.communicator.send("-thread-select {0}".format(thread_id)).is_success()
+
+        if result:
+            self.debugger.on_thread_changed.notify(self.get_thread_info().selected_thread)
+            self.debugger.on_frame_changed.notify(self.get_current_frame())
+
+            return True
+        else:
+            return False
 
     def get_current_frame(self):
         """
@@ -78,4 +87,10 @@ class ThreadManager(object):
         if frame_index >= len(self.get_frames()):
             return False
 
-        return self.debugger.communicator.send("-stack-select-frame {0}".format(frame_index)).is_success()
+        result = self.debugger.communicator.send("-stack-select-frame {0}".format(frame_index)).is_success()
+
+        if result:
+            self.debugger.on_frame_changed.notify(self.get_current_frame())
+            return True
+        else:
+            return False
