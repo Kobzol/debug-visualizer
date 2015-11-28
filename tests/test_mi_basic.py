@@ -5,7 +5,7 @@ from conftest import TEST_SRC_DIR
 
 def test_stop_no_launch(debugger):
     debugger.load_binary(os.path.join(TEST_SRC_DIR, "test_breakpoint_basic"))
-    debugger.stop(False)
+    debugger.stop_program()
 
 
 def test_load_file(debugger):
