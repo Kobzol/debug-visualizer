@@ -8,6 +8,7 @@ class MemToViewTransformer(object):
     def __init__(self):
         self.function_map = {
             TypeCategory.Builtin: self.create_basic,
+            TypeCategory.String: self.create_basic,
             TypeCategory.Pointer: self.create_pointer,
             TypeCategory.Reference: self.create_pointer,
             TypeCategory.Struct: self.create_struct,

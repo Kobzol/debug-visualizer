@@ -92,6 +92,3 @@ def register_printers(objfile):
     objfile.pretty_printers.append(str_lookup_function)
 
 gdb.events.new_objfile.connect(lambda event: register_printers(event.new_objfile))
-"""gdb.execute("file test", False)
-gdb.execute("break main", False)
-gdb.execute("run", False)"""
