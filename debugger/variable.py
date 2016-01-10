@@ -30,16 +30,18 @@ class Type(object):
 
         return Type(type_name, type_category, BasicTypeCategory(lldb_type.GetBasicType()))
 
-    def __init__(self, name, type_category, basic_type_category):
+    def __init__(self, name, type_category, basic_type_category, size):
         """
         @type name: str
         @type type_category: enums.TypeCategory
         @type basic_type_category: enums.BasicTypeCategory
+        @type size: int
         @return:
         """
         self.name = name
         self.type_category = type_category
         self.basic_type_category = basic_type_category
+        self.size = size
 
     def is_composite(self):
         return self.type_category in (TypeCategory.Struct, TypeCategory.Class, TypeCategory.Vector, TypeCategory.Array)

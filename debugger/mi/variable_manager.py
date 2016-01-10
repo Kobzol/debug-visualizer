@@ -136,7 +136,12 @@ class VariableManager(object):
                 elif type.startswith("std::string"):
                     type_category = TypeCategory.String
 
-            return Type(type_name, type_category, basic_type_category)
+            size = None
+            size_output = self.debugger.communicator.send("p sizeof({0})".format(type_name))
+            if size_output:
+                size = int(self.parser.parse_print_expression(size_output.cli_data[0]))
+
+            return Type(type_name, type_category, basic_type_category, size)
         else:
             return None
 

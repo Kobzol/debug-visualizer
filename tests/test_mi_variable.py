@@ -1,4 +1,5 @@
-from enums import ProcessState
+import ctypes
+int_size = ctypes.sizeof(ctypes.c_voidp)
 
 
 def prepare_debugger(debugger):
@@ -8,21 +9,24 @@ def prepare_debugger(debugger):
     debugger.wait_for_stop()
 
 
-def check_variable(debugger, expression, value):
+def check_variable(debugger, expression, value, size=None):
     variable = debugger.variable_manager.get_variable(expression)
 
     assert variable.path == expression
     assert variable.value == value
 
+    if size:
+        assert variable.type.size == size
+
 
 def test_values(debugger):
     prepare_debugger(debugger)
 
-    check_variable(debugger, "a", "5")
-    check_variable(debugger, "b", "5.5")
-    check_variable(debugger, "c", "true")
+    check_variable(debugger, "a", "5", int_size)
+    check_variable(debugger, "b", "5.5", int_size)
+    check_variable(debugger, "c", "true", 1)
     check_variable(debugger, "d", "hello")
-    check_variable(debugger, "strA.x", "5")
+    check_variable(debugger, "strA.x", "5", int_size)
 
     vec = debugger.variable_manager.get_variable("vec")
     assert map(lambda child: int(child.value), vec.children) == [1, 2, 3]
@@ -52,5 +56,5 @@ def test_get_memory(debugger):
 
     var = debugger.variable_manager.get_variable("a")
 
-    assert [5, 0, 0, 0] == debugger.variable_manager.get_memory(var.address, 4)
+    assert [5, 0, 0, 0] == debugger.variable_manager.get_memory(var.address, var.type.size)
     assert len(debugger.variable_manager.get_memory(var.address, 128)) == 128
