@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-src_path = os.path.dirname(__file__)
+src_path = os.path.dirname(os.path.abspath(__file__))
 
 
 def compile_tests():
