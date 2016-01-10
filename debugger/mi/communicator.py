@@ -199,6 +199,11 @@ class Communicator(object):
         #fcntl.fcntl(self.process.stdout, fcntl.F_SETFL, fl | os.O_NONBLOCK)
 
     def send(self, command):
+        """
+        Sends the given command to GDB.
+        @type command: str
+        @return: CommandResult
+        """
         self.io_lock.acquire()
         response = ""
 

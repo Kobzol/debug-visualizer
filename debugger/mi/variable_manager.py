@@ -207,6 +207,26 @@ class VariableManager(object):
 
         self.debugger.communicator.send(format.format(variable.path, variable.value))
 
+    def get_memory(self, address, count):
+        """
+        Returns count bytes from the given address.
+        @type address: str
+        @type count: int
+        @return: list of int
+        """
+        command = "x/{0}xb {1}".format(count, address)
+        output = self.debugger.communicator.send(command)
+
+        bytes = []
+        for line in output.cli_data:
+            start = line.find(":")
+            line = line[start + 1:]
+            for num in line.split("\\t"):
+                if num:
+                    bytes.append(int(num, 16))
+
+        return bytes
+
     def _get_name(self, expression):
         """
         @type expression: str

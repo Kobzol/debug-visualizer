@@ -46,3 +46,7 @@ local.properties
 build/
 .waf*
 .lock*
+
+tests/src/*
+!tests/src/*.py
+!tests/src/*.cpp

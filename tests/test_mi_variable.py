@@ -45,3 +45,12 @@ def test_update_variable(debugger):
     vec.children[0].value = "10"
 
     assert debugger.variable_manager.get_variable("vec").children[0].value == "10"
+
+
+def test_get_memory(debugger):
+    prepare_debugger(debugger)
+
+    var = debugger.variable_manager.get_variable("a")
+
+    assert [5, 0, 0, 0] == debugger.variable_manager.get_memory(var.address, 4)
+    assert len(debugger.variable_manager.get_memory(var.address, 128)) == 128
