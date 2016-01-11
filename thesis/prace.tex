@@ -1,6 +1,8 @@
 \documentclass[bc,male,java,dept460]{diploma}						% jednostranny dokument
 %\documentclass[bc,male,java,dept460,twoside]{diploma}		% oboustranny dokument
 \usepackage[czech]{babel}
+\usepackage[backend=biber,sorting=none]{biblatex}
+\addbibresource{references.bib}
 
 % remark - poznámka
 % definition - definice
@@ -84,20 +86,89 @@ za využití existujících ladících nástrojů  }
 
 % Zacneme uvodem
 \section{Úvod}
-
-\section{Principy ladění programů}
 	Ladění je nezbytná součást vývoje programů, která dovoluje programátorům detailně sledovat a ovládat průběh běžícího procesu a také
 	číst a zapisovat jeho paměť. K tomuto slouží ladící nástroje, které vytváří asociaci mezi zdrojovým kódem a binárním spustitelným
 	souborem a poskytují tak tvůrci kódu možnost ladit kód na vysoké úrovni abstrakce, tj. na úrovni samotného zdrojového kódu.
-	Tato kapitola popisuje obecné principy fungování těchto ladících nástrojů, způsob mapování z binárních instrukcí do zdrojového kódu,
-	ovládání běžícího procesu a běžné konstrukce používané při ladění. Konkrétně je popis zaměřen na programy napsané v jazycích C a C++
-	v prostředí UNIXových systémů.
-
-	\subsection{Obecné principy ladění programů}
-	\subsection{Uspořádání paměti procesů}
-	\subsection{Popis průběhu ladění}
-
+	
+\section{Principy ladění programů}
+	Tato kapitola popisuje obecné principy fungování ladících nástrojů, způsob mapování binárních instrukcí programu zpět do jeho zdrojového kódu,
+	krokování běžícího procesu a běžné konstrukce používané při ladění. Konkrétně je popis zaměřen na programy napsané v jazycích C a C++
+	v prostředí UNIXových systémů na platformě Intel x86. Popsané principy jsou ale obecné a lze je aplikovat na libovolnou operační systém.
+		
+	\subsection{Signály}
+		Pro ladění programu je nutné mít možnost číst jeho paměť, aby šly zkoumat hodnoty proměnných za jeho běhu, a také ho zastavit, jelikož
+		programy za běhu provádějí obrovské množství instrukcí za vteřinu a zkoumat takto rychle se měnící datový tok by bylo obtížné.
+		Aby šlo proces zastavit, musí mu jiný proces anebo sám operační systém zaslat signál.
+		Signály jsou zprávy, které lze zaslat běžícímu procesu, ten si je může odchytit a zareagovat na ně.\cite[21]{tanenbaum}
+		Slouží pro meziprocesní komunikaci a fungují jako softwarová obdoba hardwarových přerušení procesoru.
+		Jakmile proces obdrží signál, který očekává, tak si uloží hodnoty svých registrů a přejde do procedury, která tento signál obslouží.
+		Pokud proces obdrží signál, pro který si nepřipravil žádnou reakci, tak se provede implicitně nadefinovaná akce pro daný typ signálu.
+		V UNIXových systémech je definováno několik desítek standardních signálů, v závislosti na verzi a typu operačního systému.
+		Na signály SIGKILL, sloužící k okamžitému ukončení procesu a SIGSTOP, sloužící k zastavení procesu, nemá proces možnost zareagovat ani
+		zjistit, že mu byly poslány.
+	
+	\subsection{Krokování}
+		Operační systémy obvykle poskytují nástroj, pomocí kterého lze buď spustit proces, anebo se připojit k již běžícímu procesu, a následně ho ovládat
+		a přistupovat k jeho paměti. UNIXové systémy pro tento účel poskytují systémové volání \emph{ptrace}\cite{ptrace}, které umožňuje zachytávat signály
+		zaslané sledovanému procesu. Proces sledovaný pomocí funkce ptrace je zastaven při přijetí jakéhokoliv signálu (kromě signálu SIGKILL, který se pokusí proces
+		okamžitě ukončit). Tohoto mechanismu využívají ladící nástroje, které proces sledovaný pomocí ptrace můžou po jeho zastavení znovu spustit,
+		přistupovat k jeho paměti a ovlivňovat jeho průběh. Pokud je sledovaný proces potomkem procesu, který ho sleduje, bude při jeho spuštění vyvolán
+		signál SIGTRAP, který dovolí rodičovi odchytit začátek provádění potomka. Jakmile je proces zastavený, může ho ladící nástroj tzv. krokovat, tedy spouštět
+		instrukci po instrukci. K tomu lze použít funkci ptrace s příznakem PTRACE\_SINGLESTEP, která provede přesně jednu instrukci v laděném procesu (proces se také
+		zastaví, pokud se dostane na vstupní nebo výstupní bod systémového volání)\cite{ptrace}. Ladící nástroje obvykle nabízí krokování na vyšší úrovni než
+		pouze po jedné instrukci, jelikož to by bylo zbytečně zdlouhavé (u vyšších programovacích jazyků se jeden řádek zdrojového kódu může mapovat na desítky
+		až stovky instrukcí). Obvykle jsou dostupné následující typy krokování:
+		\begin{description}
+			\item[Step over] - krokování po řádku zdrojového kódu
+			\item[Step in] - stejná funkce jako step over, ale program se zastaví, pokud vstoupí dovnitř funkce
+			\item[Step out] - program bude pokračovat, dokud neskončí funkce, ve které se právě nachází
+		\end{description}
+		
+	\subsection{Obousměrné mapování zdrojového kódu na instrukce}
+		Aby mohly ladící nástroje nabízet krokování na úrovni (řádků) zdrojového kódu, musí umět namapovat zdrojový kód na instrukce vygenerovaného
+		spustitelného programu i instrukce zpět na zdrojový kód. Jelikož programy psané v jazycích C a C++ jsou kompilované a po jejich překladu nejsou
+		ve výsledném binárním souboru téměř žádné informace o jejich zdrojovém kódu, musí být přeloženy ve speciálním režimu, který při překladu vygeneruje
+		metadata s mapováním zdrojového kódu a vloží je do přeloženého programu. V překladačích jazyka C/C++ se tohoto dá standardně dosáhnout použitím
+		řepínače \emph{-g}. Existuje několik formátů ukládání těchto metadat, dnešním de facto standardem na UNIXových systémech je DWARF\cite{dwarf}.
+		Ten ukládá proměnné, datové typy, procedury a další údaje ze zdrojového kódu ve stromové struktuře. Pro ušetření místa obsahuje instrukce pro
+		speciální konečný automat, který implementují ladící nástroje a pomocí něho poté získávají informace o původním zdrojovém kódu.
+		
+		\vspace{5mm}
+		
+		\par Samotné mapování zdrojového kódu není pro ladící nástroj užitečné, pokud je výsledný program zoptimalizovaný překladačem. Po optimalizaci
+		totiž program nemusí obsahovat všechny původní proměnné, funkce a jeho průběh ani nemusí přesně odpovídat jeho zdrojovému kódu. Při použité málo agresivní
+		optimalizace někdy lze programy úspěšně ladit, ale pro zajištění co nejpřesnějšího ladění programů je obvykle nutné optimalizace úplně vypnout. Toho lze
+		v překladačích obvykle dosáhnout použitím přepínače \emph{-O0};
+	
+	\subsection{Běžné konstrukce ladících nástrojů}
+		\begin{description}
+			\item[Breakpoint]
+				Většina ladících nástrojů poskytuje svým uživatelům možnost zastavit běh laděného procesu pomocí tzv. breakpointu.
+				Jedná se o označení řádku v zdrojovém kódu programu, na kterém se program za běhu zastaví a umožní tak uživateli prozkoumat paměť procesu a krokovat ho.
+				Nejčastěji je implementován tak, že ladící nástroj nejdříve zjistí z daného řádku adresu instrukce ve vygenerovaném spustitelném souboru, kterou tento
+				řádek představuje, uloží si ji a nahradí ji instrukcí přerušení s kódem 3. Toto přerušení je určeno speciálně pro ladění procesů, jelikož generuje
+				instrukci o velikosti jednoho bytu, a lze jím tak nahradit libovolnou instrukci\cite[306]{intel}. Pokud by měla více než jeden byte, mohlo by ses
+				stát, že by tato instrukce přepsala více než jednu instrukci, což by mohlo způsobit nevalidní chování programu. Jakmile program během svého běhu
+				provede tuto instrukci, vyvolá se signál SIGTRAP, který ladící nástroj odchytí a laděný proces se tímto zastaví. Pokud se uživatel rozhodne proces
+				opět sputit, ladící nástroj zkopíruje původní instrukci programu (kterou si dříve uložil) na místo, kde vložil přerušení, nastaví na ni ukazatel
+				příští instrukce a proces opět spustí.
+				Některé procesory nabízí také hardwarový breakpoint, který sice může být rychlejší, ale obvykle kvůli tomu, že je implementován v hardwaru, tak poskytuje
+				vytvoření pouze několika breakpointů zároveň.
+			\item[Tracepoint]
+				V některých případech není možné laděný proces pozastavit k prozkoumání jeho paměti, jelikož jeho průběh může záviset na reálně uběhlém čase a zastavení
+				tedy může způsobit, že program neproběhne korektně. Pro tyto situace lze použít tracepoint, u kterého se uvede lokace v programu a paměť, která má být
+				sledována. Pokaždé, když se laděný proces dostane na tuto lokaci, tak je uložena sledovaná paměť a po skončení běhu procesu si lze zpětně prohlédnout,
+				jak se tato paměť v průběhu programu měnila.
+			\item[Watchpoint]
+				Pokud je potřeba zastavit program ne na konkrétním místě, ale při změně dané hodnoty v paměti, lze použít watchpoint. Ten se může hodit například pro
+				kontrolu změn globálních proměnných. Pokud nenabízí procesor hardwarovou podporu pro watchpointy, ladící nástroj prochází laděný proces instrukci po
+				instrukci, testuje hodnotu sledované paměti a pokud se tato hodnota změní, tak program zastaví. Tento proces může zpomalit laděný proces až o
+				dva řády\cite{gdb-watchpoint}.
+		\end{description}
+		
 \section {Existující ladící nástroje}
+	
+
 	\subsection{GDB}
 	\subsection{LLDB}
 	\subsection{Grafické nádstavby}
@@ -113,23 +184,16 @@ za využití existujících ladících nástrojů  }
 
 \section{Závěr}
 \label{sec:Conclusion}
-\cite{goossens94,lamport94}.
 
 \bigskip
 \begin{flushright}
 Jakub Beránek
 \end{flushright}
 
-\begin{thebibliography}{99}
-
-\bibitem{goossens94} Goossens, Michel,
-\textit{The \LaTeX\ companion,} New York: Addison, 1994.
-
-\bibitem{lamport94} Lamport, Leslie,
-\textit{\LaTeX: a document preparation system: user's guide and reference manual},
-New York: Addison-Wesley Pub. Co., 1994.
-
-\end{thebibliography}
+%\printbibliography
+\printbibheading[title=Reference, heading=bibintoc]
+\printbibliography[type=book,heading=subbibintoc,title={Knižní zdroje}]
+\printbibliography[nottype=book,heading=subbibintoc,title={Online zdroje}]
 
 \appendix
 \clearpage
