@@ -47,6 +47,7 @@ build/
 .waf*
 .lock*
 
+docs/
 tests/src/*
 !tests/src/*.py
 !tests/src/*.cpp

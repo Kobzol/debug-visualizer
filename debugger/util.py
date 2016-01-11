@@ -5,6 +5,9 @@ from threading import Event, Thread
 
 
 class Logger(object):
+    """
+    Helper class for logging.
+    """
     logger = None
 
     @staticmethod
@@ -22,6 +25,10 @@ class Logger(object):
 
 
 class RepeatTimer(Thread):
+    """
+    Thread that repeatedly calls the given function on a timer.
+    Lasts until cancelled.
+    """
     def __init__(self, time, callback):
         """
         @type time: float
@@ -38,12 +45,48 @@ class RepeatTimer(Thread):
             self.callback()
 
     def stop_repeating(self):
+        """
+        Stops the thread.
+        """
         self.stop_event.set()
 
 
+class Dispatcher(object):
+    """
+    Helper class for dynamically dispatching methods on a given object.
+
+    The functions are invoked by name.
+    """
+    @staticmethod
+    def dispatch(root_object, properties=None, arguments=None):
+        target_prop = root_object
+
+        if properties is None:
+            properties = []
+
+        if arguments is not None and not isinstance(arguments, (list, tuple)):
+            arguments = [arguments]
+
+        for prop in properties:
+            target_prop = getattr(target_prop, prop)
+
+        if hasattr(target_prop, "__call__"):
+            if arguments is not None:
+                result = target_prop(*arguments)
+            else:
+                result = target_prop()
+
+            return result
+        else:
+            return target_prop
+
+
 class BadStateError(Exception):
+    """
+    Exception that represents that an invalid state was encountered.
+    """
     def __init__(self, required_state, current_state):
-        self.required_state= required_state
+        self.required_state = required_state
         self.current_state = current_state
 
 

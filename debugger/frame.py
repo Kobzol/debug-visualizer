@@ -2,6 +2,9 @@
 
 
 class Frame(object):
+    """
+    Represents a stack frame of the debugged process.
+    """
     def __init__(self, level, func, file, line):
         """
         @type level: int

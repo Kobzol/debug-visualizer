@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 import re
 
 from enums import BasicTypeCategory, TypeCategory
@@ -90,6 +91,9 @@ basic_type_map = {
 
 
 class VariableManager(object):
+    """
+    Handles retrieval and updating of variables and raw memory of the debugged process.
+    """
     def __init__(self, debugger):
         """
         @type debugger: mi.debugger.Debugger
@@ -99,6 +103,7 @@ class VariableManager(object):
 
     def get_type(self, expression):
         """
+        Returns type for the given expression.
         @type expression: str
         @return: variable.Type
         """
@@ -147,6 +152,7 @@ class VariableManager(object):
 
     def get_variable(self, expression):
         """
+        Returns a variable for the given expression-
         @type expression: str
         @return: variable.Variable
         """
@@ -205,12 +211,18 @@ class VariableManager(object):
             return None
 
     def update_variable(self, variable):
+        """
+        Updates the variable's value in the debugged process.
+        @type variable: variable.Variable
+        """
         format = "set variable {0} = {1}"
 
         if variable.type.type_category == TypeCategory.String:
             format = "call {0}.assign(\"{1}\")"
 
-        self.debugger.communicator.send(format.format(variable.path, variable.value))
+        result = self.debugger.communicator.send(format.format(variable.path, variable.value))
+
+        return result.is_success()
 
     def get_memory(self, address, count):
         """
@@ -234,6 +246,7 @@ class VariableManager(object):
 
     def _get_name(self, expression):
         """
+        Returns name from the given expression.
         @type expression: str
         @return: str
         """

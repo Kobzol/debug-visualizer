@@ -3,16 +3,24 @@
 import socket
 import threading
 import select
-import json
 import sys
 import traceback
 
 from net.command import Command, CommandType
-from dispatcher import Dispatcher
+from util import Dispatcher
 
 
 class Server(object):
+    """
+    TCP server that dispatches commands to debugger.
+
+    Can handle only one client at a time.
+    """
     def __init__(self, port, debugger):
+        """
+        @type port: int
+        @type debugger: debugger
+        """
         self.address = ("localhost", port)
         self.debugger = debugger
         self.running = False
@@ -21,25 +29,42 @@ class Server(object):
         self.server_thread = None
         
     def is_running(self):
+        """
+        Checks that the server is listening.
+        @return: bool
+        """
         return self.running
 
     def is_client_connected(self):
+        """
+        Checks that a client is connected.
+        @return: bool
+        """
         return self.connected_client is not None
 
     def start(self):
+        """
+        Starts the server (noop if the server is already started).
+        """
         if not self.is_running():
-            self.create_socket()
+            self._create_socket()
             self.server_thread = threading.Thread(target=self.run_server_thread)
             self.running = True
             self.server_thread.start()
     
     def stop(self):
+        """
+        Stop the server (noop if the server is not running).
+        """
         if self.is_running():
             self.running = False
             self.server_thread.join()
             self.server.close()
     
-    def create_socket(self):
+    def _create_socket(self):
+        """
+        Creates a TCP socket.
+        """
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.server.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
@@ -47,9 +72,18 @@ class Server(object):
         self.server.listen(1)
     
     def is_data_available(self, fd, timeout=0.1):
+        """
+        Checks whether data is available for reading on the given file descriptor.
+        @type fd: file descriptor
+        @type timeout: float
+        @return: bool
+        """
         return len(select.select([fd], [], [], timeout)[0]) != 0
     
     def run_server_thread(self):
+        """
+        Loop that is run by the server thread.
+        """
         while self.is_running():
             try:
                 if self.is_data_available(self.server, 0.1) and not self.is_client_connected():
@@ -60,6 +94,10 @@ class Server(object):
                 sys.stdout.flush()
     
     def handle_command(self, command):
+        """
+        Handles an incoming command from the client.
+        @type command: net.Command
+        """
         if command.type == CommandType.Loopback:
             self.send_result(command, "ok")
         elif command.type == CommandType.StopServer:
@@ -78,6 +116,11 @@ class Server(object):
                 self.send_result_error(command, traceback.format_exc())
     
     def handle_client(self, client, address):
+        """
+        Handles an incoming client.
+        @type client: socket
+        @type address: (str, int)
+        """
         self.connected_client = client
         
         try:
@@ -90,6 +133,11 @@ class Server(object):
             self.connected_client = None
             
     def send_result(self, command, result):
+        """
+        Sends result of the given command to the client.
+        @type command: Command
+        @type result: any
+        """
         try:
             command.send_result(self.connected_client, result)
         except:
@@ -97,6 +145,11 @@ class Server(object):
             sys.stdout.flush()
         
     def send_result_error(self, command, error):
+        """
+        Sends an error result of the given command to the client.
+        @type command: Command
+        @type error: any
+        """
         try:
             command.send_result_error(self.connected_client, error)
         except:

@@ -6,6 +6,9 @@ from events import EventBroadcaster
 
 
 class Type(object):
+    """
+    Represent's variable's type.
+    """
     typename_replacements = {
         ":__1": "",
         "std::basic_string<char, std::char_traits<char>, std::allocator<char> >": "std::string"
@@ -36,7 +39,6 @@ class Type(object):
         @type type_category: enums.TypeCategory
         @type basic_type_category: enums.BasicTypeCategory
         @type size: int
-        @return:
         """
         self.name = name
         self.type_category = type_category
@@ -44,9 +46,17 @@ class Type(object):
         self.size = size
 
     def is_composite(self):
+        """
+        Return true if this type is a composite type, containing child elements (struct, class, vector, array)
+        @return: bool
+        """
         return self.type_category in (TypeCategory.Struct, TypeCategory.Class, TypeCategory.Vector, TypeCategory.Array)
 
     def is_valid(self):
+        """
+        Checks that the type is valid.
+        @return: bool
+        """
         return self.type_category != TypeCategory.Invalid
 
     def __repr__(self):
@@ -54,6 +64,9 @@ class Type(object):
 
 
 class Variable(object):
+    """
+    Represents a variable with type.
+    """
     @staticmethod
     def from_lldb(lldb_var):
         """
@@ -98,6 +111,7 @@ class Variable(object):
 
     def add_child(self, child):
         """
+        Adds a child variable to this variable.
         @type child: Variable
         """
         self.children.append(child)

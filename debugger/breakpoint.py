@@ -2,6 +2,9 @@
 
 
 class Breakpoint(object):
+    """
+    Represents a breakpoint.
+    """
     def __init__(self, number, location, line):
         """
         @type number: int

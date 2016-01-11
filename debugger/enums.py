@@ -2,12 +2,18 @@ from enum import Enum
 
 
 class DebuggerState(Enum):
+    """
+    Represents debugger state.
+    """
     Started = 1
     BinaryLoaded = 2
     Running = 3
 
 
 class ProcessState(Enum):
+    """
+    Represents the debugged process' state.
+    """
     Attaching = 3
     Connected = 2
     Crashed = 8
@@ -23,12 +29,18 @@ class ProcessState(Enum):
 
 
 class ThreadState(Enum):
+    """
+    Represents thread state.
+    """
     Running = 1
     Stopped = 2
     Exited = 3
 
 
 class StopReason(Enum):
+    """
+    Reason why the debugged process stoped.
+    """
     Breakpoint = 3
     Exception = 6
     Exec = 7
@@ -42,6 +54,9 @@ class StopReason(Enum):
 
 
 class TypeCategory(Enum):
+    """
+    Represents type of C/C++ type.
+    """
     Any = -1
     Array = 1
     BlockPointer = 2
@@ -74,6 +89,9 @@ class TypeCategory(Enum):
 
 
 class BasicTypeCategory(Enum):
+    """
+    Represents type of a primitive C/C++ type.
+    """
     Bool = 20
     Char = 2
     Char16 = 8

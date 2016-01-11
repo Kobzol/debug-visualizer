@@ -2,8 +2,15 @@
 
 
 class NetHelper(object):
+    """
+    Helper class for network operations.
+    """
     @staticmethod
     def get_free_port():
+        """
+        Returns a free port that can be bound.
+        @return: int
+        """
         import socket
 
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

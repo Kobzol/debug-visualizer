@@ -2,6 +2,9 @@
 
 
 class ThreadInfo(object):
+    """
+    Represents thread state (list of threads and the selected thread) of the debugged process.
+    """
     def __init__(self, selected_thread, threads):
         """
         @type selected_thread: InferiorThread
@@ -15,13 +18,15 @@ class ThreadInfo(object):
 
 
 class InferiorThread(object):
+    """
+    Represents a thread of the debugged process.
+    """
     def __init__(self, id, name, state, frame=None):
         """
         @type id: int
         @type name: str
         @type state: enums.ProcessState
         @type frame: frame.Frame
-        @return:
         """
         self.id = id
         self.name = name

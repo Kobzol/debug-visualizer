@@ -1,0 +1,14 @@
+[epydoc] # Epydoc section marker (required by ConfigParser)
+
+modules: debugger/*
+output: html
+target: docs/
+docformat: epytext
+name: Debug visualizer
+frames: yes
+private: no
+imports: no
+verbosity: 0
+parse: yes
+introspect: yes
+sourcecode: yes
