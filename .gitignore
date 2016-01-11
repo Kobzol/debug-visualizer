@@ -79,6 +79,7 @@ local.properties
 *.tdo
 *.xmpi
 *.tcp
+*.tps
 thesis/*.pdf
 
 ### TeX ###
