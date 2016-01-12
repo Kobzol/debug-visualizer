@@ -49,8 +49,10 @@ za využití existujících ladících nástrojů  }
 
 \EnglishKeywords{typography, \LaTeX, master thesis}
 
-\AddAcronym{GNU}{GNU's Not Unix!}
+\AddAcronym{API}{Application Programmable Interface}
 \AddAcronym{GDB}{The GNU Project Debugger}
+\AddAcronym{GNU}{GNU's Not Unix!}
+
 
 % Zadame cestu a jmeno souboru ci nekolika souboru s digitalizovanou podobou zadani prace
 % Pri sazbe se pak hledaji soubory Figures/Zadani1.jpg, Figures/Zadani2.jpg atd.
@@ -109,7 +111,7 @@ za využití existujících ladících nástrojů  }
 	
 	\subsection{Krokování}
 		Operační systémy obvykle poskytují nástroj, pomocí kterého lze buď spustit proces, anebo se připojit k již běžícímu procesu, a následně ho ovládat
-		a přistupovat k jeho paměti. UNIXové systémy pro tento účel poskytují systémové volání \emph{ptrace}\cite{ptrace}, které umožňuje zachytávat signály
+		a přistupovat k jeho paměti. UNIXové systémy pro tento účel poskytují systémové volání \textbf{ptrace}\cite{ptrace}, které umožňuje zachytávat signály
 		zaslané sledovanému procesu. Proces sledovaný pomocí funkce ptrace je zastaven při přijetí jakéhokoliv signálu (kromě signálu SIGKILL, který se pokusí proces
 		okamžitě ukončit). Tohoto mechanismu využívají ladící nástroje, které proces sledovaný pomocí ptrace můžou po jeho zastavení znovu spustit,
 		přistupovat k jeho paměti a ovlivňovat jeho průběh. Pokud je sledovaný proces potomkem procesu, který ho sleduje, bude při jeho spuštění vyvolán
@@ -129,7 +131,7 @@ za využití existujících ladících nástrojů  }
 		spustitelného programu i instrukce zpět na zdrojový kód. Jelikož programy psané v jazycích C a C++ jsou kompilované a po jejich překladu nejsou
 		ve výsledném binárním souboru téměř žádné informace o jejich zdrojovém kódu, musí být přeloženy ve speciálním režimu, který při překladu vygeneruje
 		metadata s mapováním zdrojového kódu a vloží je do přeloženého programu. V překladačích jazyka C/C++ se tohoto dá standardně dosáhnout použitím
-		řepínače \emph{-g}. Existuje několik formátů ukládání těchto metadat, dnešním de facto standardem na UNIXových systémech je DWARF\cite{dwarf}.
+		řepínače \textbf{-g}. Existuje několik formátů ukládání těchto metadat, dnešním de facto standardem na UNIXových systémech je DWARF\cite{dwarf}.
 		Ten ukládá proměnné, datové typy, procedury a další údaje ze zdrojového kódu ve stromové struktuře. Pro ušetření místa obsahuje instrukce pro
 		speciální konečný automat, který implementují ladící nástroje a pomocí něho poté získávají informace o původním zdrojovém kódu.
 		
@@ -138,7 +140,7 @@ za využití existujících ladících nástrojů  }
 		\par Samotné mapování zdrojového kódu není pro ladící nástroj užitečné, pokud je výsledný program zoptimalizovaný překladačem. Po optimalizaci
 		totiž program nemusí obsahovat všechny původní proměnné, funkce a jeho průběh ani nemusí přesně odpovídat jeho zdrojovému kódu. Při použité málo agresivní
 		optimalizace někdy lze programy úspěšně ladit, ale pro zajištění co nejpřesnějšího ladění programů je obvykle nutné optimalizace úplně vypnout. Toho lze
-		v překladačích obvykle dosáhnout použitím přepínače \emph{-O0};
+		v překladačích obvykle dosáhnout použitím přepínače \textbf{-O0}.
 	
 	\subsection{Běžné konstrukce ladících nástrojů}
 		\begin{description}
@@ -164,14 +166,59 @@ za využití existujících ladících nástrojů  }
 				kontrolu změn globálních proměnných. Pokud nenabízí procesor hardwarovou podporu pro watchpointy, ladící nástroj prochází laděný proces instrukci po
 				instrukci, testuje hodnotu sledované paměti a pokud se tato hodnota změní, tak program zastaví. Tento proces může zpomalit laděný proces až o
 				dva řády\cite{gdb-watchpoint}.
+			\item[Catchpoint]
+				Tuto konstrukci lze použít pro zachycení událostí procesu, jako jsou načtení sdílené knihovny, vyvolání hardwarové či softwarové výjimky, provedení
+				systémového volání anebo přijetí signálu. Většina těchto událostí je ze své podstaty asynchronní, nelze u nich tedy dopředu určit, kdy budou zavolány
+				a použití breakpointu tedy není možné.
 		\end{description}
 		
 \section {Existující ladící nástroje}
-	Ladících nástrojů pro jazyky C a C++ existuje velké množství, v této kapitole jsou popsány dva z nich, GDB a LLDB, které byly dále použity v implementaci
-	vizualizačního nástroje. Jsou zde taky popsány jejich vybrané grafické nádstavby.
+	Ladících nástrojů pro jazyky C a C++ existuje velké množství, v této kapitole jsou popsány dva z nejpoužívanějších nástrojů, GDB a LLDB, které byly dále
+	použity při implementaci vizualizačního nástroje. Jsou zde taky popsány jejich vybrané grafické nádstavby.
 
 	\subsection{GDB}
+		GDB (The GNU Debugger) je standardním ladícím nástrojem pro UNIXové systémy, často je v těchto systémech už předinstalovaný.
+		Jeho hlavním zaměřením je ladění programů napsaných v jazycích C a C++, ale podporuje mimo jiné i Adu, Objective-C, Pascal, Fortran, Javu
+		a Go\cite{gdb-languages}. Podporuje velké množství rodin procesorů, například ARM, AVR, Itanium, MIPS, PowerPC, SPARC a samozřejmě x86 i x86-64.
+		Lze jej spustit i na platformě Windows pomocí prostředí emulujících UNIX (např. Cygwin nebo MinGW). Byl vydán v roce 1986 a k roku
+		2016 stále vycházejí nové verze. 
+		
+		\par GDB obsahuje základní funkce nezbytné pro každý ladící nástroj, jako je načtení
+		ladících metadat v mnoha formátech (podporuje DWARF i několik dalších formátů), vytváření breakpointů, tracepointů a watchpointů, krokování programu a
+		čtení i zápis paměti programu. Mimo to ale nabízí i pokročilé funkce, které nemusí být podporované všemi procesory a platformami.
+		
+		\begin{description}
+			\item[Vzdálené ladění]
+				GDB dokáže být spuštěno na jednom zařízení, a ladit program spuštěný na jiném zařízení pomocí síťové komunikace (obvykle pomocí protokolu TCP).
+				Toto může být užitečné, pokud není dostupný fyzický přístup k systému, který je potřeba odladit.
+				Vzdálené ladění se dá využít také k ladění jádra (kernelů) operačního systému, čehož je využito například v programu KGDB, který slouží k ladění
+				jader operačních systémů Linux a FreeBSD pomocí sériového připojení.
+			\item[Ladění vícevláknových aplikací]
+				Pokud GDB ladí program, který využívá více než jedno vlákno, může pracovat v několika rozlišných módech\cite{gdb-multithreading}.
+				V All-stop módu se při zastavení jednoho vlákna zastaví také všechna ostatní vlákna, aby šlo mezi vlákny přepínat a číst jejich paměť bez toho,
+				aby se paměť mezitím nějak změnila. Pokud je nutné zastavit pouze jedno vlákno, tak, aby ostatní pokračovala v běhu, lze použít tzv. Non-stop mód,
+				který vždy zastaví pouze vlákno, které narazí na breakpoint, a zbytek vláken nechá běžet. S tímto módem je vhodné použít asynchronní ovládání GDB,
+				pomocí kterého lze zasílat ladící příkazy programu i za jeho běhu a ovládat tak pouze zastavené vlákno, i když zbytek vláken stále běží.
+			\item[Provádění výrazů]
+				Pomocí GDB lze nejenom číst a zapisovat paměť laděného procesu na úrovni bytů v adresním prostoru procesu, ale v podporovaných jazycích, hlavně
+				v C a C++, lze také provádět libovolné jazykové výrazy, volat funkce programu a systémová volání a pracovat s hodnotami na úrovni proměnných
+				laděného programu.
+			\item[Spolupráce s Valgrindem]
+				Valgrind je nástroj pro profilování a kontrolu paměťové korektnosti programů, který se využívá k hledání paměťových chyb, jako je například memory
+				leak. Vytváří virtuální stroj, ve kterém spouští zkoumaný program a kvůli této vlastnosti jej nelze ladit klasickými přístupy. GDB poskytuje
+				možnost připojit se k programu spuštěnému ve Valgrindu a vzdáleně ho takto ladit.
+			\item[Zpětné provádění instrukcí]
+				Při ladění nastává často situace, kdy proces zajde moc daleko a přeskočí instrukci, kterou chce uživatel zkoumat. GDB umí spouštět určité instrukce
+				zpětně, a může tedy krokovat program nejenom dopředu, ale i dozadu. Všechny změny a vedlejší efekty, které proběhly v paměti, jsou tak smazány a
+				navráceny do původního stavu (pokud to daná platforma a stav programu dovoluje).
+		\end{description}
+		
+		GDB nemá vlastní grafické rozhraní, je ovládán z příkazové řádky. Kromě toho ale podporuje také spouštění skriptů v Pythonu pomocí API,
+		které bylo použito pro implementaci vizualizačního nástroje a je popsáno dále v textu.
 	\subsection{LLDB}
+	
+	\subsection{Srovnání LLDB s GDB}
+
 	\subsection{Grafické nádstavby}
 
 \section{Popis problému}
