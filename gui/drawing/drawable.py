@@ -191,10 +191,9 @@ class ValueEntry(Gtk.Frame):
         self.set_label("Edit value")
         self.set_label_align(0.0, 0.0)
 
-        self.box = Gtk.Box()
+        self.box = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
         self.box.set_margin_bottom(5)
         self.box.set_margin_left(2)
-        self.box.set_orientation(Gtk.Orientation.HORIZONTAL)
         self.text_entry = Gtk.Entry()
         self.confirm_button = Gtk.Button(label="Set")
 

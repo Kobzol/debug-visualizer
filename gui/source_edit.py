@@ -220,7 +220,7 @@ class SourceManager(Gtk.Notebook):
 
     @require_gui_thread
     def _create_label(self, path, widget):
-        content = Gtk.Box(Gtk.Orientation.HORIZONTAL)
+        content = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
 
         label = Gtk.Label(os.path.basename(path))
 
