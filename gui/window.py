@@ -10,6 +10,7 @@ from config import Config
 from drawing.canvas import MemoryCanvas, CanvasToolbarWrapper
 from enums import ProcessState
 from gui_util import require_gui_thread, run_on_gui
+from memory_view import MemoryView
 from source_edit import SourceManager
 from dialog import FileOpenDialog, MessageBox
 from console import IOConsole
@@ -89,6 +90,9 @@ class MainWindow(Gtk.Window):
 
         # tools
         self.tool_manager = ToolManager()
+
+        self.memory_view = MemoryView(app.debugger)
+        self.tool_manager.add_tool("Memory view", self.memory_view)
 
         self.console = IOConsole(height=150)
         self.console.watch(app.debugger)

@@ -41,7 +41,7 @@ class RepeatTimer(Thread):
         self.daemon = True
 
     def _callback(self):
-        while not self.stop_event.wait(self.wait_time):
+        while self.stop_event and not self.stop_event.wait(self.wait_time):
             self.callback()
 
     def stop_repeating(self):
