@@ -181,17 +181,19 @@ za využití existujících ladících nástrojů  }
 		Jeho hlavním zaměřením je ladění programů napsaných v jazycích C a C++, ale podporuje mimo jiné i Adu, Objective-C, Pascal, Fortran, Javu
 		a Go\cite{gdb-languages}. Podporuje velké množství rodin procesorů, například ARM, AVR, Itanium, MIPS, PowerPC, SPARC a samozřejmě x86 i x86-64.
 		Lze jej spustit i na platformě Windows pomocí prostředí emulujících UNIX (např. Cygwin nebo MinGW). Byl vydán v roce 1986 a k roku
-		2016 stále vycházejí nové verze. 
+		2016 stále vycházejí nové verze.
 		
-		\par GDB obsahuje základní funkce nezbytné pro každý ladící nástroj, jako je načtení
-		ladících metadat v mnoha formátech (podporuje DWARF i několik dalších formátů), vytváření breakpointů, tracepointů a watchpointů, krokování programu a
-		čtení i zápis paměti programu. Mimo to ale nabízí i pokročilé funkce, které nemusí být podporované všemi procesory a platformami.
+		\par Umí spolupracovat s programy přeloženými libovolným překladačem jazyků C a C++, pokud je dodržen jejich standard. Navíc ještě obsahuje
+		speciální podporu pro překladač GCC (GNU Compiler Collection), který pro něj umí vygenerovat dodatečná ladící metadata.
+		GDB obsahuje základní funkce nezbytné pro každý ladící nástroj, jako je načtení ladících metadat v mnoha formátech (podporuje DWARF i několik dalších
+		formátů), vytváření breakpointů, tracepointů a watchpointů, krokování programu a čtení i zápis paměti programu.
+		Mimo to ale nabízí i pokročilé funkce, které ovšem nemusí být podporované všemi procesory a platformami, s kterými GDB jinak umí pracovat.
 		
 		\begin{description}
 			\item[Vzdálené ladění]
-				GDB dokáže být spuštěno na jednom zařízení, a ladit program spuštěný na jiném zařízení pomocí síťové komunikace (obvykle pomocí protokolu TCP).
+				GDB dokáže být spuštěn na jednom zařízení a ladit program spuštěný na jiném zařízení pomocí síťové komunikace (obvykle pomocí protokolu TCP).
 				Toto může být užitečné, pokud není dostupný fyzický přístup k systému, který je potřeba odladit.
-				Vzdálené ladění se dá využít také k ladění jádra (kernelů) operačního systému, čehož je využito například v programu KGDB, který slouží k ladění
+				Vzdálené ladění se dá využít také k ladění jádra (kernelů) operačního systému, čehož je využito například v programu KGDB, který se používá k ladění
 				jader operačních systémů Linux a FreeBSD pomocí sériového připojení.
 			\item[Ladění vícevláknových aplikací]
 				Pokud GDB ladí program, který využívá více než jedno vlákno, může pracovat v několika rozlišných módech\cite{gdb-multithreading}.
@@ -207,6 +209,9 @@ za využití existujících ladících nástrojů  }
 				Valgrind je nástroj pro profilování a kontrolu paměťové korektnosti programů, který se využívá k hledání paměťových chyb, jako je například memory
 				leak. Vytváří virtuální stroj, ve kterém spouští zkoumaný program a kvůli této vlastnosti jej nelze ladit klasickými přístupy. GDB poskytuje
 				možnost připojit se k programu spuštěnému ve Valgrindu a vzdáleně ho takto ladit.
+			\item[Analýza logu z ukončeného procesu]
+				Procesy, které se ukončí s chybou, např. po vyvolání výjimky, můžou vygenerovat výpis paměti (core dump), který lze poté načíst v GDB a zanalyzovat ho.
+				Lze tak například zobrazit stav zásobníku volání funkcí v momentu, kdy program zhavaroval, a zjistit tak, který kód programu způsobuje chybu.
 			\item[Zpětné provádění instrukcí]
 				Při ladění nastává často situace, kdy proces zajde moc daleko a přeskočí instrukci, kterou chce uživatel zkoumat. GDB umí spouštět určité instrukce
 				zpětně, a může tedy krokovat program nejenom dopředu, ale i dozadu. Všechny změny a vedlejší efekty, které proběhly v paměti, jsou tak smazány a
@@ -216,10 +221,56 @@ za využití existujících ladících nástrojů  }
 		GDB nemá vlastní grafické rozhraní, je ovládán z příkazové řádky. Kromě toho ale podporuje také spouštění skriptů v Pythonu pomocí API,
 		které bylo použito pro implementaci vizualizačního nástroje a je popsáno dále v textu.
 	\subsection{LLDB}
-	
-	\subsection{Srovnání LLDB s GDB}
+		Ladící nástroj LLDB je založen na sadě knihoven, které využívají infrastruktury LLVM a překladače Clang. LLVM je univerzální překladače, který dokáže
+		překládat velké množství jazyků do své vnitřní, jazykově nezávislé reprezentace, kterou umí optimalizovat a vygenerovat z ní dále spustitelný soubor
+		pro libovolnou kompatibilní platformu\cite{llvm}. Obsahuje také kompletní implementaci standardní knihovny jazyka C++, která plně podporuje jeho nejnovější
+		standard, C++11. Clang je nádstavbou LLVM, která analyzuje a překládá programy v jazyce C a C++. Celá LLVM architektura
+		je postavena na modulárních komponentech, které spolupracují a dají se lehce využít ve formě knihovny. Nabízí tak modernější alternativu k programům
+		GCC a GDB. Ty jsou sice stabilnější a prověřenější, ale jelikož existují už desítky let a musí udržovat zpětnou kompatibilitu, tak je těžší je
+		využít jako modul do jiného programu a pomaleji přecházejí k novým standardům.
+		
+		\vspace{5mm}
+		
+		\par Umí ladit programy napsané v jazycích C, C++, Objective-C a Swift na platformách OS X, Linux, Free BSD a Window. Podporuje tedy méně jazyků i platforem,
+		než GDB, ale narozdíl od něho je podporován, a stal se také standardním ladícím nástrojem, i operačními systémy OS X a iOS. Nabízí většinu standardních
+		funkcí ladících nástrojů, jako je krokování kódu, vytváření breakpointů a čtení a zápis paměti procesu. Jelikož je stále ve vývoji, tak zatím neobsahuje 
+		některé pokročilejší funkce, které nabízí GDB, například zpětné provádění instrukcí.
 
-	\subsection{Grafické nádstavby}
+	\subsection{Grafická rozhraní}
+		V této sekci jsou popsány vybrané grafické nádstavby pro GDB a LLDB.
+	
+		\begin{description}
+			\item[DDD]
+				DDD, neboli Data Display Debugger, je grafické prostředí podporující velké množství ladících nástrojů, mimo jiné GDB, pydb, DBX nebo Ladebug.
+				Mimo klasického zobrazování zdrojového kódu programu nabízí i pokročilé vizualizační funkce. Umí kreslit grafy z hodnot paměti procesu
+				anebo zobrazovat vztahy mezi objekty v paměti ve formě grafu. Jeho poslední verze vyšla v roce 2009, není už tedy v současnosti aktivně udržován.
+			\item[TUI]
+				Text User Interface je grafickým rozhraním vestavěným přímo v GDB, které zobrazuje stav průběhu v několik terminálových oknech pro větší přehlednost
+				programu. Je postaveno na knihovně curses, která umožňuje vytvářet textové uživatelské rozhraní s pokročilými funkcemi přímo v terminálu. TUI lze
+				spustit předáním parametru \textbf{-tui} při spouštění GDB anebo stisknutím kláves CTRL+X či spuštěním příkazu \emph{tui enable} za jeho běhu.
+				LLDB obsahuje podobné rozhraní také, ale není zatím oficiální součástí nástroje, jedná se pouze o nezávazně vyvíjený doplněk.
+			\item[KGdb]
+				
+		\end{description}
+		Clion
+		Eclipse (UltraGDB)
+		NetBeans
+		Code::Blocks
+		KGdb
+		WinGDB
+		
+		\subsubsection{Srovnání grafických rozhraní}
+			\begin{table}
+			\begin{tabular}{|c|c|c|c|c|c|c|c|}
+				\hline
+				Název 	& IDE & Aktivní	& GDB & LLDB	& Linux	& Windows & OS X \\
+				DDD 		& Ne 	& Ne 			& Ano & Ne 		& Ano 	& Ne 			& Ano \\
+				TUI 		& Ne 	& Ano 		& Ano & Ano 	& Ano 	& Ne 			& Ano \\
+				\hline
+			\end{tabular}
+			\caption{Srovnání grafických rozhraní ladících nástrojů}
+			\label{tab:debugger-gui}
+			\end{table}
 
 \section{Popis problému}
 
