@@ -1,13 +1,17 @@
 import os
 from elftools.elf.elffile import ELFFile
 
-from debuginfo import DebugInfo
+from programinfo import ProgramInfo
+from pycgdb.breakpoint_manager import BreakpointManager
+from pycgdb.programrunner import ProgramRunner
 
 
 class Debugger(object):
     def __init__(self):
         self.loaded_file = None
-        self.debug_info = None
+        self.program_info = None
+        self.runner = None
+        self.breakpoint_manager = BreakpointManager(self)
 
     def load_binary(self, file):
         file = os.path.abspath(file)
@@ -19,4 +23,4 @@ class Debugger(object):
             assert elffile.has_dwarf_info()
 
             self.loaded_file = file
-            self.debug_info = DebugInfo(elffile)
+            self.program_info = ProgramInfo(elffile)
