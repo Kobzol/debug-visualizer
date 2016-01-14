@@ -61,6 +61,22 @@ class Parser(object):
         """
         return data[7:]
 
+    def parse_disassembly(self, data):
+        lines_dis = self.parse(data)["asm_insns"]
+        lines = []
+        for line in lines_dis:
+            line_data = line["line_asm_insn"]
+            line_obj = {
+                "line" : line["line"],
+                "instructions": []
+            }
+            for inst in line_data:
+                line_obj["instructions"].append(inst["inst"])
+
+            lines.append(line_obj)
+
+        return lines
+
     def parse_print_expression(self, data):
         data = "".join(data)
         data = data[data.find("=") + 2:].replace("\\\"", "\"")
@@ -146,9 +162,9 @@ class Parser(object):
                 if char in ("]", "}"):
                     in_array.pop()
 
-                if len(in_array) > 0 and in_array[len(in_array) - 1] == 1:
+                if len(in_array) > 0 and in_array[-1] == 1:
                     j = i
-                    while j < len(data) and (data[j].isalpha() or data[j] == "="):
+                    while j < len(data) and (data[j].isalpha() or data[j] == "_" or data[j] == "="):
                         j += 1
 
                     if j > i:

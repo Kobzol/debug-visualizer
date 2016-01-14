@@ -2,6 +2,7 @@
 import re
 import traceback
 
+from mi.parser import Parser
 from util import Logger
 
 
@@ -11,6 +12,7 @@ class FileManager(object):
         @type debugger: mi.debugger.Debugger
         """
         self.debugger = debugger
+        self.parser = Parser()
 
     def _get_current_line(self):
         output = self.debugger.communicator.send("info line")
@@ -85,6 +87,25 @@ class FileManager(object):
 
             if start_address and end_address:
                 return (start_address, end_address)
+            else:
+                return None
+        else:
+            return None
+
+    def disassemble(self, filename, line):
+        """
+        Returns disassembled code for the given location.
+        Returns None if no code was found,
+        @type filename: str
+        @type line: int
+        @return: str | None
+        """
+        command = "-data-disassemble -f {0} -l {1} -n 10 -- 1".format(filename, line)
+        result = self.debugger.communicator.send(command)
+        if result:
+            disassembled = self.parser.parse_disassembly(result.data)
+            if disassembled:
+                return disassembled
             else:
                 return None
         else:
