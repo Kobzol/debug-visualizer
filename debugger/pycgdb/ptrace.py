@@ -79,13 +79,5 @@ def ptrace_getregs(pid, bit32=True):
     return regs_p.contents
 
 
-def wifstopped(status):
-    return lib.py_wifstopped(status)
-
-
-def wifexited(status):
-    return lib.py_wifexited(status)
-
-
 def get_error():
     return lib.py_errno()
