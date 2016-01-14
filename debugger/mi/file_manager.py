@@ -71,8 +71,8 @@ class FileManager(object):
         Returns the starting address and ending address in hexadecimal format of code at the specified line in the given file.
         Returns None if no code is at the given location.
         @type filename: str
-        @type line: str
-        @return: (int, int) | None
+        @type line: int
+        @return: tuple of int | None
         """
         command = "info line {0}:{1}".format(filename, line)
         result = self.debugger.communicator.send(command)
@@ -108,5 +108,24 @@ class FileManager(object):
                 return disassembled
             else:
                 return None
+        else:
+            return None
+
+    def disassemble_raw(self, filename, line):
+        """
+        Disassembles the given line in a raw form (returns a string with the line and all assembly instructions for it).
+        @type filename: str
+        @type line: int
+        @return: str | None
+        """
+        address = self.get_line_address(filename, line)
+
+        if not address:
+            return None
+
+        command = "disas /m {0}, {1}".format(address[0], address[1])
+        result = self.debugger.communicator.send(command)
+        if result:
+            return "\n".join([line.replace("\\t", "\t") for line in result.cli_data[1:-1]])
         else:
             return None
