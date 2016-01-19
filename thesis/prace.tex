@@ -1,8 +1,13 @@
 \documentclass[bc,male,java,dept460]{diploma}						% jednostranny dokument
 %\documentclass[bc,male,java,dept460,twoside]{diploma}		% oboustranny dokument
+
 \usepackage[czech]{babel}
 \usepackage[backend=biber,sorting=none]{biblatex}
+\usepackage[bottom]{footmisc}
+
 \addbibresource{references.bib}
+
+\newcommand{\lineparagraph}[1]{\paragraph{#1}\mbox{}\\}
 
 % remark - poznámka
 % definition - definice
@@ -52,6 +57,7 @@ za využití existujících ladících nástrojů  }
 \AddAcronym{API}{Application Programmable Interface}
 \AddAcronym{GDB}{The GNU Project Debugger}
 \AddAcronym{GNU}{GNU's Not Unix!}
+\AddAcronym{GUI}{Graphical user interface}
 
 
 % Zadame cestu a jmeno souboru ci nekolika souboru s digitalizovanou podobou zadani prace
@@ -261,28 +267,80 @@ za využití existujících ladících nástrojů  }
 		
 		\subsubsection{Srovnání grafických rozhraní}
 			\begin{table}
-			\begin{tabular}{|c|c|c|c|c|c|c|c|}
+			\begin{tabular}{|c|c|c|c|c|}
 				\hline
-				Název 	& IDE & Aktivní	& GDB & LLDB	& Linux	& Windows & OS X \\
-				DDD 		& Ne 	& Ne 			& Ano & Ne 		& Ano 	& Ne 			& Ano \\
-				TUI 		& Ne 	& Ano 		& Ano & Ano 	& Ano 	& Ne 			& Ano \\
+				Název 	& IDE & Aktivní	& GDB & LLDB 	\\
+				DDD 		& Ne 	& Ne 			& Ano & Ne 		\\
+				TUI 		& Ne 	& Ano 		& Ano & Ano		\\
 				\hline
 			\end{tabular}
 			\caption{Srovnání grafických rozhraní ladících nástrojů}
 			\label{tab:debugger-gui}
 			\end{table}
 
-\section{Popis problému}
+\section{Implementace vizualizačního nástroje}
+	Jazyky C a C++ jsou velmi komplexní a dovolují programátorům pracovat s hardwarem počítače na hodně nízké úrovni. Kvůli mnohým svým vlastnostem,
+	jako je absence automatické správy paměti nebo možnost provádět nebezpečné operace s ukazateli do paměti, jsou ale také velmi náchylné ke vzniku
+	četných chyb. Používání ladícího nástroje, který dokáže detailně zkoumat paměť běžícího procesu a krokovat ho, je tedy v těchto jazycích nutností.
+	Existující ladící programy jako je GDB nebo LLDB fungují dobře, ale poskytují uživateli pouze ladění v příkazové řádce, což je pro velké programy
+	velmi pomalé a nepřehledné řešení. Nad těmito nástroji proto vznikly různé grafické rozšíření, ať už samostatné, anebo integrované ve vývojových
+	prostředích. Ty obvykle poskytují mnohem pohodlnější ladění programů, které je díky tomuto i snadněji zařazené do celého pracovního postupu vytváření
+	kódu.
+	
+	\vspace{5mm}
+	
+	\par Cílem této práce bylo navrhnout a naimplementovat program, který bude ladění programu vizualizovat ve formě grafu, a otestovat, jestli tento
+	postup pomáhá při ladění programů a vizualizaci jednoduchých algoritmů. Mimo jiné by tento program měl nabízet také funkce, které jsou obvyklé v jiných
+	grafických rozhraních pro ladící nástroje, jako je krokování programu, zobrazování zdrojového kódu, přepínání zásobníkových rámců a ovládání vláken.
+	V této kapitole je popsána architektura a implementace tohoto programu.
+	
+	\vspace{5mm}
+	
+	\par Pro implementaci programu byl vybrán programovací jazyk Python\footnote{http://www.python.org} ve verzi 2.7. Novější verze Python 3 nebyla použita
+	z důvodu zachování kompatibility s API pro LLDB, které Python 3 nepodporuje. Python byl vybrán, protože je vhodný k rychlému vývoji aplikací, existuje pro
+	něj několik rozhraní pracujících s ladícími nástroji a umí snadno používat existující kód v jazycích C a C++. Navíc je multiplatformní, což by usnadnilo
+	případný port aplikace na jiný operační systém. Pro vývoj grafického rozhraní programu byla použita knihovna GTK+ 3\footnote{http://www.gtk.org}, což je
+	volně dostupný\footnote{Pod licencí LGPL 2.1}, multiplatformní grafický software umožňující tvorbu uživatelského rozhraní. Kromě možnosti tvorby vlastních
+	GUI prvků obsahuje několik desítek často používaných prvků, které jsou předpřipravené k okamžitému použití a usnadňují tak rychlý vývoj aplikací.
 
-\section{Návrh řešení}
-	\subsection{Komunikace s ladícím nástrojem}
-		\subsection{Python API pro GDB}
-		\subsection{Python API pro LLDB}
-		\subsection{Protokol GDB/MI}
+	\subsection{Architektura nástroje}
+		Nástroj tvoří dvě samostatné komponenty, aplikace s klasickým grafickým rozhraním, která slouží k interakci s uživatelem nástroje, a knihovny, která
+		poskytuje rozhraní pro komunikaci s ladícími nástroji. Následuje popis obou komponent.
 		
+		\InsertFigure{Figures/bak_architektura}{0.7\textwidth}{Architektura nástroje}{fig:AppArchitecture}
+		
+		\subsubsection{API pro komunikaci s ladícími nástroji}
+			Tato komponenta je knihovna napsaná v Pythonu, která tvoří rozhraní pro komunikaci s libovolným ladícím nástrojem. Toto rozhraní definuje abstraktní typy
+			popisující laděný proces a není tak závislé na použitém ladícím nástroji. Není nijak závislé ani na grafické komponentě nástroje, lze jej tedy vyjmout
+			a použít pro programové ovládání ladících nástrojů i v jiném projektu. Pro účely této práce bylo vytvořeno několik implementací pro komunikaci s GDB
+			a LLDB, které budou dále popsány.
+
+			\lineparagraph{Python API pro GDB}
+			GDB obsahuje rozhraní \cite{gdb-python}, které nabízí možnost načtení skriptů v Pythonu 2, které můžou ovládat GDB a přistupovat k jeho API. To nabízí
+			většinu nejpoužívanějších funkcí GDB ve formě tříd a metod. Funkce GDB, které v API nejsou obsaženy, lze vyvolat pomocí přímého provádění textových
+			příkazů. Nevýhoda tohoto API je, že neumí samo spustit instanci GDB a musí tak být načteno v již běžícím procesu GDB. Nelze jej tedy použít přímo
+			v kódu aplikace, protože samotné API běží v jiném procesu. Tento problém byl vyřešen komunikací se skriptem běžícím v procesu GDB pomocí TCP/IP.
+			Jelikož je ale toto řešení komplikovanější než ostatní způsoby práce s GDB a při testování nebylo stabilní, tak jeho implementace nebyla dokončena
+			a byl zvolen jiný postup, který je popsán níže.
+			
+			\lineparagraph{Protokol GDB/MI}
+			MI je komunikační rozhraní pro ovládání GDB pomocí textových příkazů. Nejedná se o klasické příkazy používané při manuálním ovládání GDB, ale o
+			speciální příkazy přizpůsobené pro jednoduché strojové zpracování. Obdobně jako Python API pro GDB, obsahuje rozhraní pro nejpoužívanější funkce GDB a
+			zbytek funkcí lze používat pomocí běžných textových příkazů. Použití MI je běžným a doporučeným \cite{gdb-mi-usage} způsobem pro programovou komunikaci
+			s GDB a psaní grafických rozhraní. Existují volně dostupné knihovny pro Python i C/C++, které umí komunikovat s GDB pomocí MI protokolu, nicméně za
+			účelem pochopení fungování tohoto protokolu a maximální volnosti v implementaci byl vytvořen vlastní komunikační modul.
+			
+			\lineparagraph{Python API pro LLDB}
+			Stejně jako GDB, i LLDB poskytuje API v Pythonu. Lze jej načíst do procesu LLDB a automatizovat průběh ladění, navíc jej ale lze také použít jako
+			knihovnu, která sama vytváří instance LLDB a je tedy jednoduché ji použít přímo v externím kódu. Stejně jako samotné LLDB je ale zatím ve vývoji
+			a obsahuje drobné chyby, například nepřesné zobrazování stavu vláken.
+		
+			\lineparagraph{Debugger v Pythonu}
+			(Dopsat debugger?)
+			
+			
 	\subsection{Vizualizační část}
 	
-\section{Implementace}
 	\subsection{Ovládání laděného procesu}
 	\subsection{Vizualizace paměti procesu}
 
