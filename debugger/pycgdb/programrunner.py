@@ -1,9 +1,10 @@
 import traceback
 
-import signal
 import Queue
 import os
 import threading
+
+import signal
 
 import ptrace
 from enums import ProcessState
@@ -15,13 +16,15 @@ class ProcessExitException(BaseException):
 
 
 class ProgramRunner(object):
-    def __init__(self, file, *args):
+    def __init__(self, debugger, file, *args):
+        self.debugger = debugger
         self.file = os.path.abspath(file)
         self.args = args
         self.parent_thread = None
         self.on_signal = EventBroadcaster()
         self.msg_queue = Queue.Queue()
         self.child_pid = None
+        self.last_signal = None
 
     def run(self):
         assert not self.parent_thread
@@ -30,10 +33,10 @@ class ProgramRunner(object):
         self.parent_thread.start()
 
     def exec_step_single(self):
-        self.msg_queue.put("step-single")
+        self._add_queue_command("step-single")
 
     def exec_continue(self):
-        self.msg_queue.put("continue")
+        self._add_queue_command("continue")
 
     def exec_interrupt(self):
         try:
@@ -48,6 +51,17 @@ class ProgramRunner(object):
             return True
         except:
             return False
+
+    def _add_queue_command(self, cmd):
+        """if not self.msg_queue.empty():
+            top = self.msg_queue.get()
+            if top == cmd:
+                self.msg_queue.put(top)
+                return
+            else:
+                self.msg_queue.put(top)"""
+
+        self.msg_queue.put(cmd)
 
     def _start_process(self):
         child_pid = os.fork()
@@ -92,18 +106,53 @@ class ProgramRunner(object):
 
     def _handle_child_status(self, status):
         if os.WIFSTOPPED(status):
-            self.on_signal.notify(ProcessState.Stopped)
+            self._on_stop(status)
         elif os.WIFEXITED(status):
-            self.on_signal.notify(ProcessState.Exited)
+            self.on_signal.notify(ProcessState.Exited, os.WTERMSIG(status), os.WEXITSTATUS(status))
             raise ProcessExitException()
 
     def _handle_command(self, pid, status, command):
-        result = 0
-
         if command == "continue":
-            result = ptrace.ptrace(ptrace.PTRACE_CONT, pid)
+            self._do_continue(pid)
         elif command == "step-single":
-            result = ptrace.ptrace(ptrace.PTRACE_SINGLESTEP, pid)
+            self._do_step_single(pid)
 
-        if result < 0:
-            print(ptrace.get_error())
+    def _on_stop(self, status):
+        self.last_signal = os.WSTOPSIG(status)
+        self.debugger.breakpoint_manager.set_breakpoints(self.child_pid)
+
+        self.on_signal.notify(ProcessState.Stopped, self.last_signal)
+
+    def _continue_after_breakpoint(self, exec_continue):
+        pid = self.child_pid
+        regs = ptrace.ptrace_getregs(pid)
+        orig_address = regs.eip - 1
+        if self.debugger.breakpoint_manager.has_breakpoint_for_address(orig_address):
+            self.debugger.breakpoint_manager.restore_instruction(pid, orig_address)
+            regs.eip -= 1
+            assert ptrace.ptrace_setregs(pid, regs)
+            self._do_step_single(pid)
+            pid, status = os.waitpid(pid, 0)
+            self.debugger.breakpoint_manager.set_breakpoints(pid)
+
+            if exec_continue:
+                self.exec_continue()
+            else:
+                self._handle_child_status(status)
+            return True
+        else:
+            return False
+
+    def _do_continue(self, pid):
+        if self.last_signal == 5:   # sigtrap
+            if self._continue_after_breakpoint(True):
+                return
+
+        ptrace.ptrace(ptrace.PTRACE_CONT, pid)
+
+    def _do_step_single(self, pid):
+        if self.last_signal == 5:   # sigtrap
+            if self._continue_after_breakpoint(False):
+                return
+
+        ptrace.ptrace(ptrace.PTRACE_SINGLESTEP, pid)

@@ -24,3 +24,8 @@ class Debugger(object):
 
             self.loaded_file = file
             self.program_info = ProgramInfo(elffile)
+            self.runner = ProgramRunner(self, file)
+
+    def run(self, *args):
+        self.runner.args = args
+        self.runner.run()

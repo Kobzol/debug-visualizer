@@ -5,9 +5,11 @@ lib = ctypes.cdll.LoadLibrary(os.path.join(os.path.dirname(os.path.abspath(__fil
 
 PTRACE_TRACEME = 0
 PTRACE_PEEKTEXT = 1
+PTRACE_POKETEXT = 4
 PTRACE_CONT = 7
 PTRACE_SINGLESTEP = 9
 PTRACE_GETREGS = 12
+PTRACE_SETREGS = 13
 
 
 class UserRegs64(ctypes.Structure):
@@ -75,8 +77,21 @@ def ptrace_getregs(pid, bit32=True):
         regs = UserRegs64()
 
     regs_p = ctypes.pointer(regs)
-    result = lib.py_ptrace(PTRACE_GETREGS, pid, 0, regs_p)
+    assert lib.py_ptrace(PTRACE_GETREGS, pid, 0, regs_p) >= 0
     return regs_p.contents
+
+
+def ptrace_setregs(pid, regs):
+    regs_p = ctypes.pointer(regs)
+    return lib.py_ptrace(PTRACE_SETREGS, pid, 0, regs_p) >= 0
+
+
+def ptrace_get_instruction(pid, address):
+    return lib.py_ptrace(PTRACE_PEEKTEXT, pid, address)
+
+
+def ptrace_set_instruction(pid, address, instruction):
+    return lib.py_ptrace(PTRACE_POKETEXT, pid, address, instruction) >= 0
 
 
 def get_error():
