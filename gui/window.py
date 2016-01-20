@@ -152,7 +152,7 @@ class MainWindow(Gtk.Window):
         file_path = FileOpenDialog.open_file("Choose a binary file", self, os.path.abspath("../debugger/"))
 
         if file_path:
-            self.app.debugger.stop()
+            self.app.debugger.kill(True)
             loaded = self.app.debugger.load_binary(file_path)
 
             if loaded:

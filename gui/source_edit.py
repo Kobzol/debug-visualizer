@@ -63,12 +63,16 @@ class SourceEditor(GtkSource.View):
 
         self.analyser = SourceAnalyzer()
         self.connect("motion-notify-event", lambda widget, event: self._handle_mouse_move(event))
+        self.on_symbol_hover = EventBroadcaster()
 
     def _handle_mouse_move(self, event):
         x, y = self.window_to_buffer_coords(Gtk.TextWindowType.WIDGET, event.x, event.y)
         iter = self.get_iter_at_location(x, y)
 
         symbol = self.analyser.get_symbol_name(iter.get_line() + 1, iter.get_line_offset())
+
+        if symbol is not None:
+            self.on_symbol_hover.notify(symbol)
 
     def get_buffer(self):
         return self.buffer
@@ -187,6 +191,7 @@ class SourceManager(Gtk.Notebook):
         self.popup_enable()
 
         self.on_breakpoint_changed = EventBroadcaster()
+        self.on_symbol_hover = EventBroadcaster()
         self.on_breakpoint_changed.subscribe(self._handle_breakpoint_change)
 
         self.debugger.on_process_state_changed.subscribe(self._handle_process_state_change)
@@ -238,6 +243,8 @@ class SourceManager(Gtk.Notebook):
 
     @require_gui_thread
     def _close_tab(self, widget):
+        widget.editor.on_breakpoint_changed.clear()
+
         self.remove_page(self.get_tabs().index(widget))
 
     @require_gui_thread
@@ -257,7 +264,8 @@ class SourceManager(Gtk.Notebook):
         if index != -1:
             self.select_tab(index)
             self.set_tab_reorderable(window, True)
-            editor.on_breakpoint_changed.subscribe(lambda location, type: self.on_breakpoint_changed.notify(location, type))
+            editor.on_breakpoint_changed.redirect(self.on_breakpoint_changed)
+            editor.on_symbol_hover.redirect(self.on_symbol_hover)
             return editor
         else:
             return None
