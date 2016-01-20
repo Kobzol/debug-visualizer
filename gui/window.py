@@ -91,9 +91,6 @@ class MainWindow(Gtk.Window):
         # tools
         self.tool_manager = ToolManager()
 
-        self.memory_view = MemoryView(app.debugger)
-        self.tool_manager.add_tool("Memory view", self.memory_view)
-
         self.console = IOConsole(height=150)
         self.console.watch(app.debugger)
 
@@ -116,6 +113,9 @@ class MainWindow(Gtk.Window):
         window.add_with_viewport(self.thread_selector)
         window.set_size_request(-1, 100)
         self.tool_manager.add_tool("Threads", window)
+
+        self.memory_view = MemoryView(app.debugger)
+        self.tool_manager.add_tool("Memory view", self.memory_view)
 
         self._add_to_row(self.tool_manager, 3)
 

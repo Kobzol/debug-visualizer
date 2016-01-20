@@ -166,7 +166,12 @@ class VariableManager(object):
             address_output = self.debugger.communicator.send("p &{0}".format(expression))
             if address_output:
                 address = self.parser.parse_print_expression(address_output.cli_data)
-                address = address[address.rfind(" ") + 1:]
+                if address[0] == "(":
+                    address = address[address.rfind(" ") + 1:]
+                elif address[:2] == "0x":
+                    address = address[:address.find(" ")]
+                else:
+                    address = None
 
             name = self._get_name(expression)
             value = None

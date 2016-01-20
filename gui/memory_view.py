@@ -1,7 +1,6 @@
 import re
 from gi.repository import Gtk
 
-from enums import ProcessState
 from events import EventBroadcaster
 
 
@@ -15,7 +14,8 @@ class MemoryGrid(Gtk.Grid):
         self.address = None
 
         self.row_labels = []
-        self.rows = []
+        self.byte_rows = []
+        self.ascii_rows = []
 
         self.set_column_spacing(2)
         self.set_row_spacing(2)
@@ -24,9 +24,57 @@ class MemoryGrid(Gtk.Grid):
 
         for x in xrange(1, height + 1):
             self.row_labels.append(self._create_row_label(x))
-            self.rows.append([])
+            self.byte_rows.append([])
+            self.ascii_rows.append([])
             for y in xrange(1, width + 1):
-                self.rows[-1].append(self._create_block_view(x, y))
+                self.byte_rows[-1].append(self._create_block_view(x, y))
+            for y in xrange(width + 1, width * 2 + 1):
+                self.ascii_rows[-1].append(self._create_ascii_block_view(x, y))
+
+    def load_address(self, address):
+        """
+        Loads an address into the view.
+        The address should be a hexadecimal string starting with 0x/0X or a name of a variable.
+        @type address: str
+        """
+        address, address_int = self._parse_address(address)
+
+        if address_int is None:
+            return
+
+        memory = self.debugger.variable_manager.get_memory(address, self.width * self.height)
+
+        for i, row in enumerate(self.byte_rows):
+            for j, block in enumerate(row):
+                index = i * self.width + j
+                value = "?"
+
+                if index < len(memory):
+                    value = str(memory[index])
+
+                block.set_label(value)
+
+        for i, row in enumerate(self.ascii_rows):
+            for j, block in enumerate(row):
+                index = i * self.width + j
+                value = "?"
+
+                if index < len(memory):
+                    value = memory[index]
+                    if value <= 32 or value >= 127:
+                        value = ord(".")
+                    value = chr(value)
+
+                block.set_label(value)
+
+        for i, label in enumerate(self.row_labels):
+            text = hex(address_int)
+
+            if text[-1] == "L":
+                text = text[:-1]
+
+            label.set_label(text)
+            address_int += self.width
 
     def _create_row_label(self, row):
         view = Gtk.Label()
@@ -43,36 +91,35 @@ class MemoryGrid(Gtk.Grid):
 
         return view
 
-    def load_address(self, address):
+    def _create_ascii_block_view(self, row, column, width=1, height=1):
+        view = Gtk.Label()
+        view.set_selectable(True)
+        view.set_label("?")
+        view.set_margin_left(5)
+        view.set_margin_right(5)
+        self.attach(view, column, row, width, height)
+
+        return view
+
+    def _parse_address(self, address):
+        """
+        Parses the given address and returns tuple (hex address, int address).
+        The input address should either be a hex string starting with 0x/0X or a name of a variable.
+        @type address: str
+        @return: tuple of (str, int)
+        """
         if re.match("^0(x|X)", address):
             try:
-                address_int = int(address, 16)
+                return (address, int(address, 16))
             except:
-                return
+                return (None, None)
         else:
             variable = self.debugger.variable_manager.get_variable(address)
-            if not variable:
-                return
+            if not variable or not variable.address:
+                return (None, None)
             else:
                 address = variable.address
-                address_int = int(address, 16)
-
-        memory = self.debugger.variable_manager.get_memory(address, self.width * self.height)
-
-        for i, row in enumerate(self.rows):
-            for j, block in enumerate(row):
-                index = i * self.width + j
-                value = "?"
-
-                if index < len(memory):
-                    value = str(memory[index])
-
-                block.set_label(value)
-
-        for i, label in enumerate(self.row_labels):
-            text = hex(address_int)
-            label.set_label(text)
-            address_int += self.width
+                return (address, int(address, 16))
 
 
 class AddressInput(Gtk.Box):
