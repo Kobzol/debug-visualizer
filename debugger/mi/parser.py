@@ -140,7 +140,11 @@ class Parser(object):
             return None
 
     def _instantiate_breakpoint(self, bp):
-        return Breakpoint(int(bp["number"]), bp["fullname"], int(bp["line"]))
+        if "fullname" not in bp:
+            name = ""
+        else:
+            name = bp["fullname"]
+        return Breakpoint(int(bp["number"]), name, int(bp["line"]))
 
     def _remove_array_labels(self, data):
         in_array = []
