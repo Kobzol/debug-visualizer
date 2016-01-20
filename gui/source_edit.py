@@ -72,7 +72,7 @@ class SourceEditor(GtkSource.View):
         symbol = self.analyser.get_symbol_name(iter.get_line() + 1, iter.get_line_offset())
 
         if symbol is not None:
-            self.on_symbol_hover.notify(symbol)
+            self.on_symbol_hover.notify(self, symbol)
 
     def get_buffer(self):
         return self.buffer
@@ -192,10 +192,17 @@ class SourceManager(Gtk.Notebook):
 
         self.on_breakpoint_changed = EventBroadcaster()
         self.on_symbol_hover = EventBroadcaster()
+        self.on_symbol_hover.subscribe(self._handle_symbol_hover)
         self.on_breakpoint_changed.subscribe(self._handle_breakpoint_change)
 
         self.debugger.on_process_state_changed.subscribe(self._handle_process_state_change)
         self.debugger.on_frame_changed.subscribe(self._handle_frame_change)
+
+    def _handle_symbol_hover(self, source_editor, symbol):
+        if self.debugger.process_state == ProcessState.Stopped:
+            variable = self.debugger.variable_manager.get_variable(symbol)
+            if variable and variable.address:
+                source_editor.set_tooltip_text(str(variable))
 
     def _handle_breakpoint_change(self, location, change_type):
         if change_type == BreakpointChangeType.Create:
