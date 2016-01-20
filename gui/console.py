@@ -147,8 +147,7 @@ class IOConsole(Console):
         try:
             self.debugger.io_manager.stdin.write(input_buffer)
         except:
-            print(traceback.format_exc())
-            sys.stdout.flush()
+            traceback.print_exc()
 
     @require_gui_thread
     def _write_on_ui(self, text, tag_name=None):

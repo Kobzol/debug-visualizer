@@ -93,13 +93,13 @@ class ProgramRunner(object):
                 except Queue.Empty:
                     pass
                 except:
-                    print(traceback.format_exc())
+                    traceback.print_exc()
         except OSError:
             self.on_signal.notify(ProcessState.Exited)
         except ProcessExitException:
             pass
         except:
-            print(traceback.format_exc())
+            traceback.print_exc()
 
         self.child_pid = None
         self.parent_thread = None

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import traceback
 
 from clang.cindex import TranslationUnit, File, SourceLocation, Cursor
 
@@ -24,8 +25,8 @@ class SourceAnalyzer(object):
         try:
             self.tu = self._create_tu_from_file(file_path)
             self.file = File.from_name(self.tu, file_path)
-        except Exception as e:
-            print(e)
+        except:
+            traceback.print_exc()
 
     def get_symbol_name(self, offset, column=None):
         if self.tu is None or self.file is None:

@@ -89,9 +89,8 @@ class Server(object):
                 if self.is_data_available(self.server, 0.1) and not self.is_client_connected():
                     client, address = self.server.accept()
                     self.handle_client(client, address)
-            except Exception as e:
-                print(e)
-                sys.stdout.flush()
+            except:
+                traceback.print_exc()
     
     def handle_command(self, command):
         """
@@ -111,8 +110,7 @@ class Server(object):
                 result = Dispatcher.dispatch(self.debugger, properties, arguments)
                 self.send_result(command, result)
             except:
-                print(traceback.format_exc())
-                sys.stdout.flush()
+                traceback.print_exc()
                 self.send_result_error(command, traceback.format_exc())
     
     def handle_client(self, client, address):
@@ -127,8 +125,8 @@ class Server(object):
             while self.is_running():
                 if self.is_data_available(client, 0.1):
                     self.handle_command(Command.receive(client))
-        except Exception as e:
-            print(e)
+        except:
+            traceback.print_exc()
         finally:
             self.connected_client = None
             
@@ -141,8 +139,7 @@ class Server(object):
         try:
             command.send_result(self.connected_client, result)
         except:
-            print(traceback.format_exc())
-            sys.stdout.flush()
+            traceback.print_exc()
         
     def send_result_error(self, command, error):
         """
@@ -153,5 +150,4 @@ class Server(object):
         try:
             command.send_result_error(self.connected_client, error)
         except:
-            print(traceback.format_exc())
-            sys.stdout.flush()
+            traceback.print_exc()

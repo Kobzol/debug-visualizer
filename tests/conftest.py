@@ -15,7 +15,7 @@ SRC_DIR = os.path.join(ROOT_DIR, "debugger")
 sys.path.append(SRC_DIR)
 os.chdir(TEST_DIR)
 
-from mi.debugger import Debugger
+from mi.mi_debugger import Debugger
 from mi.parser import Parser
 
 

@@ -23,7 +23,7 @@ class FileManager(object):
                 match = re.match("(\d+)", cli_data)
 
                 return int(match.group(0))
-        except Exception as e:
+        except:
             traceback.print_exc()
 
         return None
@@ -35,7 +35,7 @@ class FileManager(object):
             if output:
                 cli_data = output.cli_data[2]
                 return cli_data[11:]
-        except Exception as e:
+        except:
             traceback.print_exc()
 
         return None

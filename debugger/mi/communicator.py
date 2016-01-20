@@ -228,8 +228,8 @@ class Communicator(object):
                 else:
                     self._handle_output(output)
 
-        except IOError as e:
-            print(e)
+        except:
+            traceback.print_exc()
 
         self.io_lock.release()
 
@@ -262,7 +262,7 @@ class Communicator(object):
             if output:
                 output = self._parse_output(output)
                 self._handle_output(output)
-        except Exception as e:
+        except:
             traceback.print_exc()
         finally:
             self.io_lock.release()
@@ -292,8 +292,8 @@ class Communicator(object):
                     input = process.stdout.readline()
             else:
                 input = process.stdout.readline()
-        except Exception as e:
-            print(e)
+        except:
+            traceback.print_exc()
 
         self.io_lock.release()
 

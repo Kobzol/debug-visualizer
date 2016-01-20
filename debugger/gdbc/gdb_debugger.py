@@ -61,7 +61,7 @@ class GdbDebugger(object):
             
             return True
         except:
-            print(traceback.format_exc())
+            traceback.print_exc()
             return False"""
     
     def after_bp(self, stop_event, continue_exec):

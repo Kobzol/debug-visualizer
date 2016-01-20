@@ -5,10 +5,9 @@ import threading
 
 import time
 
+import debugger
 import util
 from enums import ProcessState, DebuggerState
-from events import EventBroadcaster
-from flags import Flags
 from mi.breakpoint_manager import BreakpointManager
 from mi.communicator import Communicator
 from mi.file_manager import FileManager
@@ -17,18 +16,10 @@ from mi.thread_manager import ThreadManager
 from mi.variable_manager import VariableManager
 
 
-class ProcessExitedEventData(object):
-    def __init__(self, return_code):
-        self.return_code = return_code
-
-
-class ProcessStoppedEventData(object):
-    def __init__(self, stop_reason):
-        self.stop_reason = stop_reason
-
-
-class Debugger(object):
+class MiDebugger(debugger.Debugger):
     def __init__(self):
+        super(MiDebugger, self).__init__()
+
         self.communicator = Communicator()
         self.communicator.on_process_change.subscribe(self._handle_process_state)
 
@@ -38,16 +29,7 @@ class Debugger(object):
         self.thread_manager = ThreadManager(self)
         self.variable_manager = VariableManager(self)
 
-        self.state = Flags(DebuggerState, DebuggerState.Started)
-        self.process_state = ProcessState.Invalid
-
         self.exit_lock = threading.Lock()
-
-        self.on_debugger_state_changed = EventBroadcaster()
-        self.state.on_value_changed.redirect(self.on_debugger_state_changed)
-        self.on_process_state_changed = EventBroadcaster()
-        self.on_frame_changed = EventBroadcaster()
-        self.on_thread_changed = EventBroadcaster()
 
     def _handle_process_state(self, output):
         """
@@ -57,10 +39,10 @@ class Debugger(object):
         self.process_state = output.state
 
         if output.state == ProcessState.Exited:
-            self.stop(False, output.exit_code)
+            self.stop_program(output.exit_code)
         elif output.state == ProcessState.Stopped:
             self.on_process_state_changed.notify(output.state,
-                ProcessStoppedEventData(output.reason)
+                 debugger.ProcessStoppedEventData(output.reason)
             )
         else:
             self.on_process_state_changed.notify(output.state, None)
@@ -155,7 +137,7 @@ class Debugger(object):
             self.communicator.quit_program()
 
             self.process_state = ProcessState.Exited
-            self.on_process_state_changed.notify(ProcessState.Exited, ProcessExitedEventData(return_code))
+            self.on_process_state_changed.notify(ProcessState.Exited, debugger.ProcessExitedEventData(return_code))
             util.Logger.debug("Debugger process ended")
             self.state.unset(DebuggerState.Running)
 
