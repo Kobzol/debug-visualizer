@@ -96,10 +96,14 @@ class Vector(object):
         return Vector(-self.x, -self.y)
 
     def __mul__(self, other):
+        """
+        @type other: Vector | Number
+        @return: Vector
+        """
         if isinstance(other, numbers.Number):
             return Vector(self.x * other, self.y * other)
         elif isinstance(other, Vector):
-            return self.x * other.x +  self.y * other.y
+            return self.x * other.x + self.y * other.y
         else:
             raise TypeError
 

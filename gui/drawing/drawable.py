@@ -1,15 +1,36 @@
 # -*- coding: utf-8 -*-
 
 import abc
+import cairo
 
 from gi.repository import Gtk
 from gi.repository import Gdk
+
+from enum import Enum
 
 from drawing.geometry import Margin, RectangleBBox
 from drawing.size import Size
 from drawing.vector import Vector
 from events import EventBroadcaster
 from mouse import ClickHandler
+
+
+class FontStyle(object):
+    def __init__(self, color=None, bold=False, italic=False, font_family=None):
+        """
+        Represents style of a font.
+        @type color: Color
+        @type bold: bool
+        @type italic: bool
+        @type font_family: basestring
+        """
+        if not color:
+            color = Color()
+
+        self.color = color
+        self.bold = bold
+        self.italic = italic
+        self.font_family = font_family
 
 
 class Color(object):
@@ -45,10 +66,36 @@ class Color(object):
 
 class DrawingUtils(object):
     @staticmethod
-    def get_text_size(canvas, text):
+    def apply_font_style(canvas, font_style):
+        """
+        Applies the given font style to the given canvas.
+        @type canvas: canvas.Canvas
+        @type font_style: FontStyle
+        """
+        canvas.cr.select_font_face(font_style.font_family if font_style.font_family else "sans-serif",
+                            cairo.FONT_SLANT_ITALIC if font_style.italic else cairo.FONT_SLANT_NORMAL,
+                            cairo.FONT_WEIGHT_BOLD if font_style.bold else cairo.FONT_WEIGHT_NORMAL)
+
+    @staticmethod
+    def get_text_size(canvas, text, font_style=None):
+        """
+        @type canvas: canvas.Canvas
+        @type text: basestring
+        @type font_style: FontStyle
+        """
+        if not font_style:
+            font_style = FontStyle()
+
+        canvas.cr.save()
+
+        DrawingUtils.apply_font_style(canvas, font_style)
         size = canvas.cr.text_extents(text)
 
-        return Size(size[2], -size[1])   # (width, height)
+        size = Size(size[2], -size[1])   # (width, height)
+
+        canvas.cr.restore()
+
+        return size
 
     @staticmethod
     def set_color(canvas, color):
@@ -60,18 +107,23 @@ class DrawingUtils(object):
         canvas.cr.set_source_rgba(color.red, color.green, color.blue, color.alpha)
 
     @staticmethod
-    def draw_text(canvas, text, position, color=Color(), y_center=False, x_center=False):
+    def draw_text(canvas, text, position, y_center=False, x_center=False, font_style=None):
         """
         Draws text on a given position. When no centering is set, it will be drawn from top-left corner.
         @type canvas: canvas.Canvas
         @type text: str
         @type position: Vector
-        @param color: Color
-        @param y_center: bool
-        @param x_center: bool
+        @type y_center: bool
+        @type x_center: bool
+        @type font_style: FontStyle
         """
+        if not font_style:
+            font_style = FontStyle()
+
         cr = canvas.cr
         cr.save()
+
+        DrawingUtils.apply_font_style(canvas, font_style)
 
         position = Vector.vectorize(position)
 
@@ -87,7 +139,7 @@ class DrawingUtils(object):
         else:
             position.y += text_size.height
 
-        DrawingUtils.set_color(canvas, color)
+        DrawingUtils.set_color(canvas, font_style.color)
         cr.move_to(position.x, position.y)
 
         cr.show_text(text)
@@ -185,10 +237,13 @@ class DrawingUtils(object):
 
 
 class ValueEntry(Gtk.Frame):
-    def __init__(self):
+    def __init__(self, label):
+        """
+        @type label: basestring
+        """
         Gtk.Frame.__init__(self)
 
-        self.set_label("Edit value")
+        self.set_label(label)
         self.set_label_align(0.0, 0.0)
 
         self.box = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
@@ -203,7 +258,6 @@ class ValueEntry(Gtk.Frame):
         self.box.pack_start(self.confirm_button, False, False, 5)
         self.add(self.box)
         self.show_all()
-        self.hide()
 
         self.confirm_button.connect("clicked", lambda btn: self._handle_confirm_click())
 
@@ -233,35 +287,105 @@ class Drawable(object):
     def __init__(self, canvas):
         self.canvas = canvas
         self.position = Vector(0, 0)
+        self.margin = Margin()
         self.children = []
+        self._visible = True
+
         self.click_handler = ClickHandler(self)
 
-    def set_position(self, position):
-        self.position = Vector.vectorize(position)
+    @property
+    def visible(self):
+        return self._visible
 
-    @abc.abstractmethod
-    def draw(self):
+    @visible.setter
+    def visible(self, value):
+        self._visible = value
+
+    def add_child(self, child):
+        self.children.append(child)
+        self.click_handler.propagate_handler(child.click_handler)
+
+    def set_position(self, position):
+        self.position = position.copy()
+        self.place_children()
+
+    def handle_mouse_event(self, mouse_data):
+        """
+        @type mouse_data: mouse.MouseData
+        """
+        self.click_handler.handle_mouse_event(mouse_data)
+
+    def on_mouse_click(self, mouse_data):
         pass
+
+    def get_rect(self):
+        if not self.visible:
+            return RectangleBBox(self.position)
+
+        self.place_children()
+
+        size = RectangleBBox(self.position)
+
+        return RectangleBBox.contain([size] + [child.get_rect() + child.margin for child in self.children if child.visible])
 
     @abc.abstractmethod
     def place_children(self):
         pass
 
-    @abc.abstractmethod
-    def get_bbox(self):
-        pass
+    def draw(self):
+        self.place_children()
+
+        if self.visible:
+            for child in self.children:
+                child.draw()
 
 
-class BoxedLabelDrawable(Drawable):
-    def __init__(self, canvas, label, margin=None):
+class LinearLayoutDirection(Enum):
+    Horizontal = 1
+    Vertical = 2
+
+
+class LinearLayout(Drawable):
+    def __init__(self, canvas, direction=LinearLayoutDirection.Vertical):
         """
+        @type canvas: canvas.Canvas
+        @type direction: LinearLayoutDirection
+        """
+        super(LinearLayout, self).__init__(canvas)
+        self.direction = direction
+
+    def place_children(self):
+        position = self.position.copy()
+
+        for child in self.children:
+            child_position = position + Vector(child.margin.left, child.margin.top)  # add margin
+            child.set_position(child_position)
+            rect = child.get_rect()
+
+            if self.direction == LinearLayoutDirection.Horizontal:
+                position.x += child.margin.left + rect.width + child.margin.right
+            elif self.direction == LinearLayoutDirection.Vertical:
+                position.y += child.margin.top + rect.height + child.margin.bottom
+
+
+class Label(Drawable):
+    def __init__(self, canvas, label, padding=None, font_style=None):
+        """
+        @type canvas: canvas.Canvas
         @type label: str | callable
-        @type margin: Margin
+        @type padding: Margin
         """
-        super(BoxedLabelDrawable, self).__init__(canvas)
+        super(Label, self).__init__(canvas)
 
+        if not font_style:
+            font_style = FontStyle()
+
+        self.font_style = font_style
         self.label = label if label is not None else ""
-        self.margin = margin if margin else Margin()
+        self.padding = padding if padding else Margin()
+
+    def on_mouse_click(self, mouse_data):
+        print(mouse_data)
 
     def get_label(self):
         if isinstance(self.label, basestring):
@@ -269,147 +393,121 @@ class BoxedLabelDrawable(Drawable):
         else:
             return self.label()
 
-    def place_children(self):
-        pass
+    def get_rect(self):
+        if not self.visible:
+            return RectangleBBox(self.position)
 
-    def get_bbox(self):
-        label_size = DrawingUtils.get_text_size(self.canvas, self.get_label())
+        label_size = DrawingUtils.get_text_size(self.canvas, self.get_label(), font_style=self.font_style)
 
-        width = self.margin.left + label_size.width + self.margin.right
-        height = self.margin.top + label_size.height + self.margin.bottom
+        width = self.padding.left + label_size.width + self.padding.right
+        height = self.padding.top + label_size.height + self.padding.bottom
 
         return RectangleBBox(self.position, Size(width, height))
 
     def draw(self):
-        bbox = self.get_bbox()
+        if not self.visible:
+            return
+
+        rect = self.get_rect()
 
         # box
-        DrawingUtils.draw_rectangle(self.canvas, self.position, bbox.size, center=False)
+        DrawingUtils.draw_rectangle(self.canvas, self.position, rect.size, center=False)
 
-        text_x = self.position.x + self.margin.left
-        text_y = self.position.y + self.margin.top
+        text_x = self.position.x + self.padding.left
+        text_y = self.position.y + self.padding.top
 
         # value
-        DrawingUtils.draw_text(self.canvas, self.get_label(), Vector(text_x, text_y), y_center=False)
+        DrawingUtils.draw_text(self.canvas, self.get_label(), Vector(text_x, text_y), y_center=False, font_style=self.font_style)
 
 
-class AbstractValueDrawable(Drawable):
-    def __init__(self, canvas, value):
+class LabelWrapper(LinearLayout):
+    def __init__(self, canvas, name, inner_drawable, padding=None):
         """
-        @type value: variable.Variable
+        @type canvas: canvas.Canvas
+        @type name: basestring
+        @type inner_drawable: Drawable
         """
-        super(AbstractValueDrawable, self).__init__(canvas)
+        super(LabelWrapper, self).__init__(canvas, LinearLayoutDirection.Horizontal)
 
-        self.value = value
+        self.name = name
 
-    def get_name(self):
-        return self.value.name
+        name_child = Label(canvas, name, padding if padding else Margin(10))
+        self.add_child(name_child)
+        self.add_child(inner_drawable)
 
-    def get_value(self):
-        value = self.value.value
-
-        if value is None:
-            return "(none)"
+    def set_show_name(self, value):
+        if value:
+            self.children[0].visible = True
         else:
-            return value
+            self.children[0].visible = False
 
-    @abc.abstractmethod
-    def draw(self):
-        pass
-
-    @abc.abstractmethod
-    def get_bbox(self):
-        pass
-
-    @abc.abstractmethod
-    def place_children(self):
-        pass
-
-
-class StackFrameDrawable(Drawable):
-    def __init__(self, canvas):
-        super(StackFrameDrawable, self).__init__(canvas)
-
-        self.variables = []
-
-    def add_variable(self, var):
-        self.variables.append(var)
-        self.click_handler.propagate_handler(var.click_handler)
-
-    def place_children(self):
-        height = self.position.y
-
-        for var in self.variables:
-            var.position.x = self.position.x
-            var.position.y = height
-            height += var.get_bbox().height
-
-    def get_bbox(self):
         self.place_children()
 
-        return RectangleBBox.contain([var.get_bbox() for var in self.variables])
 
-    def draw(self):
-        self.place_children()
-
-        for var in self.variables:
-            var.draw()
-
-
-class SimpleVarDrawable(AbstractValueDrawable):
-    def __init__(self, canvas, value):
+class VariableDrawable(LinearLayout):
+    def __init__(self, canvas, variable):
         """
-        @type value: variable.Variable
+        @type canvas: canvas.Canvas
+        @type variable: variable.Variable
         """
-        super(SimpleVarDrawable, self).__init__(canvas, value)
+        super(VariableDrawable, self).__init__(canvas)
 
-        self.name_box = BoxedLabelDrawable(canvas, self.get_name, Margin.all(5.0))
-        self.value_box = BoxedLabelDrawable(canvas, self.get_value, Margin.all(5.0))
+        self.variable = variable
 
-        self.value_entry = ValueEntry()
+        self.value_drawable = Label(canvas, self.get_variable_value, Margin.all(5))
+        self.wrapper = LabelWrapper(canvas, self.get_variable_name(), self.value_drawable, Margin.all(5))
+
+        self.add_child(self.wrapper)
+
+        self.value_entry = ValueEntry("Edit value of {}".format(self.get_variable_name()))
         self.value_entry.on_value_entered.subscribe(self._handle_value_change)
         canvas.fixed_wrapper.put(self.value_entry, self.position.x, self.position.y)
+        self.value_entry.hide()
 
-        self.click_handler.on_mouse_click.subscribe(self._handle_mouse_click)
+    def get_variable_value(self):
+        return self.variable.value
+
+    def get_variable_name(self):
+        if self.variable.name:
+            return self.variable.name
+        else:
+            return "(None)"
 
     def _handle_value_change(self, value):
-        self.value.value = value
+        self.variable.value = value
 
-    def _handle_mouse_click(self, point):
+    def on_mouse_click(self, point):
         """
-        @type point: drawing.vector.Vector
+        @type point: vector.Vector
         """
-        self.value_entry.set_value(self.get_value())
+        self.value_entry.set_value(self.get_variable_value())
         self.value_entry.toggle()
         self.canvas.fixed_wrapper.move(self.value_entry, point.x, point.y)
 
-    def place_children(self):
-        self.name_box.set_position(self.position)
-        self.value_box.set_position(self.position.add(Vector(self.name_box.get_bbox().width, 0)))
 
-    def get_bbox(self):
-        self.place_children()
+class StackFrameDrawable(LinearLayout):
+    def __init__(self, canvas, frame):
+        """
+        @type canvas: canvas.Canvas
+        @type frame: frame.Frame
+        """
+        super(StackFrameDrawable, self).__init__(canvas, LinearLayoutDirection.Vertical)
 
-        name_bbox = self.name_box.get_bbox()
-        value_bbox = self.value_box.get_bbox()
-
-        return RectangleBBox.contain((name_bbox, value_bbox))
-
-    def draw(self):
-        self.place_children()
-
-        self.name_box.draw()
-        self.value_box.draw()
-
-    def get_name(self):
-        return "{0} {1}".format(self.value.type.name, self.value.name)
+        self.label = Label(canvas, "Frame {0}".format(frame.func), Margin.all(10), FontStyle(italic=True))
+        self.add_child(self.label)
 
 
-class PointerDrawable(SimpleVarDrawable):
-    pass
+class PointerDrawable(Drawable):
+    def __init__(self, canvas, pointer):
+        """
+        @type canvas: canvas.Canvas
+        @type pointer: variable.Variable
+        """
+        super(PointerDrawable, self).__init__(canvas)
+        self.pointer = pointer
 
 
-class VectorDrawable(AbstractValueDrawable):
+class VectorDrawable(Drawable):
     def __init__(self, canvas, value):
         """
         @type canvas: drawing.canvas.Canvas
@@ -447,45 +545,15 @@ class VectorDrawable(AbstractValueDrawable):
             member.draw()
 
 
-class StructDrawable(AbstractValueDrawable):
-    def __init__(self, canvas, value):
+class StructDrawable(LinearLayout):
+    def __init__(self, canvas, struct):
         """
-        @type val: variable.Variable
+        @type canvas: canvas.Canvas
+        @type struct: variable.Variable
         """
-        super(StructDrawable, self).__init__(canvas, value)
-        self.struct_label = BoxedLabelDrawable(canvas, "{0} {1}".format(value.type.name, value.name),
-                                               Margin.all(6.0))
-        self.children = []
+        super(StructDrawable, self).__init__(canvas, LinearLayoutDirection.Vertical)
 
-    def add_child(self, child):
-        """
-        @type child: Drawable
-        """
-        self.children.append(child)
-        self.click_handler.propagate_handler(child.click_handler)
+        self.struct = struct
 
-    def get_children_left_offset(self):
-        return 10
-
-    def place_children(self):
-        self.struct_label.set_position(self.position)
-        label_bbox = self.struct_label.get_bbox()
-
-        height = self.position.y + label_bbox.height
-
-        for var in self.children:
-            var.position.x = self.position.x + self.get_children_left_offset()
-            var.position.y = height
-            height += var.get_bbox().height
-
-    def get_bbox(self):
-        self.place_children()
-
-        return RectangleBBox.contain([self.struct_label.get_bbox()] + [var.get_bbox() for var in self.children])
-
-    def draw(self):
-        self.place_children()
-        self.struct_label.draw()
-
-        for var in self.children:
-            var.draw()
+        self.struct_label = Label(canvas, "{0} {1}".format(struct.type.name, struct.name), Margin.all(6.0))
+        self.add_child(self.struct_label)

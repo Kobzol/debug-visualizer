@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 
+import cairo
 from gi.repository import Gtk
 from gi.repository import Gdk
 
 from drawing.drawable import DrawingUtils, Color
 from drawing.memtoview import MemToViewTransformer
-from drawing.mouse import MouseButtonState
+from drawing.mouse import MouseButtonState, MouseData
 from drawing.vector import Vector
-from events import EventBroadcaster
 from enums import ProcessState
-from variable import Variable
 
 
 class Canvas(Gtk.EventBox):
@@ -36,12 +35,13 @@ class Canvas(Gtk.EventBox):
         self.zoom = 1.0
         self.zoom_limits = (0.5, 2.0)
         self.cr = None
+        """@type cr: cairo.Context"""
 
         self.drawables = []
 
     def _notify_handlers(self):
         for drawable in self.drawables:  # TODO: synchronize
-            drawable.click_handler.handle_mouse_event(self.mouse_button_state, self.mouse_position * (1 / self.zoom))
+            drawable.click_handler.handle_mouse_event(MouseData(self.mouse_button_state, self.mouse_position * (1 / self.zoom)))
 
     def _handle_press(self, button_event, mouse_down):
         """

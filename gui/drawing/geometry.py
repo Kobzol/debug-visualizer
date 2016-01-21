@@ -23,6 +23,10 @@ class RectangleBBox(object):
 
         return RectangleBBox((min_x, min_y), (max_x - min_x, max_y - min_y))
 
+    @staticmethod
+    def from_margin(position, margin):
+        return RectangleBBox(position, margin.to_size())
+
     def __init__(self, position=(0, 0), size=(0, 0)):
         self.position = Vector.vectorize(position)
         self.size = Size.make_size(size)
@@ -48,6 +52,22 @@ class RectangleBBox(object):
         return (self.position.x <= point.x <= self.position.x + self.width and
                 self.position.y <= point.y <= self.position.y + self.height)
 
+    def __add__(self, other):
+        if isinstance(other, Margin):
+            position = self.position.copy()
+            position.x -= other.left
+            position.y -= other.top
+            size = self.size.copy()
+            size.width += other.right
+            size.height += other.bottom
+
+            return RectangleBBox(position, size)
+        else:
+            raise AttributeError("RectangleBBox can be only added with margin, added with {}".format(other))
+
+    def __repr__(self):
+        return "Rectangle[Position: {}, Size: {}]".format(self.position, self.size)
+
 
 class Margin(object):
     @staticmethod
@@ -70,3 +90,12 @@ class Margin(object):
         self.right = right
         self.bottom = bottom
         self.left = left
+
+    def to_size(self):
+        """
+        @return: size.Size
+        """
+        return Size(self.right - self.left, self.bottom - self.top)
+
+    def __repr__(self):
+        return "Margin[Top: {}, Right: {}, Bottom: {}, Left: {}]".format(self.top, self.right, self.bottom, self.left)

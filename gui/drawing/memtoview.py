@@ -36,7 +36,7 @@ class MemToViewTransformer(object):
         return drawable.PointerDrawable(canvas, var)
 
     def create_basic(self, canvas, var):
-        return drawable.SimpleVarDrawable(canvas, var)
+        return drawable.VariableDrawable(canvas, var)
 
     def create_vector(self, canvas, var):
         return drawable.VectorDrawable(canvas, var)
@@ -65,6 +65,6 @@ class MemToViewTransformer(object):
             transformed = self.transform_var(canvas, var)
 
             if transformed is not None:
-                frame.add_variable(transformed)
+                frame.add_child(transformed)
 
         return frame
