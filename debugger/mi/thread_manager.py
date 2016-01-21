@@ -15,7 +15,7 @@ class ThreadManager(object):
 
     def get_current_thread(self):
         """
-        @return: inferior_thread.Thread
+        @rtype: inferior_thread.Thread
         """
         thread_info = self.get_thread_info()
         return thread_info.selected_thread
@@ -23,7 +23,7 @@ class ThreadManager(object):
     def get_thread_info(self):
         """
         Returns (active_thread_id, all_threads).
-        @return: inferior_thread.ThreadInfo | None
+        @rtype: inferior_thread.ThreadInfo | None
         """
         output = self.debugger.communicator.send("-thread-info")
 
@@ -35,7 +35,7 @@ class ThreadManager(object):
     def set_thread_by_index(self, thread_id):
         """
         @type thread_id: int
-        @return: bool
+        @rtype: bool
         """
         result = self.debugger.communicator.send("-thread-select {0}".format(thread_id)).is_success()
 
@@ -51,7 +51,7 @@ class ThreadManager(object):
 
     def get_current_frame(self):
         """
-        @return: frame.Frame | None
+        @rtype: frame.Frame | None
         """
         output = self.debugger.communicator.send("-stack-info-frame")
 
@@ -73,7 +73,7 @@ class ThreadManager(object):
 
     def get_frames(self):
         """
-        @return: list of frame.Frame | None
+        @rtype: list of frame.Frame | None
         """
         output = self.debugger.communicator.send("-stack-list-frames")
 
@@ -85,7 +85,7 @@ class ThreadManager(object):
     def change_frame(self, frame_index):
         """
         @type frame_index: int
-        @return: bool
+        @rtype: bool
         """
         if frame_index >= len(self.get_frames()):
             return False

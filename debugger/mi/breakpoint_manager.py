@@ -20,7 +20,7 @@ class BreakpointManager(object):
 
     def get_breakpoints(self):
         """
-        @return: debugger.Breakpoint[] | None
+        @rtype: debugger.Breakpoint[] | None
         """
         bps = self.debugger.communicator.send("-break-list")
 

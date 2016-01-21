@@ -72,7 +72,7 @@ class FileManager(object):
         Returns None if no code is at the given location.
         @type filename: str
         @type line: int
-        @return: tuple of int | None
+        @rtype: tuple of int | None
         """
         command = "info line {0}:{1}".format(filename, line)
         result = self.debugger.communicator.send(command)
@@ -98,7 +98,7 @@ class FileManager(object):
         Returns None if no code was found,
         @type filename: str
         @type line: int
-        @return: str | None
+        @rtype: str | None
         """
         command = "-data-disassemble -f {0} -l {1} -n 10 -- 1".format(filename, line)
         result = self.debugger.communicator.send(command)
@@ -116,7 +116,7 @@ class FileManager(object):
         Disassembles the given line in a raw form (returns a string with the line and all assembly instructions for it).
         @type filename: str
         @type line: int
-        @return: str | None
+        @rtype: str | None
         """
         address = self.get_line_address(filename, line)
 

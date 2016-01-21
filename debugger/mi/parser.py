@@ -22,7 +22,7 @@ class Parser(object):
     def parse_thread_info(self, data):
         """
         @type data: str
-        @return: inferior_thread.ThreadInfo
+        @rtype: inferior_thread.ThreadInfo
         """
         data = self.parse(data)
         current_thread_id = int(data["current-thread-id"])
@@ -41,7 +41,7 @@ class Parser(object):
     def parse_stack_frames(self, data):
         """
         @type data: str
-        @return: list of frame.Frame
+        @rtype: list of frame.Frame
         """
         data = self.parse(data)["stack"]
         frames = []
@@ -57,7 +57,7 @@ class Parser(object):
     def parse_variable_type(self, data):
         """
         @type data: str
-        @return: str
+        @rtype: str
         """
         return data[7:]
 
@@ -86,21 +86,21 @@ class Parser(object):
     def parse_struct(self, data):
         """
         @type data: str
-        @return: dict
+        @rtype: dict
         """
         return self.parse(data)
 
     def parse_frame_variables(self, data):
         """
         @type data: str
-        @return: dict
+        @rtype: dict
         """
         return self.parse(data)["variables"]
 
     def parse_struct_member_names(self, data):
         """
         @type data: str
-        @return: list of str
+        @rtype: list of str
         """
         data = data.replace("'", "\"")
         return self._parse_json(data)
@@ -114,7 +114,7 @@ class Parser(object):
     def _instantiate_frame(self, frame):
         """
         @type frame: dict
-        @return: frame.Frame
+        @rtype: frame.Frame
         """
         level = int(frame.get("level", "0"))
         func = frame.get("func", "")
@@ -126,7 +126,7 @@ class Parser(object):
     def _instantiate_thread_state(self, state):
         """
         @type state: str
-        @return: enums.ThreadState | None
+        @rtype: enums.ThreadState | None
         """
         map = {
             "running": ThreadState.Running,

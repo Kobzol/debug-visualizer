@@ -93,7 +93,7 @@ class Margin(object):
 
     def to_size(self):
         """
-        @return: size.Size
+        @rtype: size.Size
         """
         return Size(self.right - self.left, self.bottom - self.top)
 

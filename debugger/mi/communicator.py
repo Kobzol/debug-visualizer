@@ -202,7 +202,7 @@ class Communicator(object):
         """
         Sends the given command to GDB.
         @type command: str
-        @return: CommandResult
+        @rtype: CommandResult
         """
         self.io_lock.acquire()
         response = ""

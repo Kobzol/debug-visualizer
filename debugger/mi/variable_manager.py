@@ -105,7 +105,7 @@ class VariableManager(object):
         """
         Returns type for the given expression.
         @type expression: str
-        @return: variable.Type
+        @rtype: variable.Type
         """
         output = self.debugger.communicator.send("ptype {0}".format(expression))
         short_output = self.debugger.communicator.send("whatis {0}".format(expression))
@@ -154,7 +154,7 @@ class VariableManager(object):
         """
         Returns a variable for the given expression-
         @type expression: str
-        @return: variable.Variable
+        @rtype: variable.Variable
         """
         type = self.get_type(expression)
         output = self.debugger.communicator.send("p {0}".format(expression))
@@ -234,7 +234,7 @@ class VariableManager(object):
         Returns count bytes from the given address.
         @type address: str
         @type count: int
-        @return: list of int
+        @rtype: list of int
         """
         command = "x/{0}xb {1}".format(count, address)
         output = self.debugger.communicator.send(command)
@@ -253,7 +253,7 @@ class VariableManager(object):
         """
         Returns name from the given expression.
         @type expression: str
-        @return: str
+        @rtype: str
         """
         match = re.search("([a-zA-Z_$]+)$", expression)
 

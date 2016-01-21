@@ -9,7 +9,7 @@ class NetHelper(object):
     def get_free_port():
         """
         Returns a free port that can be bound.
-        @return: int
+        @rtype: int
         """
         import socket
 

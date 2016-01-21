@@ -31,14 +31,14 @@ class Server(object):
     def is_running(self):
         """
         Checks that the server is listening.
-        @return: bool
+        @rtype: bool
         """
         return self.running
 
     def is_client_connected(self):
         """
         Checks that a client is connected.
-        @return: bool
+        @rtype: bool
         """
         return self.connected_client is not None
 
@@ -76,7 +76,7 @@ class Server(object):
         Checks whether data is available for reading on the given file descriptor.
         @type fd: file descriptor
         @type timeout: float
-        @return: bool
+        @rtype: bool
         """
         return len(select.select([fd], [], [], timeout)[0]) != 0
     

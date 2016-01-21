@@ -106,7 +106,7 @@ class MemoryGrid(Gtk.Grid):
         Parses the given address and returns tuple (hex address, int address).
         The input address should either be a hex string starting with 0x/0X or a name of a variable.
         @type address: str
-        @return: tuple of (str, int)
+        @rtype: tuple of (str, int)
         """
         if re.match("^0(x|X)", address):
             try:

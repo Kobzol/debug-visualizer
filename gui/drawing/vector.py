@@ -98,7 +98,7 @@ class Vector(object):
     def __mul__(self, other):
         """
         @type other: Vector | Number
-        @return: Vector
+        @rtype: Vector
         """
         if isinstance(other, numbers.Number):
             return Vector(self.x * other, self.y * other)

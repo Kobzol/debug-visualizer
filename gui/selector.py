@@ -145,7 +145,7 @@ class ThreadSelector(Selector):
     def add_thread(self, thread):
         """
         @type thread: inferior_thread.InferiorThread
-        @return: ThreadListRow
+        @rtype: ThreadListRow
         """
         row = ThreadListRow(thread)
 

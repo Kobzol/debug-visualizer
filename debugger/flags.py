@@ -56,7 +56,7 @@ class Flags(object):
         """
         Checks whether the given value is set in the bitfield.
         @type value: enum instance
-        @return: bool
+        @rtype: bool
         """
         self._check_cls(value)
         return (self.value & (1 << value.value)) != 0
@@ -64,7 +64,7 @@ class Flags(object):
     def get_value(self):
         """
         Returns the integer value of the whole bitfield.
-        @return: int
+        @rtype: int
         """
         return self.value
 

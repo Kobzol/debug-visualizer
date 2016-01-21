@@ -48,14 +48,14 @@ class Type(object):
     def is_composite(self):
         """
         Return true if this type is a composite type, containing child elements (struct, class, vector, array)
-        @return: bool
+        @rtype: bool
         """
         return self.type_category in (TypeCategory.Struct, TypeCategory.Class, TypeCategory.Vector, TypeCategory.Array)
 
     def is_valid(self):
         """
         Checks that the type is valid.
-        @return: bool
+        @rtype: bool
         """
         return self.type_category != TypeCategory.Invalid
 
