@@ -127,4 +127,4 @@ class Variable(object):
         self.on_value_changed.notify(self)
 
     def __repr__(self):
-        return "Variable: {0} ({1}) = {2}".format(self.type.name, self.path, self.value)
+        return "Variable: {0} ({1}) = {2}".format(self.type, self.path if self.path else self.name, self.value)
