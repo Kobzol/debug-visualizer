@@ -293,6 +293,14 @@ class Drawable(object):
 
         self.click_handler = ClickHandler(self)
 
+        self.on_mouse_click = EventBroadcaster()
+        self.on_mouse_enter = EventBroadcaster()
+        self.on_mouse_leave = EventBroadcaster()
+
+        self.on_mouse_click.subscribe(self.handle_mouse_click)
+        self.on_mouse_enter.subscribe(self.handle_mouse_enter)
+        self.on_mouse_leave.subscribe(self.handle_mouse_leave)
+
     @property
     def visible(self):
         return self._visible
@@ -315,7 +323,22 @@ class Drawable(object):
         """
         self.click_handler.handle_mouse_event(mouse_data)
 
-    def on_mouse_click(self, mouse_data):
+    def handle_mouse_click(self, mouse_data):
+        """
+        @type mouse_data: mouse.MouseData
+        """
+        pass
+
+    def handle_mouse_enter(self, mouse_data):
+        """
+        @type mouse_data: mouse.MouseData
+        """
+        pass
+
+    def handle_mouse_leave(self, mouse_data):
+        """
+        @type mouse_data: mouse.MouseData
+        """
         pass
 
     def get_rect(self):
@@ -382,10 +405,7 @@ class Label(Drawable):
 
         self.font_style = font_style
         self.label = label if label is not None else ""
-        self.padding = padding if padding else Margin()
-
-    def on_mouse_click(self, mouse_data):
-        print(mouse_data)
+        self.padding = padding if padding else Margin.all(10)
 
     def get_label(self):
         if isinstance(self.label, basestring):
@@ -476,7 +496,7 @@ class VariableDrawable(LinearLayout):
     def _handle_value_change(self, value):
         self.variable.value = value
 
-    def on_mouse_click(self, point):
+    def handle_mouse_click(self, point):
         """
         @type point: vector.Vector
         """
@@ -508,41 +528,12 @@ class PointerDrawable(Drawable):
 
 
 class VectorDrawable(Drawable):
-    def __init__(self, canvas, value):
+    def __init__(self, canvas, vector):
         """
         @type canvas: drawing.canvas.Canvas
-        @type value: variable.Variable
+        @type vector: variable.Variable
         """
-        super(VectorDrawable, self).__init__(canvas, value)
-
-        self.label = BoxedLabelDrawable(canvas, value.name, Margin.all(5.0))
-
-        for member in value.children:
-            drawable = BoxedLabelDrawable(canvas, member.value, Margin.all(5.0))
-            self.children.append(drawable)
-            self.click_handler.propagate_handler(drawable.click_handler)
-
-    def place_children(self):
-        self.label.position = self.position.copy()
-        width = self.position.x + self.label.get_bbox().width
-
-        for member in self.children:
-            member.position.y = self.position.y
-            member.position.x = width
-            width += member.get_bbox().width
-
-    def get_bbox(self):
-        self.place_children()
-
-        return RectangleBBox.contain([self.label.get_bbox()] + [member.get_bbox() for member in self.children])
-
-    def draw(self):
-        self.place_children()
-
-        self.label.draw()
-
-        for member in self.children:
-            member.draw()
+        super(VectorDrawable, self).__init__(canvas)
 
 
 class StructDrawable(LinearLayout):

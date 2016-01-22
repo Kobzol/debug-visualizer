@@ -5,9 +5,14 @@ from events import EventBroadcaster
 
 
 class ClickedState(Enum):
-    Released = 0
-    ReadyToPress = 1
-    Pressed = 2
+    Released = 1
+    ReadyToPress = 2
+    Pressed = 3
+
+
+class PositionState(Enum):
+    Inside = 1
+    Outside = 2
 
 
 class MouseButtonState(Enum):
@@ -32,39 +37,50 @@ class ClickHandler(object):
         @type drawable: drawable.Drawable
         """
         self.drawable = drawable
-        self.state = ClickedState.Released
+        self.click_state = ClickedState.Released
+        self.position_state = PositionState.Outside
 
         self.propagated_handlers = []
 
     def _is_point_inside(self, point):
         return self.drawable.get_rect().is_point_inside(point)
 
-    def _handle_mouse_up(self, point):
+    def _handle_mouse_up(self, mouse_data):
         """
-        @type point: drawing.vector.Vector
+        @type mouse_data: MouseData
         """
-        if self._is_point_inside(point):
-            if self.state == ClickedState.Released:
-                self.state = ClickedState.ReadyToPress
-            if self.state == ClickedState.Pressed:
-                self.drawable.on_mouse_click(point)
-                self.state = ClickedState.ReadyToPress
+        if self._is_point_inside(mouse_data.position):
+            if self.click_state == ClickedState.Released:
+                self.click_state = ClickedState.ReadyToPress
+            if self.click_state == ClickedState.Pressed:
+                self.drawable.on_mouse_click.notify(mouse_data)
+                self.click_state = ClickedState.ReadyToPress
         else:
-            self.state = ClickedState.Released
+            self.click_state = ClickedState.Released
 
-        for handler in self.propagated_handlers:
-            handler._handle_mouse_up(point)
-
-    def _handle_mouse_down(self, point):
+    def _handle_mouse_down(self, mouse_data):
         """
-        @type point: drawing.vector.Vector
+        @type mouse_data: MouseData
         """
-        if self._is_point_inside(point):
-            if self.state == ClickedState.ReadyToPress:
-                self.state = ClickedState.Pressed
+        if self._is_point_inside(mouse_data.position):
+            if self.click_state == ClickedState.ReadyToPress:
+                self.click_state = ClickedState.Pressed
 
-        for handler in self.propagated_handlers:
-            handler._handle_mouse_down(point)
+    def _handle_mouse_move(self, mouse_data):
+        """
+        @type mouse_data: MouseData
+        """
+        next_state = PositionState.Outside
+        if self._is_point_inside(mouse_data.position):
+            next_state = PositionState.Inside
+
+        if self.position_state != next_state:
+            if next_state == PositionState.Outside:
+                self.drawable.on_mouse_leave.notify(mouse_data)
+            else:
+                self.drawable.on_mouse_enter.notify(mouse_data)
+
+        self.position_state = next_state
 
     def propagate_handler(self, handler):
         """
@@ -77,6 +93,11 @@ class ClickHandler(object):
         @type mouse_data: MouseData
         """
         if mouse_data.state == MouseButtonState.Down:
-            self._handle_mouse_down(mouse_data.position)
+            self._handle_mouse_down(mouse_data)
         elif mouse_data.state == MouseButtonState.Up:
-            self._handle_mouse_up(mouse_data.position)
+            self._handle_mouse_up(mouse_data)
+
+        self._handle_mouse_move(mouse_data)
+
+        for handler in self.propagated_handlers:
+            handler.handle_mouse_event(mouse_data)
