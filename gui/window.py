@@ -74,7 +74,6 @@ class MainWindow(Gtk.Window):
         self.source_manager = SourceManager(app.debugger)
         self.source_manager.set_size_request(-1, 500)
         self.content.add1(self.source_manager)
-        self.add_shortcut(Gdk.KEY_space, self.source_manager.toggle_breakpoint, Gdk.ModifierType.CONTROL_MASK)
 
         canvas = MemoryCanvas(app.debugger)
         Config.GUI_MEMORY_CANVAS_TOOLBAR.connect_signals({

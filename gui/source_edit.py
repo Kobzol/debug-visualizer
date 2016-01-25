@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 
+from gi.repository import Gdk
+from gi.repository import GdkPixbuf
 from gi.repository import Gtk
 from gi.repository import GtkSource
-import os
 
+import os
 from enum import Enum
 
+import paths
 from analysis.source_analyser import SourceAnalyzer
 from events import EventBroadcaster
 from enums import ProcessState
@@ -16,6 +19,28 @@ from gui_util import run_on_gui, require_gui_thread
 class BreakpointChangeType(Enum):
     Create = 1
     Delete = 2
+
+
+class BreakpointRenderer(GtkSource.GutterRendererPixbuf):
+    def __init__(self, source_window, breakpoint_img_path, execution_img_path, **properties):
+        super(BreakpointRenderer, self).__init__(**properties)
+        self.source_window = source_window
+        self.bp_pixbuf = GdkPixbuf.Pixbuf.new_from_file(breakpoint_img_path)
+        self.exec_pixbuf = GdkPixbuf.Pixbuf.new_from_file(execution_img_path)
+        self.set_alignment(0.5, 0.5)
+        self.set_size(15)
+        self.set_padding(5, -1)
+
+    def do_draw(self, cr, background_area, cell_area, start, end, state):
+        line = start.get_line()
+
+        if line in self.source_window.bp_lines:
+            self.set_pixbuf(self.bp_pixbuf)
+            GtkSource.GutterRendererPixbuf.do_draw(self, cr, background_area, cell_area, start, end, state)
+
+        if line == self.source_window.exec_line:
+            self.set_pixbuf(self.exec_pixbuf)
+            GtkSource.GutterRendererPixbuf.do_draw(self, cr, background_area, cell_area, start, end, state)
 
 
 class SourceWindow(Gtk.ScrolledWindow):
@@ -48,9 +73,13 @@ class SourceEditor(GtkSource.View):
         self.set_language(language)
         self.get_buffer().set_highlight_syntax(True)
         self.get_buffer().set_highlight_matching_brackets(True)
-        self.tag_breakpoint = self.get_buffer().create_tag("bp-line", background="Red")
-        self.tag_exec = self.get_buffer().create_tag("exec-line", background="Yellow")
         self.set_editable(False)
+
+        self.gutter_renderer = BreakpointRenderer(self,
+                                                  paths.get_resource("img/circle.png"),
+                                                  paths.get_resource("img/arrow.png"))
+        gutter = self.get_gutter(Gtk.TextWindowType.LEFT)
+        gutter.insert(self.gutter_renderer, 0)
 
         self.stop_undoable()
 
@@ -62,8 +91,12 @@ class SourceEditor(GtkSource.View):
         self.file = None
         self.on_breakpoint_changed = EventBroadcaster()
 
+        self.exec_line = None
+        self.bp_lines = set()
+
         self.analyser = SourceAnalyzer()
         self.connect("motion-notify-event", lambda widget, event: self._handle_mouse_move(event))
+        self.connect("button-press-event", lambda widget, event: self._handle_mouse_click(event))
         self.on_symbol_hover = EventBroadcaster()
 
     def _handle_mouse_move(self, event):
@@ -74,6 +107,12 @@ class SourceEditor(GtkSource.View):
 
         if symbol is not None:
             self.on_symbol_hover.notify(self, symbol)
+
+    def _handle_mouse_click(self, event):
+        if event.type == Gdk.EventType.BUTTON_PRESS and self.get_window(Gtk.TextWindowType.LEFT) == event.window:
+            x, y = self.window_to_buffer_coords(Gtk.TextWindowType.LEFT, event.x, event.y)
+            iter = self.get_iter_at_location(x, y)
+            self.breakpoint_toggle(iter.get_line())
 
     def get_buffer(self):
         return self.buffer
@@ -136,20 +175,18 @@ class SourceEditor(GtkSource.View):
 
     @require_gui_thread
     def breakpoint_change(self, line_number, enable=True):
-        line_iters = self.get_line_iters(line_number)
-
         if enable:
-            self.get_buffer().apply_tag(self.tag_breakpoint, line_iters[0], line_iters[1])
+            self.bp_lines.add(line_number)
         else:
-            self.get_buffer().remove_tag(self.tag_breakpoint, line_iters[0], line_iters[1])
+            self.bp_lines.remove(line_number)
+
+        self.gutter_renderer.queue_draw()
 
         self.on_breakpoint_changed.notify(*self._create_bp_event(line_number, enable))
 
     @require_gui_thread
     def breakpoint_toggle(self, line_number):
-        line_iters = self.get_line_iters(line_number)
-
-        if line_iters[0].has_tag(self.tag_breakpoint):
+        if line_number in self.bp_lines:
             self.breakpoint_change(line_number, False)
         else:
             self.breakpoint_change(line_number, True)
@@ -158,13 +195,16 @@ class SourceEditor(GtkSource.View):
     def set_exec_line(self, line_number):
         self.unset_exec_line()
         line_iters = self.get_line_iters(line_number)
-        self.get_buffer().apply_tag(self.tag_exec, line_iters[0], line_iters[1])
         self.scroll_to_iter(line_iters[0], 0.0, True, 0.5, 0.5)
+        self.exec_line = line_number
+
+        self.gutter_renderer.queue_draw()
 
     @require_gui_thread
     def unset_exec_line(self):
-        buffer = self.get_buffer()
-        buffer.remove_tag(self.tag_exec, buffer.get_start_iter(), buffer.get_end_iter())
+        self.exec_line = None
+
+        self.gutter_renderer.queue_draw()
 
     @require_gui_thread
     def undo(self):
