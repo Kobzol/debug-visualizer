@@ -18,6 +18,20 @@ from tool_manager import ToolManager
 from toolbar_manager import ToolbarManager
 
 
+class TitleWindow(Gtk.ScrolledWindow):
+    def __init__(self, title, content, *args, **kwargs):
+        Gtk.ScrolledWindow.__init__(self, *args, **kwargs)
+
+        self.wrapper = Gtk.Box.new(Gtk.Orientation.VERTICAL, 0)
+        label = Gtk.Label.new(title)
+        label.set_halign(Gtk.Align.START)
+        label.set_margin_left(5)
+        self.wrapper.pack_start(label, False, False, 5)
+        self.wrapper.pack_start(content, True, True, 0)
+
+        self.add(self.wrapper)
+
+
 class MainWindow(Gtk.Window):
     def __init__(self, app):
         """
@@ -101,19 +115,17 @@ class MainWindow(Gtk.Window):
         self.tool_manager.add_tool("Console", self.console_wrapper)
 
         self.frame_selector = FrameSelector(app.debugger)
-        window = Gtk.ScrolledWindow()
-        window.add_with_viewport(self.frame_selector)
+        window = TitleWindow("Call stack", self.frame_selector)
         window.set_size_request(-1, 100)
         self.tool_manager.add_tool("Call stack", window)
 
         self.thread_selector = ThreadSelector(app.debugger)
-        window = Gtk.ScrolledWindow()
-        window.add_with_viewport(self.thread_selector)
+        window = TitleWindow("Threads", self.thread_selector)
         window.set_size_request(-1, 100)
         self.tool_manager.add_tool("Threads", window)
 
         self.memory_view = MemoryView(app.debugger)
-        self.tool_manager.add_tool("Memory view", self.memory_view)
+        self.tool_manager.add_tool("Memory view", TitleWindow("Memory view", self.memory_view))
 
         self._add_to_row(self.tool_manager, 3)
 

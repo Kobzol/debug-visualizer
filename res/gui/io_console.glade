@@ -14,6 +14,7 @@
           <object class="GtkLabel" id="console_label">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <property name="margin_left">5</property>
             <property name="label" translatable="yes">I/O console</property>
           </object>
           <packing>
