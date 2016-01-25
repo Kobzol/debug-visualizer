@@ -50,6 +50,7 @@ class SourceEditor(GtkSource.View):
         self.get_buffer().set_highlight_matching_brackets(True)
         self.tag_breakpoint = self.get_buffer().create_tag("bp-line", background="Red")
         self.tag_exec = self.get_buffer().create_tag("exec-line", background="Yellow")
+        self.set_editable(False)
 
         self.stop_undoable()
 
