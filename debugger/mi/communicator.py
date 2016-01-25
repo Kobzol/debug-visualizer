@@ -205,7 +205,7 @@ class Communicator(object):
         @rtype: CommandResult
         """
         self.io_lock.acquire()
-        response = ""
+        response = CommandResult(ResultType.Error)
 
         token = self.token
         self.token += 1
