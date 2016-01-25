@@ -34,7 +34,7 @@ class BreakpointRenderer(GtkSource.GutterRendererPixbuf):
     def do_draw(self, cr, background_area, cell_area, start, end, state):
         line = start.get_line()
 
-        if line in self.source_window.bp_lines:
+        if line in self.source_window.get_breakpoint_lines():
             self.set_pixbuf(self.bp_pixbuf)
             GtkSource.GutterRendererPixbuf.do_draw(self, cr, background_area, cell_area, start, end, state)
 
@@ -64,9 +64,15 @@ class SourceEditor(GtkSource.View):
         except:
             return None
 
-    def __init__(self, language="cpp"):
+    def __init__(self, debugger, language="cpp"):
+        """
+        @type debugger: debugger.mi.MiDebugger
+        @type language: str
+        """
         self.buffer = GtkSource.Buffer()
         super(SourceEditor, self).__init__(buffer=self.get_buffer())
+
+        self.debugger = debugger
 
         self.start_undoable()
 
@@ -112,13 +118,27 @@ class SourceEditor(GtkSource.View):
         if event.type == Gdk.EventType.BUTTON_PRESS and self.get_window(Gtk.TextWindowType.LEFT) == event.window:
             x, y = self.window_to_buffer_coords(Gtk.TextWindowType.LEFT, event.x, event.y)
             iter = self.get_iter_at_location(x, y)
-            self.breakpoint_toggle(iter.get_line())
+            self.toggle_breakpoint(iter.get_line())
 
     def get_buffer(self):
         return self.buffer
 
     def get_file(self):
         return self.file
+
+    def get_breakpoint_lines(self):
+        lines = []
+        for bp in self.debugger.breakpoint_manager.get_breakpoints():
+            if os.path.abspath(bp.location) == os.path.abspath(self.file):
+                lines.append(bp.line)
+
+        return lines
+
+    @require_gui_thread
+    def toggle_breakpoint(self, line):
+        self.debugger.breakpoint_manager.toggle_breakpoint(self.file, line)
+
+        self.gutter_renderer.queue_draw()
 
     @require_gui_thread
     def set_language(self, key):
@@ -167,29 +187,6 @@ class SourceEditor(GtkSource.View):
         end_line = start_line.copy()
         end_line.forward_to_line_end()
         return (start_line, end_line)
-
-    @require_gui_thread
-    def _create_bp_event(self, line, create=True):
-        # +1 because the lines are usually addressed starting from 1
-        return ((self.file, line + 1), BreakpointChangeType.Create if create else BreakpointChangeType.Delete)
-
-    @require_gui_thread
-    def breakpoint_change(self, line_number, enable=True):
-        if enable:
-            self.bp_lines.add(line_number)
-        else:
-            self.bp_lines.remove(line_number)
-
-        self.gutter_renderer.queue_draw()
-
-        self.on_breakpoint_changed.notify(*self._create_bp_event(line_number, enable))
-
-    @require_gui_thread
-    def breakpoint_toggle(self, line_number):
-        if line_number in self.bp_lines:
-            self.breakpoint_change(line_number, False)
-        else:
-            self.breakpoint_change(line_number, True)
 
     @require_gui_thread
     def set_exec_line(self, line_number):
@@ -297,7 +294,7 @@ class SourceManager(Gtk.Notebook):
 
     @require_gui_thread
     def _add_tab(self, file_path):
-        editor = SourceEditor()
+        editor = SourceEditor(self.debugger)
         editor.set_content_from_file(file_path)
         editor.set_hexpand(True)
         editor.set_vexpand(True)
@@ -349,11 +346,6 @@ class SourceManager(Gtk.Notebook):
             return self.get_nth_page(selected).editor
         else:
             return None
-
-    @require_gui_thread
-    def toggle_breakpoint(self):
-        editor = self.get_selected_editor()
-        editor.breakpoint_toggle(editor.get_current_line())
 
     @require_gui_thread
     def select_tab(self, index):

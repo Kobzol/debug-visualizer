@@ -10,17 +10,39 @@ class BreakpointManager(object):
         self.debugger = debugger
         self.parser = Parser()
 
-    def add_breakpoint(self, location, line=None):
+    def add_breakpoint(self, location, line):
+        """
+        Adds a breakpoint, if there is not a breakpoint with the same location and line already.
+        @type location: str
+        @type line: int
+        @type: boolean
+        """
         self.debugger.require_state(DebuggerState.BinaryLoaded)
+
+        if self.find_breakpoint(location, line) is not None:
+            return False
 
         if line is not None:
             location += ":" + str(line)
 
         return self.debugger.communicator.send("-break-insert {0}".format(location)).is_success()
 
+    def toggle_breakpoint(self, location, line):
+        """
+        Toggles a breakpoint on the given location and line.
+        @type location: str
+        @type line: int
+        @rtype: boolean
+        """
+        bp = self.find_breakpoint(location, line)
+        if bp:
+            return self.remove_breakpoint(location, line)
+        else:
+            return self.add_breakpoint(location, line)
+
     def get_breakpoints(self):
         """
-        @rtype: debugger.Breakpoint[] | None
+        @rtype: list of debugger.Breakpoint
         """
         bps = self.debugger.communicator.send("-break-list")
 
@@ -33,6 +55,7 @@ class BreakpointManager(object):
         """
         @type location: str
         @type line: int
+        @rtype: debugger.Breakpoint | None
         """
         location = os.path.abspath(location)
 
@@ -46,6 +69,7 @@ class BreakpointManager(object):
         """
         @type location: str
         @type line: int
+        @rtype: boolean
         """
         self.debugger.require_state(DebuggerState.BinaryLoaded)
 
