@@ -87,6 +87,10 @@ class MemoryGrid(Gtk.Grid):
     def _create_block_view(self, row, column, width=1, height=1):
         view = Gtk.Button()
         view.set_label("?")
+
+        if column == self.width:
+            view.set_margin_right(15)
+
         self.attach(view, column, row, width, height)
 
         return view
@@ -167,7 +171,7 @@ class MemoryView(Gtk.ScrolledWindow):
 
         self.wrapper = Gtk.Box.new(Gtk.Orientation.VERTICAL, 0)
         self.wrapper.pack_start(self.address_input, False, False, 10)
-        self.wrapper.pack_start(self.memorygrid, False, False, 0)
+        self.wrapper.pack_start(self.memorygrid, False, False, 10)
 
         self.add(self.wrapper)
 
