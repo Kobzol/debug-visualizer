@@ -10,7 +10,7 @@
       <object class="GtkToolButton" id="zoom_out">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="tooltip_text" translatable="yes">Run</property>
+        <property name="tooltip_text" translatable="yes">Zoom out</property>
         <property name="is_important">True</property>
         <property name="label" translatable="yes">Zoom _out</property>
         <property name="use_underline">True</property>
@@ -26,7 +26,7 @@
       <object class="GtkToolButton" id="zoom_in">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="tooltip_text" translatable="yes">Run</property>
+        <property name="tooltip_text" translatable="yes">Zoom in</property>
         <property name="is_important">True</property>
         <property name="label" translatable="yes">Zoom _in</property>
         <property name="use_underline">True</property>
@@ -42,7 +42,7 @@
       <object class="GtkToolButton" id="zoom_reset">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="tooltip_text" translatable="yes">Run</property>
+        <property name="tooltip_text" translatable="yes">Reset zoom</property>
         <property name="is_important">True</property>
         <property name="label" translatable="yes">_Reset zoom</property>
         <property name="use_underline">True</property>
