@@ -130,13 +130,13 @@ class SourceEditor(GtkSource.View):
         lines = []
         for bp in self.debugger.breakpoint_manager.get_breakpoints():
             if os.path.abspath(bp.location) == os.path.abspath(self.file):
-                lines.append(bp.line)
+                lines.append(bp.line - 1)
 
         return lines
 
     @require_gui_thread
     def toggle_breakpoint(self, line):
-        self.debugger.breakpoint_manager.toggle_breakpoint(self.file, line)
+        self.debugger.breakpoint_manager.toggle_breakpoint(self.file, line + 1)
 
         self.gutter_renderer.queue_draw()
 
