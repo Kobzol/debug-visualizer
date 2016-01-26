@@ -67,11 +67,6 @@ class StdVectorPrinter:
         self.val = val
         self.is_bool = val.type.template_argument(0).code == gdb.TYPE_CODE_BOOL
 
-    def children(self):
-        return self._iterator(self.val['_M_impl']['_M_start'],
-                              self.val['_M_impl']['_M_finish'],
-                              self.is_bool)
-
     def to_string(self):
         return None
 
