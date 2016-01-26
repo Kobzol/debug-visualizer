@@ -4,7 +4,7 @@ import re
 
 from enums import BasicTypeCategory, TypeCategory
 from mi.parser import Parser
-from debugee import Type, Variable
+from debugee import Type, Variable, Register
 
 basic_type_map = {
     "bool" : BasicTypeCategory.Bool,
@@ -269,7 +269,7 @@ class VariableManager(object):
         for reg in register_values:
             number = int(reg["number"])
             if number < len(register_names) and len(register_names[number]) > 0:
-                registers.append((register_names[number], str(reg["value"])))
+                registers.append(Register(str(register_names[number]), str(reg["value"])))
 
         return registers
 
