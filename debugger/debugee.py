@@ -213,3 +213,6 @@ class Register(object):
         """
         self.name = name
         self.value = value
+
+    def __repr__(self):
+        return "Register: {} = {}".format(self.name, self.value)
