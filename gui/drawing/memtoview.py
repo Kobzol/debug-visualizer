@@ -33,7 +33,7 @@ class MemToViewTransformer(object):
         return container
 
     def create_pointer(self, canvas, var):
-        return drawable.PointerDrawable(canvas, var)
+        return drawable.VariableDrawable(canvas, var)
 
     def create_basic(self, canvas, var):
         return drawable.VariableDrawable(canvas, var)
@@ -58,13 +58,18 @@ class MemToViewTransformer(object):
         else:
             return None
 
-    def transform_frame(self, canvas, vars):
-        frame = drawable.StackFrameDrawable(canvas)
+    def transform_frame(self, canvas, frame):
+        """
+        @type canvas: canvas.Canvas
+        @type frame: frame.Frame
+        @rtype: drawable.StackFrameDrawable
+        """
+        frame_drawable = drawable.StackFrameDrawable(canvas, frame)
 
-        for var in vars:
+        for var in frame.variables:
             transformed = self.transform_var(canvas, var)
 
             if transformed is not None:
-                frame.add_child(transformed)
+                frame_drawable.add_child(transformed)
 
-        return frame
+        return frame_drawable

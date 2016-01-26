@@ -455,7 +455,7 @@ class ToggleDrawable(Drawable):
         """
         @type position: drawing.vector.Vector
         """
-        Drawable.set_position(self, position)
+        super(ToggleDrawable, self).set_position(position)
         for drawable in self.drawables:
             drawable.set_position(position)
 
@@ -476,11 +476,13 @@ class ToggleDrawable(Drawable):
 
 
 class Label(Drawable):
-    def __init__(self, canvas, label, padding=None, font_style=None):
+    def __init__(self, canvas, label, padding=None, font_style=None, border_width=1):
         """
         @type canvas: canvas.Canvas
         @type label: str | callable
         @type padding: Margin
+        @type font_style: FontStyle
+        @type border_width: int
         """
         super(Label, self).__init__(canvas)
 
@@ -490,6 +492,7 @@ class Label(Drawable):
         self.font_style = font_style
         self.label = label if label is not None else ""
         self.padding = padding if padding else Margin.all(10)
+        self.border_width = border_width
 
     def get_label(self):
         if isinstance(self.label, basestring):
@@ -503,11 +506,8 @@ class Label(Drawable):
 
         label_size = DrawingUtils.get_text_size(self.canvas, self.get_label(), font_style=self.font_style)
 
-        width = self.padding.left + label_size.width + self.padding.right
-        height = self.padding.top + label_size.height + self.padding.bottom
-
-        width += 2  # border size
-        height += 2
+        width = self.border_width + self.padding.left + label_size.width + self.padding.right + self.border_width
+        height = self.border_width + self.padding.top + label_size.height + self.padding.bottom + self.border_width
 
         return RectangleBBox(self.position, Size(width, height))
 
@@ -518,7 +518,7 @@ class Label(Drawable):
         rect = self.get_rect()
 
         # box
-        DrawingUtils.draw_rectangle(self.canvas, self.position, rect.size, center=False)
+        DrawingUtils.draw_rectangle(self.canvas, self.position, rect.size, width=self.border_width, center=False)
 
         text_x = self.position.x + self.padding.left
         text_y = self.position.y + self.padding.top
@@ -624,8 +624,18 @@ class StackFrameDrawable(LinearLayout):
         """
         super(StackFrameDrawable, self).__init__(canvas, LinearLayoutDirection.Vertical)
 
-        self.label = Label(canvas, "Frame {0}".format(frame.func), Margin.all(10), FontStyle(italic=True))
+        self.label = Label(canvas, "Frame {0}".format(frame.func), Margin.all(10), FontStyle(italic=True), 0)
         self.add_child(self.label)
+
+    def get_rect(self):
+        rect = super(StackFrameDrawable, self).get_rect()
+        size = rect.size.copy()
+        size = Size(size.width + 1, size.height + 1)
+        return RectangleBBox(rect.position.copy().add((-1, -1)), size)
+
+    def draw(self):
+        super(StackFrameDrawable, self).draw()
+        DrawingUtils.draw_rectangle(self.canvas, self.position, self.get_rect().size)
 
 
 class PointerDrawable(Drawable):

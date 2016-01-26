@@ -150,8 +150,6 @@ class MemoryCanvas(Canvas):
             self._set_frame(frame)
 
     def _set_frame(self, frame):
-        return
-
         self.active_frame = frame
 
         for widget in self.fixed_wrapper.get_children():
@@ -160,7 +158,7 @@ class MemoryCanvas(Canvas):
         for var in frame.variables:
             var.on_value_changed.subscribe(self._handle_var_change)
 
-        self.set_drawables([self.memtoview.transform_frame(self, frame.variables)])
+        self.set_drawables([self.memtoview.transform_frame(self, frame)])
 
 
 class CanvasToolbarWrapper(Gtk.VBox):
