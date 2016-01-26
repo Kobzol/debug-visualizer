@@ -130,11 +130,12 @@ class FrameSelector(Selector):
         frames = self.debugger.thread_manager.get_frames()
         selected_frame = self.debugger.thread_manager.get_current_frame()
 
-        for frame in frames:
-            row = self.add_frame(frame)
+        if frames and selected_frame:
+            for frame in frames:
+                row = self.add_frame(frame)
 
-            if frame.level == selected_frame.level:
-                self._select_row_auto(row)
+                if frame.level == selected_frame.level:
+                    self._select_row_auto(row)
 
 
 class ThreadSelector(Selector):
@@ -189,8 +190,9 @@ class ThreadSelector(Selector):
         self.clear_children()
         thread_info = self.debugger.thread_manager.get_thread_info()
 
-        for thread in thread_info.threads:
-            row = self.add_thread(thread)
+        if thread_info:
+            for thread in thread_info.threads:
+                row = self.add_thread(thread)
 
-            if thread == thread_info.selected_thread:
-                self._select_row_auto(row)
+                if thread == thread_info.selected_thread:
+                    self._select_row_auto(row)
