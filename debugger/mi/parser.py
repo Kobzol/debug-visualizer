@@ -67,7 +67,7 @@ class Parser(object):
         for line in lines_dis:
             line_data = line["line_asm_insn"]
             line_obj = {
-                "line" : line["line"],
+                "line" : int(line["line"]),
                 "instructions": []
             }
             for inst in line_data:
