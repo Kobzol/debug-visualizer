@@ -11,6 +11,7 @@ class VisualiserApp(object):
     def __init__(self):
         self.debugger = MiDebugger()
         self.main_window = MainWindow(self)
+        Gtk.init()
 
     def quit(self):
         self.debugger.kill(True)
