@@ -57,7 +57,14 @@ class FileManager(object):
             return None
 
     def get_current_location(self):
+        """
+        Returns the current file and line of the debugged process.
+        @rtype: tuple of basestring, int | None
+        """
         frame = self.debugger.thread_manager.get_current_frame()
+
+        if not frame:
+            return None
 
         line = frame.line
         location = frame.file
