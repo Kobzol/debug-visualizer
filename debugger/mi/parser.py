@@ -184,7 +184,7 @@ class Parser(object):
 
     def _modify_labels(self, data):
         """
-        Changes keys in the form ([a-zA-Z|-)+\s*= to "\1": (replaces = with :, removes whitespace and adds quotes).
+        Changes keys in the form ([a-zA-Z-_])+\s*= to "\1": (replaces = with :, removes whitespace and adds quotes).
         @type data: basestring
         @rtype: basestring
         """
@@ -203,7 +203,7 @@ class Parser(object):
                 i += 1
                 continue
 
-            matches_ident = re.match("[a-zA-Z]|-", char) is not None
+            matches_ident = re.match("[a-zA-Z-_]", char) is not None
             if not in_ident and matches_ident:
                 in_ident = True
                 start_ident = i
@@ -214,7 +214,7 @@ class Parser(object):
 
             if in_ident and char == "=":
                 old_length = len(data)
-                data = data[:start_ident] + re.sub("^((?:[a-zA-Z-])+)\s*=", r'"\1":', data[start_ident:])
+                data = data[:start_ident] + re.sub("^((?:[a-zA-Z-_])+)\s*=", r'"\1":', data[start_ident:])
                 diff = old_length - len(data)
                 i -= diff
 
