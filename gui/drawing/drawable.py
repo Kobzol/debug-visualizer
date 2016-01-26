@@ -281,6 +281,7 @@ class DrawingUtils(object):
         cr.scale(x_ratio, y_ratio)
 
         cr.set_source_surface(img)
+        cr.get_source().set_filter(cairo.FILTER_FAST)
         cr.paint()
 
         cr.restore()
