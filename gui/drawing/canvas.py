@@ -40,6 +40,7 @@ class Canvas(Gtk.EventBox):
         """@type cr: cairo.Context"""
 
         self.drawables = []
+        self.tooltip_drawable = None
 
     def _notify_handlers(self):
         mouse_data = MouseData(self.mouse_data.lb_state, self.mouse_data.rb_state, self.mouse_data.position * (1 / self.zoom))
@@ -109,6 +110,17 @@ class Canvas(Gtk.EventBox):
         @type cursor: Gdk.Cursor
         """
         self.get_window().set_cursor(cursor)
+
+    def set_drawable_tooltip(self, drawable, text):
+        """
+        @type drawable: drawable.Drawable
+        @type text: basestring
+        """
+        if text is None and drawable != self.tooltip_drawable:
+            return
+
+        self.tooltip_drawable = drawable
+        self.set_tooltip_text(text)
 
     def set_background_color(self, color=Color()):
         self.bg_color = color

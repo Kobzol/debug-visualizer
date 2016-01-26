@@ -355,7 +355,9 @@ class Drawable(object):
 
         self.on_mouse_click.subscribe(self.handle_mouse_click)
         self.on_mouse_enter.subscribe(self.handle_mouse_enter)
+        self.on_mouse_enter.subscribe(self.handle_tooltip_start)
         self.on_mouse_leave.subscribe(self.handle_mouse_leave)
+        self.on_mouse_leave.subscribe(self.handle_tooltip_end)
 
     @property
     def visible(self):
@@ -396,6 +398,27 @@ class Drawable(object):
         @type mouse_data: drawing.mouse.MouseData
         """
         pass
+
+    def handle_tooltip_start(self, mouse_data):
+        """
+        @type mouse_data: mouse.MouseData
+        """
+        tooltip = self.get_tooltip()
+
+        if tooltip is not None:
+            self.canvas.set_drawable_tooltip(self, tooltip)
+
+    def handle_tooltip_end(self, mouse_data):
+        """
+        @type mouse_data: mouse.MouseData
+        """
+        self.canvas.set_drawable_tooltip(self, None)
+
+    def get_tooltip(self):
+        """
+        @rtype: basestring | None
+        """
+        return None
 
     def get_rect(self):
         if not self.visible:
@@ -517,6 +540,9 @@ class Label(Drawable):
         height = self.border_width + self.padding.top + label_size.height + self.padding.bottom + self.border_width
 
         return RectangleBBox(self.position, Size(width, height))
+
+    def get_tooltip(self):
+        return self.get_label()
 
     def draw(self):
         if not self.visible:
