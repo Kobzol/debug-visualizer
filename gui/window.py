@@ -4,9 +4,13 @@ from gi.repository import Gtk
 from gi.repository import Gdk
 
 import os
+
+import paths
 from config import Config
 
 from drawing.canvas import MemoryCanvas, CanvasToolbarWrapper
+from drawing.drawable import Image, ToggleDrawable
+from drawing.size import Size
 from enums import ProcessState
 from gui_util import require_gui_thread, run_on_gui
 from memory_view import MemoryView

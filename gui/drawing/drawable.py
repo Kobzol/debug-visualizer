@@ -4,7 +4,6 @@ import abc
 import cairo
 
 from gi.repository import Gtk
-from gi.repository import Gdk
 
 from enum import Enum
 
@@ -235,6 +234,56 @@ class DrawingUtils(object):
 
         cr.restore()
 
+    @staticmethod
+    def draw_image(canvas, position, img_path, size=None, center=False):
+        """
+        Draws an image given by a file path.
+        @type canvas: canvas.Canvas
+        @type position: vector.Vector
+        @type img_path: basestring
+        @type size: size.Size
+        @type center: boolean
+        """
+        img = cairo.ImageSurface.create_from_png(img_path)
+        DrawingUtils.draw_image_from_surface(canvas, position, img, size, center)
+
+    @staticmethod
+    def draw_image_from_surface(canvas, position, img, size=None, center=False):
+        """
+        Draws an image given by a cairo.ImageSurface object.
+        @type canvas: canvas.Canvas
+        @type position: vector.Vector
+        @type img: cairo.ImageSurface
+        @type size: size.Size
+        @type center: boolean
+        """
+        if not size:
+            size = Size(img.get_width(), img.get_height())
+        else:
+            size = Size.make_size(size)
+
+        position = Vector.vectorize(position)
+        width = img.get_width()
+        height = img.get_height()
+
+        cr = canvas.cr
+
+        cr.save()
+
+        if center:
+            cr.translate(position.x - size.width / 2.0, position.y - size.height / 2.0)
+        else:
+            cr.translate(position.x, position.y)
+
+        x_ratio = float(size.width) / width
+        y_ratio = float(size.height) / height
+        cr.scale(x_ratio, y_ratio)
+
+        cr.set_source_surface(img)
+        cr.paint()
+
+        cr.restore()
+
 
 class ValueEntry(Gtk.Frame):
     def __init__(self, label):
@@ -351,7 +400,6 @@ class Drawable(object):
 
         return RectangleBBox.contain([size] + [child.get_rect() + child.margin for child in self.children if child.visible])
 
-    @abc.abstractmethod
     def place_children(self):
         pass
 
@@ -389,6 +437,36 @@ class LinearLayout(Drawable):
                 position.x += child.margin.left + rect.width + child.margin.right
             elif self.direction == LinearLayoutDirection.Vertical:
                 position.y += child.margin.top + rect.height + child.margin.bottom
+
+
+class ToggleDrawable(Drawable):
+    def __init__(self, canvas, drawables):
+        """
+        Represents a drawable that toggles several drawables on a mouse click.
+        @type canvas: canvas.Canvas
+        @type drawables: list of Drawable
+        """
+        super(ToggleDrawable, self).__init__(canvas)
+
+        self.drawables = list(drawables)
+        self.current_drawable = 0
+
+    def set_position(self, position):
+        Drawable.set_position(self, position)
+        for drawable in self.drawables:
+            drawable.set_position(position)
+
+    def get_active_drawable(self):
+        return self.drawables[self.current_drawable]
+
+    def get_rect(self):
+        return self.get_active_drawable().get_rect()
+
+    def handle_mouse_click(self, mouse_data):
+        self.current_drawable = (self.current_drawable + 1) % len(self.drawables)
+
+    def draw(self):
+        self.get_active_drawable().draw()
 
 
 class Label(Drawable):
@@ -462,6 +540,30 @@ class LabelWrapper(LinearLayout):
             self.children[0].visible = False
 
         self.place_children()
+
+
+class Image(Drawable):
+    def __init__(self, canvas, image_path, size=None):
+        """
+        Represents a drawable image.
+        Image path has to be a valid path to a PNG image.
+        @type canvas: canvas.Canvas
+        @type image_path: basestring
+        @type size: Size
+        """
+        super(Image, self).__init__(canvas)
+
+        self.img = cairo.ImageSurface.create_from_png(image_path)
+        self.size = size if size else Size(self.img.get_width(), self.img.get_height())
+
+    def get_rect(self):
+        return RectangleBBox(self.position, self.size)
+
+    def get_image(self):
+        return self.img
+
+    def draw(self):
+        DrawingUtils.draw_image_from_surface(self.canvas, self.position, self.get_image(), self.size)
 
 
 class VariableDrawable(LinearLayout):
