@@ -128,9 +128,11 @@ class SourceEditor(GtkSource.View):
 
     def get_breakpoint_lines(self):
         lines = []
-        for bp in self.debugger.breakpoint_manager.get_breakpoints():
-            if os.path.abspath(bp.location) == os.path.abspath(self.file):
-                lines.append(bp.line - 1)
+
+        if self.file:
+            for bp in self.debugger.breakpoint_manager.get_breakpoints():
+                if os.path.abspath(bp.location) == os.path.abspath(self.file):
+                    lines.append(bp.line - 1)
 
         return lines
 

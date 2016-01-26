@@ -9,6 +9,7 @@ from drawing.memtoview import MemToViewTransformer
 from drawing.mouse import MouseButtonState, MouseData, TranslationHandler
 from drawing.vector import Vector
 from enums import ProcessState
+from gui_util import run_on_gui, require_gui_thread
 
 
 class Canvas(Gtk.EventBox):
@@ -179,7 +180,8 @@ class MemoryCanvas(Canvas):
             frame = self.debugger.thread_manager.get_current_frame()
             self._set_frame(frame)
 
-    def _set_frame(self, frame):
+    @require_gui_thread
+    def _set_frame_gui(self, frame):
         self.active_frame = frame
 
         for widget in self.fixed_wrapper.get_children():
@@ -189,6 +191,9 @@ class MemoryCanvas(Canvas):
             var.on_value_changed.subscribe(self._handle_var_change)
 
         self.set_drawables([self.memtoview.transform_frame(frame)])
+
+    def _set_frame(self, frame):
+        run_on_gui(self._set_frame_gui, frame)
 
 
 class CanvasToolbarWrapper(Gtk.VBox):

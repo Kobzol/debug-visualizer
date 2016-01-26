@@ -11,6 +11,7 @@ from drawing.geometry import Margin, RectangleBBox
 from drawing.size import Size
 from drawing.vector import Vector
 from enums import TypeCategory
+from gui_util import require_gui_thread
 from util import EventBroadcaster
 from mouse import ClickHandler
 
@@ -288,6 +289,7 @@ class DrawingUtils(object):
 
 
 class ValueEntry(Gtk.Frame):
+    @require_gui_thread
     def __init__(self, label):
         """
         @type label: basestring
@@ -314,6 +316,7 @@ class ValueEntry(Gtk.Frame):
 
         self.on_value_entered = EventBroadcaster()
 
+    @require_gui_thread
     def set_value(self, value):
         """
         @type value: str
@@ -327,6 +330,7 @@ class ValueEntry(Gtk.Frame):
         self.on_value_entered.notify(value)
         self.hide()
 
+    @require_gui_thread
     def toggle(self):
         if self.props.visible:
             self.hide()
@@ -335,6 +339,7 @@ class ValueEntry(Gtk.Frame):
 
 
 class Drawable(object):
+    @require_gui_thread
     def __init__(self, canvas):
         self.canvas = canvas
         self.position = Vector(0, 0)
