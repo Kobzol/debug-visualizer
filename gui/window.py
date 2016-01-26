@@ -97,7 +97,8 @@ class MainWindow(Gtk.Window):
         Config.GUI_MEMORY_CANVAS_TOOLBAR.connect_signals({
             "zoom-in": lambda *x: canvas.zoom_in(),
             "zoom-out": lambda *x: canvas.zoom_out(),
-            "zoom-reset": lambda *x: canvas.zoom_reset()
+            "zoom-reset": lambda *x: canvas.zoom_reset(),
+            "translation-reset": lambda *x: canvas.reset_translation()
         })
         canvas_toolbar = Config.GUI_MEMORY_CANVAS_TOOLBAR.get_object("toolbar")
         self.content.add2(CanvasToolbarWrapper(canvas, canvas_toolbar))

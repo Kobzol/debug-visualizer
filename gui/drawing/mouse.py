@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 
+from gi.repository import Gdk
+
 from enum import Enum
-from events import EventBroadcaster
+
+from drawing.vector import Vector
 
 
 class ClickedState(Enum):
@@ -21,13 +24,18 @@ class MouseButtonState(Enum):
 
 
 class MouseData(object):
-    def __init__(self, state, position):
+    def __init__(self, lb_state, rb_state, position):
         """
-        @type state: MouseButtonState
+        @type lb_state: MouseButtonState
+        @type rb_state: MouseButtonState
         @type position: drawing.vector.Vector
         """
-        self.state = state
+        self.lb_state = lb_state
+        self.rb_state = rb_state
         self.position = position
+
+    def copy(self):
+        return MouseData(self.lb_state, self.rb_state, self.position.copy())
 
 
 class ClickHandler(object):
@@ -92,12 +100,46 @@ class ClickHandler(object):
         """
         @type mouse_data: MouseData
         """
-        if mouse_data.state == MouseButtonState.Down:
+        if mouse_data.lb_state == MouseButtonState.Down:
             self._handle_mouse_down(mouse_data)
-        elif mouse_data.state == MouseButtonState.Up:
+        elif mouse_data.lb_state == MouseButtonState.Up:
             self._handle_mouse_up(mouse_data)
 
         self._handle_mouse_move(mouse_data)
 
         for handler in self.propagated_handlers:
             handler.handle_mouse_event(mouse_data)
+
+
+class TranslationHandler(object):
+    def __init__(self, canvas):
+        """
+        Handles translation of canvas using right mouse dragging.
+        @type canvas: canvas.Canvas
+        """
+        self.canvas = canvas
+        self.mouse_state = MouseButtonState.Up
+        self.position = Vector(0, 0)
+
+    def set_drag_cursor(self):
+        self.canvas.set_cursor(Gdk.Cursor.new(Gdk.CursorType.HAND1))
+
+    def set_default_cursor(self):
+        self.canvas.set_cursor(None)
+
+    def handle_mouse_event(self, mouse_data):
+        """
+        @type mouse_data: MouseData
+        """
+        if self.mouse_state == MouseButtonState.Up:
+            if mouse_data.rb_state == MouseButtonState.Down:
+                self.set_drag_cursor()
+        else:
+            if mouse_data.rb_state == MouseButtonState.Up:
+                self.set_default_cursor()
+            else:
+                diff = mouse_data.position - self.position
+                self.canvas.translate_by(diff)
+
+        self.position = mouse_data.position.copy()
+        self.mouse_state = mouse_data.rb_state

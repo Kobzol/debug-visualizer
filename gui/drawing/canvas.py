@@ -6,7 +6,7 @@ from gi.repository import Gdk
 
 from drawing.drawable import DrawingUtils, Color
 from drawing.memtoview import MemToViewTransformer
-from drawing.mouse import MouseButtonState, MouseData
+from drawing.mouse import MouseButtonState, MouseData, TranslationHandler
 from drawing.vector import Vector
 from enums import ProcessState
 
@@ -29,26 +29,34 @@ class Canvas(Gtk.EventBox):
         self.connect("button-release-event", lambda widget, button_event: self._handle_press(button_event, False))
         self.connect("motion-notify-event", lambda widget, move_event: self._handle_mouse_move(move_event))
 
-        self.mouse_button_state = MouseButtonState.Up
-        self.mouse_position = Vector(0, 0)
+        self.mouse_data = MouseData(MouseButtonState.Up, MouseButtonState.Up, Vector(0, 0))
+        self.translation_handler = TranslationHandler(self)
 
         self.zoom = 1.0
         self.zoom_limits = (0.5, 2.0)
+        self.translation = Vector(0, 0)
         self.cr = None
         """@type cr: cairo.Context"""
 
         self.drawables = []
 
     def _notify_handlers(self):
+        mouse_data = MouseData(self.mouse_data.lb_state, self.mouse_data.rb_state, self.mouse_data.position * (1 / self.zoom))
         for drawable in self.drawables:  # TODO: synchronize
-            drawable.click_handler.handle_mouse_event(MouseData(self.mouse_button_state, self.mouse_position * (1 / self.zoom)))
+            drawable.click_handler.handle_mouse_event(mouse_data.copy())
+        self.translation_handler.handle_mouse_event(self.mouse_data.copy())
 
     def _handle_press(self, button_event, mouse_down):
         """
         @type button_event: Gdk.EventButton
         @type mouse_down: bool
         """
-        self.mouse_button_state = MouseButtonState.Down if mouse_down else MouseButtonState.Up
+        mouse_state = MouseButtonState.Down if mouse_down else MouseButtonState.Up
+        if button_event.button == 1:  # left button
+            self.mouse_data.lb_state = mouse_state
+        elif button_event.button == 3:  # right button
+            self.mouse_data.rb_state = mouse_state
+
         self._notify_handlers()
         self.redraw()
 
@@ -56,7 +64,7 @@ class Canvas(Gtk.EventBox):
         """
         @type move_event: Gdk.EventMotion
         """
-        self.mouse_position = Vector(move_event.x, move_event.y)
+        self.mouse_data.position = Vector(move_event.x, move_event.y)
         self._notify_handlers()
         self.redraw()
 
@@ -80,6 +88,8 @@ class Canvas(Gtk.EventBox):
         cr.rectangle(0, 0, width, height)
         cr.fill()
 
+        self.cr.translate(self.translation.x, self.translation.y)
+
         self.cr.scale(self.zoom, self.zoom)
 
         for drawable in self.drawables:
@@ -93,8 +103,28 @@ class Canvas(Gtk.EventBox):
         self.drawables = []
         self.redraw()
 
+    def set_cursor(self, cursor):
+        """
+        @type cursor: Gdk.Cursor
+        """
+        self.get_window().set_cursor(cursor)
+
     def set_background_color(self, color=Color()):
         self.bg_color = color
+        self.redraw()
+
+    def translate_by(self, vector):
+        """
+        Translates the canvas by the given vector.
+        @type vector: Vector
+        """
+        self.translation += vector
+
+    def reset_translation(self):
+        """
+        Resets the translation of the canvas.
+        """
+        self.translation = Vector(0, 0)
         self.redraw()
 
     def redraw(self):
