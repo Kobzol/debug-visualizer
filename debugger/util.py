@@ -12,6 +12,7 @@ class Logger(object):
 
     @staticmethod
     def init_logger(level):
+        logging.basicConfig()
         Logger.logger = logging.getLogger("debugger")
         Logger.logger.setLevel(level)
 
