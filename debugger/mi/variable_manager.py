@@ -267,9 +267,9 @@ class VariableManager(object):
         registers = []
         register_values = self.parser.parse(register_values.data)["register-values"]
         for reg in register_values:
-            number = reg["number"]
+            number = int(reg["number"])
             if number < len(register_names) and len(register_names[number]) > 0:
-                registers.append((register_names[number], reg["value"]))
+                registers.append((register_names[number], str(reg["value"])))
 
         return registers
 
