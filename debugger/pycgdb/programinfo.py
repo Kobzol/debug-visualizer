@@ -49,9 +49,6 @@ class ProgramInfo(object):
             self._parse_die(child)
 
     def _parse_line_state(self, files, line_state):
-        """
-        @type entry_state: elftools.dwarf.lineprogram.LineState
-        """
         file = os.path.abspath(files[line_state.file - 1].name)
         line = line_state.line
         address = line_state.address

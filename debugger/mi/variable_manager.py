@@ -2,6 +2,7 @@
 
 import re
 
+import debugger
 from enums import BasicTypeCategory, TypeCategory
 from mi.parser import Parser
 from debugee import Type, Variable, Register
@@ -90,15 +91,15 @@ basic_type_map = {
     """
 
 
-class VariableManager(object):
+class VariableManager(debugger.VariableManager):
     """
     Handles retrieval and updating of variables and raw memory of the debugged process.
     """
     def __init__(self, debugger):
         """
-        @type debugger: mi.debugger.Debugger
+        @type debugger: Debugger
         """
-        self.debugger = debugger
+        super(VariableManager, self).__init__(debugger)
         self.parser = Parser()
 
     def get_type(self, expression):

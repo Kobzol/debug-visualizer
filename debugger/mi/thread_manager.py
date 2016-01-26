@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 
+import debugger
 from mi.parser import Parser
 from util import Logger
 
 
-class ThreadManager(object):
+class ThreadManager(debugger.ThreadManager):
     def __init__(self, debugger):
         """
-        @type debugger: mi.debugger.Debugger
+        @type debugger: debugger.Debugger
         """
-        self.debugger = debugger
+        super(ThreadManager, self).__init__(debugger)
         self.parser = Parser()
 
     def get_current_thread(self):

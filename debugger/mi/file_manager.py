@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
+
 import re
 import traceback
 
+import debugger
 from mi.parser import Parser
 from util import Logger
 
 
-class FileManager(object):
+class FileManager(debugger.FileManager):
     def __init__(self, debugger):
         """
-        @type debugger: mi.debugger.Debugger
+        @type debugger: debugger.Debugger
         """
-        self.debugger = debugger
+        super(FileManager, self).__init__(debugger)
         self.parser = Parser()
 
     def _get_current_line(self):

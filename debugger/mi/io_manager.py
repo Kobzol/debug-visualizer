@@ -1,29 +1,17 @@
 # -*- coding: utf-8 -*-
 
 import os
-import tempfile
 import threading
 
+import debugger
 
-class IOManager(object):
-    @staticmethod
-    def create_pipe():
-        tmpdir = tempfile.gettempdir()
-        temp_name = next(tempfile._get_candidate_names())
 
-        fifo = os.path.join(tmpdir, temp_name + ".fifo")
-
-        os.mkfifo(fifo)
-
-        return os.path.abspath(fifo)
-
+class IOManager(debugger.IOManager):
     def __init__(self):
+        super(IOManager, self).__init__()
+
         self.file_threads = []
         self.file_paths = []
-
-        self.stdin = None
-        self.stdout = None
-        self.stderr = None
 
     def _open_file(self, attribute, mode, file_path):
         setattr(self, attribute, open(file_path, mode, buffering=0))
@@ -40,7 +28,7 @@ class IOManager(object):
         if len(self.file_threads) > 0:
             return
 
-        stdin, stdout, stderr = [IOManager.create_pipe() for _ in xrange(3)]
+        stdin, stdout, stderr = [self.create_pipe() for _ in xrange(3)]
 
         self.file_paths += (stdin, stdout, stderr)
 

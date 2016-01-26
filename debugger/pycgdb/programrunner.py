@@ -51,14 +51,6 @@ class ProgramRunner(object):
             return False
 
     def _add_queue_command(self, cmd):
-        """if not self.msg_queue.empty():
-            top = self.msg_queue.get()
-            if top == cmd:
-                self.msg_queue.put(top)
-                return
-            else:
-                self.msg_queue.put(top)"""
-
         self.msg_queue.put(cmd)
 
     def _start_process(self):

@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 
 import os
+
+import debugger
 from enums import DebuggerState
 from mi.parser import Parser
 
 
-class BreakpointManager(object):
+class BreakpointManager(debugger.BreakpointManager):
     def __init__(self, debugger):
-        self.debugger = debugger
+        super(BreakpointManager, self).__init__(debugger)
         self.parser = Parser()
 
     def add_breakpoint(self, location, line):
@@ -15,7 +17,7 @@ class BreakpointManager(object):
         Adds a breakpoint, if there is not a breakpoint with the same location and line already.
         @type location: str
         @type line: int
-        @type: boolean
+        @rtype: boolean
         """
         self.debugger.require_state(DebuggerState.BinaryLoaded)
 
