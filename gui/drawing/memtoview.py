@@ -5,7 +5,10 @@ from enums import TypeCategory
 
 
 class MemToViewTransformer(object):
-    def __init__(self):
+    def __init__(self, canvas):
+        """
+        @type canvas: canvas.Canvas
+        """
         self.function_map = {
             TypeCategory.Builtin: self.create_basic,
             TypeCategory.String: self.create_basic,
@@ -16,32 +19,37 @@ class MemToViewTransformer(object):
             TypeCategory.Array: self.create_vector,
             TypeCategory.Vector: self.create_vector
         }
+        self.canvas = canvas
 
-    def create_struct(self, canvas, var):
+    def create_struct(self, var):
         """
         @type var: variable.Variable
-        @rtype: drawable.Drawable
+        @rtype: drawable.StructDrawable
         """
-        container = drawable.StructDrawable(canvas, var)
+        return drawable.StructDrawable(self.canvas, var)
 
-        for child in var.children:
-            var = self.transform_var(canvas, child)
+    def create_pointer(self, var):
+        """
+        @type var: variable.Variable
+        @rtype: drawable.PointerDrawable
+        """
+        return drawable.VariableDrawable(self.canvas, var)
 
-            if var:
-                container.add_child(var)
+    def create_basic(self, var):
+        """
+        @type var: variable.Variable
+        @rtype: drawable.VariableDrawable
+        """
+        return drawable.VariableDrawable(self.canvas, var)
 
-        return container
+    def create_vector(self, var):
+        """
+        @type var: variable.Variable
+        @rtype: drawable.VectorDrawable
+        """
+        return drawable.VectorDrawable(self.canvas, var)
 
-    def create_pointer(self, canvas, var):
-        return drawable.VariableDrawable(canvas, var)
-
-    def create_basic(self, canvas, var):
-        return drawable.VariableDrawable(canvas, var)
-
-    def create_vector(self, canvas, var):
-        return drawable.VectorDrawable(canvas, var)
-
-    def transform_var(self, canvas, var):
+    def transform_var(self, var):
         """
         @type var: variable.Variable
         @rtype drawable.Drawable
@@ -54,22 +62,14 @@ class MemToViewTransformer(object):
         create_fn = self.function_map.get(type.type_category, None)
 
         if create_fn:
-            return create_fn(canvas, var)
+            return create_fn(var)
         else:
             return None
 
-    def transform_frame(self, canvas, frame):
+    def transform_frame(self, frame):
         """
-        @type canvas: canvas.Canvas
         @type frame: frame.Frame
         @rtype: drawable.StackFrameDrawable
         """
-        frame_drawable = drawable.StackFrameDrawable(canvas, frame)
-
-        for var in frame.variables:
-            transformed = self.transform_var(canvas, var)
-
-            if transformed is not None:
-                frame_drawable.add_child(transformed)
-
+        frame_drawable = drawable.StackFrameDrawable(self.canvas, frame)
         return frame_drawable

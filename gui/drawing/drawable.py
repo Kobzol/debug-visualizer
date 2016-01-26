@@ -10,6 +10,7 @@ from enum import Enum
 from drawing.geometry import Margin, RectangleBBox
 from drawing.size import Size
 from drawing.vector import Vector
+from enums import TypeCategory
 from events import EventBroadcaster
 from mouse import ClickHandler
 
@@ -491,7 +492,7 @@ class Label(Drawable):
 
         self.font_style = font_style
         self.label = label if label is not None else ""
-        self.padding = padding if padding else Margin.all(10)
+        self.padding = padding if padding else Margin.all(5)
         self.border_width = border_width
 
     def get_label(self):
@@ -538,7 +539,7 @@ class LabelWrapper(LinearLayout):
 
         self.name = name
 
-        name_child = Label(canvas, name, padding if padding else Margin(10))
+        name_child = Label(canvas, name, padding if padding else Margin.all(5))
         self.add_child(name_child)
         self.add_child(inner_drawable)
 
@@ -575,34 +576,23 @@ class Image(Drawable):
         DrawingUtils.draw_image_from_surface(self.canvas, self.position, self.get_image(), self.size)
 
 
-class VariableDrawable(LinearLayout):
+class VariableDrawable(Label):
     def __init__(self, canvas, variable):
         """
         @type canvas: canvas.Canvas
         @type variable: variable.Variable
         """
-        super(VariableDrawable, self).__init__(canvas)
+        super(VariableDrawable, self).__init__(canvas, self.get_variable_value, Margin.all(5))
 
         self.variable = variable
 
-        self.value_drawable = Label(canvas, self.get_variable_value, Margin.all(5))
-        self.wrapper = LabelWrapper(canvas, self.get_variable_name(), self.value_drawable, Margin.all(5))
-
-        self.add_child(self.wrapper)
-
-        self.value_entry = ValueEntry("Edit value of {}".format(self.get_variable_name()))
+        self.value_entry = ValueEntry("Edit value of {}".format(variable.name))
         self.value_entry.on_value_entered.subscribe(self._handle_value_change)
         canvas.fixed_wrapper.put(self.value_entry, self.position.x, self.position.y)
         self.value_entry.hide()
 
     def get_variable_value(self):
         return self.variable.value
-
-    def get_variable_name(self):
-        if self.variable.name:
-            return self.variable.name
-        else:
-            return "(None)"
 
     def _handle_value_change(self, value):
         self.variable.value = value
@@ -624,8 +614,14 @@ class StackFrameDrawable(LinearLayout):
         """
         super(StackFrameDrawable, self).__init__(canvas, LinearLayoutDirection.Vertical)
 
-        self.label = Label(canvas, "Frame {0}".format(frame.func), Margin.all(10), FontStyle(italic=True), 0)
+        self.label = Label(canvas, "Frame {0}".format(frame.func), Margin.all(5), FontStyle(italic=True), 0)
         self.add_child(self.label)
+
+        for var in frame.variables:
+            drawable = canvas.memtoview.transform_var(var)
+            if drawable:
+                drawable = LabelWrapper(self.canvas, "{} {}".format(var.type.name, var.name), drawable)
+                self.add_child(drawable)
 
     def get_rect(self):
         rect = super(StackFrameDrawable, self).get_rect()
@@ -648,13 +644,43 @@ class PointerDrawable(Drawable):
         self.pointer = pointer
 
 
-class VectorDrawable(Drawable):
+class VectorValueDrawable(Label):
+    def __init__(self, canvas, variable):
+        """
+        @type canvas: canvas.Canvas
+        @type variable: variable.Variable
+        """
+        super(VectorValueDrawable, self).__init__(canvas, self.get_name)
+        self.variable = variable
+
+    def get_name(self):
+        if self.variable.type.type_category in (TypeCategory.Builtin, TypeCategory.String):
+            return str(self.variable.value)
+        else:
+            return "C"
+
+
+class VectorDrawable(LinearLayout):
     def __init__(self, canvas, vector):
         """
         @type canvas: drawing.canvas.Canvas
         @type vector: variable.Variable
         """
-        super(VectorDrawable, self).__init__(canvas)
+        super(VectorDrawable, self).__init__(canvas, LinearLayoutDirection.Horizontal)
+        self.vector = vector
+        self.max_elements = 3
+
+        for i in xrange(0, min((self.max_elements, len(vector.children)))):
+            self.add_child(VectorValueDrawable(self.canvas, vector.children[i]))
+
+        if len(vector.children) > self.max_elements:
+            self.add_child(Label(self.canvas, "..."))
+
+    def get_max_elements(self):
+        """
+        @rtype: int
+        """
+        return self.max_elements
 
 
 class StructDrawable(LinearLayout):
@@ -664,8 +690,20 @@ class StructDrawable(LinearLayout):
         @type struct: variable.Variable
         """
         super(StructDrawable, self).__init__(canvas, LinearLayoutDirection.Vertical)
-
         self.struct = struct
 
-        self.struct_label = Label(canvas, "{0} {1}".format(struct.type.name, struct.name), Margin.all(6.0))
-        self.add_child(self.struct_label)
+        for child in struct.children:
+            drawable = self.canvas.memtoview.transform_var(child)
+            if drawable:
+                wrapper = LabelWrapper(self.canvas, child.name, drawable, Margin.all(5))
+                self.add_child(wrapper)
+
+    def get_rect(self):
+        rect = super(StructDrawable, self).get_rect()
+        size = rect.size.copy()
+        size = Size(size.width + 1, size.height + 1)
+        return RectangleBBox(rect.position.copy().add((-1, -1)), size)
+
+    def draw(self):
+        super(StructDrawable, self).draw()
+        DrawingUtils.draw_rectangle(self.canvas, self.position, self.get_rect().size)

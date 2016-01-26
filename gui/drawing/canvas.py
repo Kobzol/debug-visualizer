@@ -135,7 +135,7 @@ class MemoryCanvas(Canvas):
         self.debugger.on_process_state_changed.subscribe(self._handle_process_state_change)
         self.debugger.on_frame_changed.subscribe(self._handle_frame_change)
 
-        self.memtoview = MemToViewTransformer()
+        self.memtoview = MemToViewTransformer(self)
         self.active_frame = None
 
     def _handle_var_change(self, variable):
@@ -158,7 +158,7 @@ class MemoryCanvas(Canvas):
         for var in frame.variables:
             var.on_value_changed.subscribe(self._handle_var_change)
 
-        self.set_drawables([self.memtoview.transform_frame(self, frame)])
+        self.set_drawables([self.memtoview.transform_frame(frame)])
 
 
 class CanvasToolbarWrapper(Gtk.VBox):
