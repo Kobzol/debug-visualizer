@@ -368,25 +368,25 @@ class Drawable(object):
 
     def handle_mouse_event(self, mouse_data):
         """
-        @type mouse_data: mouse.MouseData
+        @type mouse_data: drawing.mouse.MouseData
         """
         self.click_handler.handle_mouse_event(mouse_data)
 
     def handle_mouse_click(self, mouse_data):
         """
-        @type mouse_data: mouse.MouseData
+        @type mouse_data: drawing.mouse.MouseData
         """
         pass
 
     def handle_mouse_enter(self, mouse_data):
         """
-        @type mouse_data: mouse.MouseData
+        @type mouse_data: drawing.mouse.MouseData
         """
         pass
 
     def handle_mouse_leave(self, mouse_data):
         """
-        @type mouse_data: mouse.MouseData
+        @type mouse_data: drawing.mouse.MouseData
         """
         pass
 
@@ -452,6 +452,9 @@ class ToggleDrawable(Drawable):
         self.current_drawable = 0
 
     def set_position(self, position):
+        """
+        @type position: drawing.vector.Vector
+        """
         Drawable.set_position(self, position)
         for drawable in self.drawables:
             drawable.set_position(position)
@@ -463,6 +466,9 @@ class ToggleDrawable(Drawable):
         return self.get_active_drawable().get_rect()
 
     def handle_mouse_click(self, mouse_data):
+        """
+        @type mouse_data: drawing.mouse.MouseData
+        """
         self.current_drawable = (self.current_drawable + 1) % len(self.drawables)
 
     def draw(self):
@@ -499,6 +505,9 @@ class Label(Drawable):
 
         width = self.padding.left + label_size.width + self.padding.right
         height = self.padding.top + label_size.height + self.padding.bottom
+
+        width += 2  # border size
+        height += 2
 
         return RectangleBBox(self.position, Size(width, height))
 
@@ -598,13 +607,13 @@ class VariableDrawable(LinearLayout):
     def _handle_value_change(self, value):
         self.variable.value = value
 
-    def handle_mouse_click(self, point):
+    def handle_mouse_click(self, mouse_data):
         """
-        @type point: vector.Vector
+        @type mouse_data: mouse.MouseData
         """
         self.value_entry.set_value(self.get_variable_value())
         self.value_entry.toggle()
-        self.canvas.fixed_wrapper.move(self.value_entry, point.x, point.y)
+        self.canvas.fixed_wrapper.move(self.value_entry, mouse_data.position.x, mouse_data.position.y)
 
 
 class StackFrameDrawable(LinearLayout):
