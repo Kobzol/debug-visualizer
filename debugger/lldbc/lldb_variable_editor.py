@@ -12,7 +12,7 @@ class LldbVariableEditor(object):
     def change_variable_in_frame(self, frame, variable):
         """
         @type frame: lldb.SBFrame
-        @type variable: variable.Variable
+        @type variable: debugee.Variable
         """
         self.debugger.require_state(DebuggerState.Running)
         frame.EvaluateExpression(variable.path + " = " + variable.value)

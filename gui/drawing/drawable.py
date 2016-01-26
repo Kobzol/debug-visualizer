@@ -11,7 +11,7 @@ from drawing.geometry import Margin, RectangleBBox
 from drawing.size import Size
 from drawing.vector import Vector
 from enums import TypeCategory
-from events import EventBroadcaster
+from util import EventBroadcaster
 from mouse import ClickHandler
 
 
@@ -581,7 +581,7 @@ class VariableDrawable(Label):
     def __init__(self, canvas, variable):
         """
         @type canvas: canvas.Canvas
-        @type variable: variable.Variable
+        @type variable: debugee.Variable
         """
         super(VariableDrawable, self).__init__(canvas, self.get_variable_value, Margin.all(5))
 
@@ -611,7 +611,7 @@ class StackFrameDrawable(LinearLayout):
     def __init__(self, canvas, frame):
         """
         @type canvas: canvas.Canvas
-        @type frame: frame.Frame
+        @type frame: debugee.Frame
         """
         super(StackFrameDrawable, self).__init__(canvas, LinearLayoutDirection.Vertical)
 
@@ -639,7 +639,7 @@ class PointerDrawable(Drawable):
     def __init__(self, canvas, pointer):
         """
         @type canvas: canvas.Canvas
-        @type pointer: variable.Variable
+        @type pointer: debugee.Variable
         """
         super(PointerDrawable, self).__init__(canvas)
         self.pointer = pointer
@@ -649,7 +649,7 @@ class VectorValueDrawable(Label):
     def __init__(self, canvas, variable):
         """
         @type canvas: canvas.Canvas
-        @type variable: variable.Variable
+        @type variable: debugee.Variable
         """
         super(VectorValueDrawable, self).__init__(canvas, self.get_name)
         self.variable = variable
@@ -665,7 +665,7 @@ class VectorDrawable(LinearLayout):
     def __init__(self, canvas, vector):
         """
         @type canvas: drawing.canvas.Canvas
-        @type vector: variable.Variable
+        @type vector: debugee.Variable
         """
         super(VectorDrawable, self).__init__(canvas, LinearLayoutDirection.Horizontal)
         self.vector = vector
@@ -688,7 +688,7 @@ class StructDrawable(LinearLayout):
     def __init__(self, canvas, struct):
         """
         @type canvas: canvas.Canvas
-        @type struct: variable.Variable
+        @type struct: debugee.Variable
         """
         super(StructDrawable, self).__init__(canvas, LinearLayoutDirection.Vertical)
         self.struct = struct

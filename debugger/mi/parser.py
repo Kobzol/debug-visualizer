@@ -3,10 +3,8 @@
 import json
 import re
 
-from breakpoint import Breakpoint
+from debugee import Breakpoint, InferiorThread, ThreadInfo, Frame
 from enums import ThreadState
-from frame import Frame
-from inferior_thread import InferiorThread, ThreadInfo
 
 
 class Parser(object):
@@ -22,7 +20,7 @@ class Parser(object):
     def parse_thread_info(self, data):
         """
         @type data: str
-        @rtype: inferior_thread.ThreadInfo
+        @rtype: debugee.ThreadInfo
         """
         data = self.parse(data)
         current_thread_id = int(data["current-thread-id"])
@@ -41,7 +39,7 @@ class Parser(object):
     def parse_stack_frames(self, data):
         """
         @type data: str
-        @rtype: list of frame.Frame
+        @rtype: list of debugee.Frame
         """
         data = self.parse(data)["stack"]
         frames = []
@@ -114,7 +112,7 @@ class Parser(object):
     def _instantiate_frame(self, frame):
         """
         @type frame: dict
-        @rtype: frame.Frame
+        @rtype: debugee.Frame
         """
         level = int(frame.get("level", "0"))
         func = frame.get("func", "")

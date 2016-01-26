@@ -3,7 +3,6 @@
 import abc
 
 from gi.repository import Gtk
-from gi.repository import GObject
 
 from enums import ProcessState
 from gui_util import run_on_gui, require_gui_thread
@@ -12,7 +11,7 @@ from gui_util import run_on_gui, require_gui_thread
 class FrameListRow(Gtk.ListBoxRow):
     def __init__(self, frame):
         """
-        @type frame: frame.Frame
+        @type frame: debugee.Frame
         """
         super(FrameListRow, self).__init__()
 
@@ -22,7 +21,7 @@ class FrameListRow(Gtk.ListBoxRow):
 class ThreadListRow(Gtk.ListBoxRow):
     def __init__(self, thread):
         """
-        @type thread: inferior_thread.InferiorThread
+        @type thread: debugee.InferiorThread
         """
         super(ThreadListRow, self).__init__()
 
@@ -145,7 +144,7 @@ class ThreadSelector(Selector):
     @require_gui_thread
     def add_thread(self, thread):
         """
-        @type thread: inferior_thread.InferiorThread
+        @type thread: debugee.InferiorThread
         @rtype: ThreadListRow
         """
         row = ThreadListRow(thread)

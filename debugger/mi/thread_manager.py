@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from mi.parser import Parser
-from inferior_thread import InferiorThread
 from util import Logger
 
 
@@ -15,7 +14,7 @@ class ThreadManager(object):
 
     def get_current_thread(self):
         """
-        @rtype: inferior_thread.Thread
+        @rtype: debugee.Thread
         """
         thread_info = self.get_thread_info()
         return thread_info.selected_thread
@@ -23,7 +22,7 @@ class ThreadManager(object):
     def get_thread_info(self):
         """
         Returns (active_thread_id, all_threads).
-        @rtype: inferior_thread.ThreadInfo | None
+        @rtype: debugee.ThreadInfo | None
         """
         output = self.debugger.communicator.send("-thread-info")
 
@@ -51,7 +50,7 @@ class ThreadManager(object):
 
     def get_current_frame(self):
         """
-        @rtype: frame.Frame | None
+        @rtype: debugee.Frame | None
         """
         output = self.debugger.communicator.send("-stack-info-frame")
 
@@ -73,7 +72,7 @@ class ThreadManager(object):
 
     def get_frames(self):
         """
-        @rtype: list of frame.Frame | None
+        @rtype: list of debugee.Frame | None
         """
         output = self.debugger.communicator.send("-stack-list-frames")
 

@@ -1,14 +1,12 @@
 import traceback
-
 import Queue
 import os
 import threading
-
 import signal
-
 import ptrace
+
 from enums import ProcessState
-from events import EventBroadcaster
+from util import EventBroadcaster
 
 
 class ProcessExitException(BaseException):

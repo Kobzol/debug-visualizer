@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from enums import BasicTypeCategory
-from enums import TypeCategory
-from events import EventBroadcaster
+from enums import BasicTypeCategory, TypeCategory
+from util import EventBroadcaster
 
 
 class Type(object):
@@ -128,3 +127,89 @@ class Variable(object):
 
     def __repr__(self):
         return "Variable: {0} ({1}) = {2}".format(self.type, self.path if self.path else self.name, self.value)
+
+
+class Frame(object):
+    """
+    Represents a stack frame of the debugged process.
+    """
+    def __init__(self, level, func, file, line):
+        """
+        @type level: int
+        @type func: str
+        @type file: str
+        @type line: int
+        """
+        self.level = level
+        self.func = func
+        self.file = file
+        self.line = line
+        self.variables = []
+
+    def __repr__(self):
+        return "Frame #{0} ({1} at {2}:{3}".format(self.level, self.func, self.file, self.line)
+
+
+class ThreadInfo(object):
+    """
+    Represents thread state (list of threads and the selected thread) of the debugged process.
+    """
+    def __init__(self, selected_thread, threads):
+        """
+        @type selected_thread: InferiorThread
+        @type threads: list of InferiorThread
+        """
+        self.selected_thread = selected_thread
+        self.threads = threads
+
+    def __repr__(self):
+        return "Thread info: active: {0}, threads: {1}".format(str(self.selected_thread), str(self.threads))
+
+
+class InferiorThread(object):
+    """
+    Represents a thread of the debugged process.
+    """
+    def __init__(self, id, name, state, frame=None):
+        """
+        @type id: int
+        @type name: str
+        @type state: enums.ProcessState
+        @type frame: Frame
+        """
+        self.id = id
+        self.name = name
+        self.state = state
+        self.frame = frame
+
+    def __repr__(self):
+        return "Thread #{0} ({1}): {2}".format(self.id, self.name, self.state)
+
+
+class Breakpoint(object):
+    """
+    Represents a breakpoint.
+    """
+    def __init__(self, number, location, line):
+        """
+        @type number: int
+        @type location: str
+        @type line: int
+        """
+        self.number = number
+        self.location = location
+        self.line = line
+
+    def __repr__(self):
+        return "BP #{0}: {1}:{2}".format(self.number, self.location, self.line)
+
+
+class Register(object):
+    def __init__(self, name, value):
+        """
+        Represents a CPU register.
+        @type name: basestring
+        @type value: basestring
+        """
+        self.name = name
+        self.value = value

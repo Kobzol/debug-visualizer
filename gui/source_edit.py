@@ -10,7 +10,7 @@ from enum import Enum
 
 import paths
 from analysis.source_analyser import SourceAnalyzer
-from events import EventBroadcaster
+from util import EventBroadcaster
 from enums import ProcessState
 from util import Logger
 from gui_util import run_on_gui, require_gui_thread

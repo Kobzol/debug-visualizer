@@ -2,8 +2,6 @@
 
 import util
 from enums import DebuggerState, ProcessState
-from events import EventBroadcaster
-from flags import Flags
 
 
 class ProcessExitedEventData(object):
@@ -18,15 +16,15 @@ class ProcessStoppedEventData(object):
 
 class Debugger(object):
     def __init__(self):
-        self.state = Flags(DebuggerState, DebuggerState.Started)
+        self.state = util.Flags(DebuggerState, DebuggerState.Started)
         self.process_state = ProcessState.Invalid
 
-        self.on_process_state_changed = EventBroadcaster()
-        self.on_debugger_state_changed = EventBroadcaster()
+        self.on_process_state_changed = util.EventBroadcaster()
+        self.on_debugger_state_changed = util.EventBroadcaster()
         self.state.on_value_changed.redirect(self.on_debugger_state_changed)
-        self.on_process_state_changed = EventBroadcaster()
-        self.on_frame_changed = EventBroadcaster()
-        self.on_thread_changed = EventBroadcaster()
+        self.on_process_state_changed = util.EventBroadcaster()
+        self.on_frame_changed = util.EventBroadcaster()
+        self.on_thread_changed = util.EventBroadcaster()
 
     def require_state(self, required_state):
         if not self.get_state().is_set(required_state):

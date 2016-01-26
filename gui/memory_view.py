@@ -1,7 +1,7 @@
 import re
 from gi.repository import Gtk
 
-from events import EventBroadcaster
+from util import EventBroadcaster
 
 
 class MemoryGrid(Gtk.Grid):

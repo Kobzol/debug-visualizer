@@ -23,35 +23,35 @@ class MemToViewTransformer(object):
 
     def create_struct(self, var):
         """
-        @type var: variable.Variable
+        @type var: debugee.Variable
         @rtype: drawable.StructDrawable
         """
         return drawable.StructDrawable(self.canvas, var)
 
     def create_pointer(self, var):
         """
-        @type var: variable.Variable
+        @type var: debugee.Variable
         @rtype: drawable.PointerDrawable
         """
         return drawable.VariableDrawable(self.canvas, var)
 
     def create_basic(self, var):
         """
-        @type var: variable.Variable
+        @type var: debugee.Variable
         @rtype: drawable.VariableDrawable
         """
         return drawable.VariableDrawable(self.canvas, var)
 
     def create_vector(self, var):
         """
-        @type var: variable.Variable
+        @type var: debugee.Variable
         @rtype: drawable.VectorDrawable
         """
         return drawable.VectorDrawable(self.canvas, var)
 
     def transform_var(self, var):
         """
-        @type var: variable.Variable
+        @type var: debugee.Variable
         @rtype drawable.Drawable
         """
         type = var.type
@@ -68,7 +68,7 @@ class MemToViewTransformer(object):
 
     def transform_frame(self, frame):
         """
-        @type frame: frame.Frame
+        @type frame: debugee.Frame
         @rtype: drawable.StackFrameDrawable
         """
         frame_drawable = drawable.StackFrameDrawable(self.canvas, frame)

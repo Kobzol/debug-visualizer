@@ -145,6 +145,7 @@ class MainWindow(Gtk.Window):
         if state == ProcessState.Exited:
             run_on_gui(self.add_status_message, "Process exited with code {0}.".format(event_data.return_code))
         elif state == ProcessState.Stopped:
+            self.app.debugger.variable_manager.get_registers()
             location = self.app.debugger.file_manager.get_current_location()
             if location[0]:
                 run_on_gui(self.add_status_message, "Process stopped at {0}:{1} - {2}"

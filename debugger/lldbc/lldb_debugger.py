@@ -6,18 +6,16 @@ logging.basicConfig(level=logging.INFO)
 import threading
 import os
 import time
-
 import lldb
-from events import EventBroadcaster
+
 import exceptions as exceptions
-from enums import DebuggerState
 from lldbc.lldb_breakpoint_manager import LldbBreakpointManager
 from lldbc.lldb_file_manager import LldbFileManager
 from lldbc.lldb_io_manager import LldbIOManager
 from lldbc.lldb_memory_manager import LldbMemoryManager
 from lldbc.lldb_thread_manager import LldbThreadManager
 from enums import ProcessState, StopReason, DebuggerState
-from flags import Flags
+from util import EventBroadcaster, Flags
 from lldbc.lldb_variable_editor import LldbVariableEditor
 
 

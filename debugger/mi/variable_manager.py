@@ -4,7 +4,7 @@ import re
 
 from enums import BasicTypeCategory, TypeCategory
 from mi.parser import Parser
-from variable import Type, Variable
+from debugee import Type, Variable
 
 basic_type_map = {
     "bool" : BasicTypeCategory.Bool,
@@ -105,7 +105,7 @@ class VariableManager(object):
         """
         Returns type for the given expression.
         @type expression: str
-        @rtype: variable.Type
+        @rtype: debugee.Type
         """
         output = self.debugger.communicator.send("ptype {0}".format(expression))
         short_output = self.debugger.communicator.send("whatis {0}".format(expression))
@@ -154,7 +154,7 @@ class VariableManager(object):
         """
         Returns a variable for the given expression-
         @type expression: str
-        @rtype: variable.Variable
+        @rtype: debugee.Variable
         """
         type = self.get_type(expression)
         output = self.debugger.communicator.send("p {0}".format(expression))
@@ -218,7 +218,7 @@ class VariableManager(object):
     def update_variable(self, variable):
         """
         Updates the variable's value in the debugged process.
-        @type variable: variable.Variable
+        @type variable: debugee.Variable
         """
         format = "set variable {0} = {1}"
 
@@ -248,6 +248,31 @@ class VariableManager(object):
                     bytes.append(int(num, 16))
 
         return bytes
+
+    def get_registers(self):
+        """
+        Returns the register values as a list of tuples with name and value of the given register.
+        @rtype: list of register.Register
+        """
+        register_names = self.debugger.communicator.send("-data-list-register-names")
+        if not register_names:
+            return None
+
+        register_names = self.parser.parse(register_names.data)["register-names"]
+
+        register_values = self.debugger.communicator.send("-data-list-register-values --skip-unavailable x")
+        if not register_values:
+            return None
+
+        registers = []
+        register_values = self.parser.parse(register_values.data)["register-values"]
+        for reg in register_values:
+            number = reg["number"]
+            if number < len(register_names) and len(register_names[number]) > 0:
+                registers.append((register_names[number], reg["value"]))
+
+        return registers
+
 
     def _get_name(self, expression):
         """

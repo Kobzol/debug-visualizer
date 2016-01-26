@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
+import inspect
 from threading import Event, Thread
 
 
@@ -89,6 +90,138 @@ class BadStateError(Exception):
     def __init__(self, required_state, current_state):
         self.required_state = required_state
         self.current_state = current_state
+
+
+class Flags(object):
+    """
+    Represents bitfield composed enums.
+
+    Raises events when changed.
+    """
+    def __init__(self, enum_cls, initial_value=0):
+        """
+        @type enum_cls: enum class
+        @type initial_value: int | enum instance
+        """
+        if not inspect.isclass(enum_cls):
+            raise TypeError("parameter must be class")
+
+        if isinstance(initial_value, enum_cls):
+            initial_value = initial_value.value
+
+        self.enum_cls = enum_cls
+        self.value = initial_value
+
+        self.on_value_changed = EventBroadcaster()
+
+    def _check_cls(self, obj):
+        if not isinstance(obj, self.enum_cls):
+            raise TypeError("enum must be of class " + str(self.enum_cls))
+
+    def set(self, value):
+        """
+        Sets the given value in the bitfield.
+        @type value: enum instance
+        """
+        self._check_cls(value)
+
+        old_value = self.value
+        self.value |= (1 << value.value)
+        self.on_value_changed.notify(self, Flags(self.enum_cls, old_value))
+
+    def unset(self, value):
+        """
+        Unsets the given value in the bitfield.
+        @type value: enum instance
+        """
+        self._check_cls(value)
+
+        old_value = self.value
+        self.value &= ~(1 << value.value)
+        self.on_value_changed.notify(self, Flags(self.enum_cls, old_value))
+
+    def is_set(self, value):
+        """
+        Checks whether the given value is set in the bitfield.
+        @type value: enum instance
+        @rtype: bool
+        """
+        self._check_cls(value)
+        return (self.value & (1 << value.value)) != 0
+
+    def get_value(self):
+        """
+        Returns the integer value of the whole bitfield.
+        @rtype: int
+        """
+        return self.value
+
+    def clear(self):
+        """
+        Clears the bitfield to 0 (effectively unsetting all flags).
+        """
+        old_value = self.value
+        self.value = 0
+        self.on_value_changed.notify(self, Flags(self.enum_cls, old_value))
+
+    def __repr__(self):
+        flags = "["
+
+        for enum_val in self.enum_cls:
+            if self.is_set(enum_val):
+                flags += str(enum_val) + ", "
+
+        if len(flags) > 1:
+            flags = flags[:-2]
+
+        return flags + "]"
+
+
+class EventBroadcaster(object):
+    """
+    Object that broadcasts event to it's listeners.
+
+    Evety broadcaster represents a single event type.
+    """
+    def __init__(self):
+        self.listeners = []
+
+    def notify(self, *args, **kwargs):
+        """
+        Notifies all listeners that an event has occured.
+        @param args: arbitraty arguments that will be passed to the listeners
+        """
+        map(lambda listener: listener(*args, **kwargs), self.listeners)
+
+    def subscribe(self, listener):
+        """
+        Subscribes an event listener, who will receive events from the broadcaster.
+        @type listener: function
+        """
+        self.listeners.append(listener)
+
+    def unsubscribe(self, listener):
+        """
+        Unsubscribes an event listener.
+        It will no longer receive events after he unsubscribes.
+        @param listener: function
+        """
+        self.listeners.remove(listener)
+
+    def clear(self):
+        """
+        Removes all event listeners.
+        """
+        self.listeners = []
+
+    def redirect(self, broadcaster):
+        """
+        Redirects this broadcaster to the given broadcaster.
+
+        All events fired by this broadcaster will be also delivered to the given broadcaster.
+        @type broadcaster: EventBroadcaster
+        """
+        self.subscribe(broadcaster.notify)
 
 
 Logger.init_logger(logging.DEBUG)

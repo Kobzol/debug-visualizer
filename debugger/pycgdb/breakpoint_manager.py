@@ -1,6 +1,6 @@
 import os
 
-from breakpoint import Breakpoint
+from debugee import Breakpoint
 import ptrace
 
 
