@@ -182,10 +182,54 @@ class Parser(object):
 
         return data
 
+    def _modify_labels(self, data):
+        """
+        Changes keys in the form ([a-zA-Z|-)+\s*= to "\1": (replaces = with :, removes whitespace and adds quotes).
+        @type data: basestring
+        @rtype: basestring
+        """
+        in_str = False
+        in_ident = False
+        start_ident = 0
+        i = 0
+
+        while i < len(data):
+            char = data[i]
+
+            if char == "\"":
+                in_str = not in_str
+
+            if in_str:
+                i += 1
+                continue
+
+            matches_ident = re.match("[a-zA-Z]|-", char) is not None
+            if not in_ident and matches_ident:
+                in_ident = True
+                start_ident = i
+
+            if in_ident and re.match("\s", char) is not None:
+                i += 1
+                continue
+
+            if in_ident and char == "=":
+                old_length = len(data)
+                data = data[:start_ident] + re.sub("^((?:[a-zA-Z-])+)\s*=", r'"\1":', data[start_ident:])
+                diff = old_length - len(data)
+                i -= diff
+
+                in_ident = False
+            elif in_ident and not matches_ident:
+                raise BaseException("Wrong attribute key")
+
+            i += 1
+
+        return data
+
     def _prep_json(self, data):
         # remove array labels
         data = self._remove_array_labels(data)
-        data = re.sub("((?:\w|-)+)\s*=", r'"\1":', data)
+        data = self._modify_labels(data)
         data = re.sub("<error reading variable[^>]*>", "\"\"", data)
 
         if data[0] not in ("{", "["):
