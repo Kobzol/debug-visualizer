@@ -13,7 +13,7 @@ from drawing.drawable import Image, ToggleDrawable
 from drawing.size import Size
 from enums import ProcessState
 from gui_util import require_gui_thread, run_on_gui
-from memory_view import MemoryView
+from memory_view import MemoryView, RegisterList
 from source_edit import SourceManager
 from dialog import FileOpenDialog, MessageBox
 from console import IOConsole
@@ -128,6 +128,9 @@ class MainWindow(Gtk.Window):
         window = TitleWindow("Threads", self.thread_selector)
         window.set_size_request(-1, 100)
         self.tool_manager.add_tool("Threads", window)
+
+        self.register_list = RegisterList(app.debugger)
+        self.tool_manager.add_tool("Registers", TitleWindow("Registers", self.register_list))
 
         self.memory_view = MemoryView(app.debugger)
         self.tool_manager.add_tool("Memory view", TitleWindow("Memory view", self.memory_view))

@@ -1,7 +1,49 @@
 import re
 from gi.repository import Gtk
 
+from enums import ProcessState
+from gui_util import require_gui_thread, run_on_gui
 from util import EventBroadcaster
+
+
+class RegisterList(Gtk.ListBox):
+    def __init__(self, debugger):
+        """
+        @type debugger: debugger.Debugger
+        """
+        super(RegisterList, self).__init__()
+        self.set_selection_mode(Gtk.SelectionMode.NONE)
+
+        self.debugger = debugger
+        self.debugger.on_process_state_changed.subscribe(self._handle_process_change)
+        self.debugger.on_frame_changed.subscribe(self._handle_frame_change)
+
+    def _handle_process_change(self, state, event_data):
+        if state == ProcessState.Stopped:
+            self.update_registers()
+
+    def _handle_frame_change(self, frame):
+        self.update_registers()
+
+    @require_gui_thread
+    def _update_register_gui(self, registers):
+        """
+        @type registers: list of debugee.Register
+        """
+        for widget in self.get_children():
+            self.remove(widget)
+
+        for register in registers:
+            label = Gtk.Label.new("{} = {}".format(register.name, register.value))
+            label.set_halign(Gtk.Align.START)
+            row = Gtk.ListBoxRow.new()
+            row.add(label)
+            self.add(row)
+
+        self.show_all()
+
+    def update_registers(self):
+        run_on_gui(self._update_register_gui, self.debugger.variable_manager.get_registers())
 
 
 class MemoryGrid(Gtk.Grid):
