@@ -7,7 +7,7 @@ from gi.repository import Gtk
 
 from enum import Enum
 
-from drawing.geometry import Margin, RectangleBBox
+from drawing.geometry import Margin, RectangleBBox, Padding
 from drawing.size import Size
 from drawing.vector import Vector
 from enums import TypeCategory
@@ -290,10 +290,24 @@ class DrawingUtils(object):
 
 class Drawable(object):
     @require_gui_thread
-    def __init__(self, canvas):
+    def __init__(self, canvas, **properties):
         self.canvas = canvas
-        self.position = Vector(0, 0)
-        self.margin = Margin()
+
+        if "position" in properties:
+            self.position = Vector.vectorize(properties["position"])
+        else:
+            self.position = Vector(0, 0)
+
+        if "margin" in properties:
+            self.margin = properties["margin"]
+        else:
+            self.margin = Margin()
+
+        if "padding" in properties:
+            self.padding = properties["padding"]
+        else:
+            self.padding = Margin()
+
         self.children = []
         self._visible = True
 
@@ -376,7 +390,7 @@ class Drawable(object):
 
         self.place_children()
 
-        size = RectangleBBox(self.position)
+        size = RectangleBBox(self.position, self.padding.to_size())
 
         return RectangleBBox.contain([size] + [child.get_rect() + child.margin for child in self.children if child.visible])
 
@@ -397,16 +411,18 @@ class LinearLayoutDirection(Enum):
 
 
 class LinearLayout(Drawable):
-    def __init__(self, canvas, direction=LinearLayoutDirection.Vertical):
+    def __init__(self, canvas, direction=LinearLayoutDirection.Vertical, **properties):
         """
         @type canvas: canvas.Canvas
         @type direction: LinearLayoutDirection
         """
-        super(LinearLayout, self).__init__(canvas)
+        super(LinearLayout, self).__init__(canvas, **properties)
         self.direction = direction
 
     def place_children(self):
         position = self.position.copy()
+        position.x += self.padding.left
+        position.y += self.padding.top
 
         for child in self.children:
             child_position = position + Vector(child.margin.left, child.margin.top)  # add margin
@@ -417,6 +433,13 @@ class LinearLayout(Drawable):
                 position.x += child.margin.left + rect.width + child.margin.right
             elif self.direction == LinearLayoutDirection.Vertical:
                 position.y += child.margin.top + rect.height + child.margin.bottom
+
+    def get_rect(self):
+        rectangle = RectangleBBox.contain([child.get_rect() for child in self.children if child.visible])
+        return RectangleBBox(self.position, Size(
+                rectangle.width + self.padding.left + self.padding.right,
+                rectangle.height + self.padding.top + self.padding.bottom
+        ))
 
 
 class ToggleDrawable(Drawable):
@@ -456,23 +479,25 @@ class ToggleDrawable(Drawable):
 
 
 class Label(Drawable):
-    def __init__(self, canvas, label, padding=None, font_style=None, border_width=1):
+    def __init__(self, canvas, label, font_style=None, border_width=1, size=(-1, -1), **properties):
         """
         @type canvas: canvas.Canvas
         @type label: str | callable
         @type padding: Margin
         @type font_style: FontStyle
         @type border_width: int
+        @type size: size.Size
         """
-        super(Label, self).__init__(canvas)
+        super(Label, self).__init__(canvas, **properties)
 
         if not font_style:
             font_style = FontStyle()
 
         self.font_style = font_style
         self.label = label if label is not None else ""
-        self.padding = padding if padding else Margin.all(5)
         self.border_width = border_width
+
+        self.size = Size.make_size(size).replace_default(self.get_text_size())
 
     def get_label(self):
         if isinstance(self.label, basestring):
@@ -480,14 +505,15 @@ class Label(Drawable):
         else:
             return self.label()
 
+    def get_text_size(self):
+        return DrawingUtils.get_text_size(self.canvas, self.get_label(), font_style=self.font_style)
+
     def get_rect(self):
         if not self.visible:
             return RectangleBBox(self.position)
 
-        label_size = DrawingUtils.get_text_size(self.canvas, self.get_label(), font_style=self.font_style)
-
-        width = self.border_width + self.padding.left + label_size.width + self.padding.right + self.border_width
-        height = self.border_width + self.padding.top + label_size.height + self.padding.bottom + self.border_width
+        width = self.border_width + self.padding.left + self.size.width + self.padding.right + self.border_width
+        height = self.border_width + self.padding.top + self.size.height + self.padding.bottom + self.border_width
 
         return RectangleBBox(self.position, Size(width, height))
 
@@ -501,28 +527,25 @@ class Label(Drawable):
         rect = self.get_rect()
 
         # box
-        DrawingUtils.draw_rectangle(self.canvas, self.position, rect.size, width=self.border_width, center=False)
+        DrawingUtils.draw_rectangle(self.canvas, self.position, (rect + Margin.all(-self.border_width)).size, width=self.border_width, center=False)
 
-        text_x = self.position.x + self.padding.left
-        text_y = self.position.y + self.padding.top
+        text_x = self.position.x + rect.width / 2.0  # self.position.x + self.padding.left
+        text_y = self.position.y + rect.height / 2.0  # self.position.y + self.padding.top
 
         # value
-        DrawingUtils.draw_text(self.canvas, self.get_label(), Vector(text_x, text_y), y_center=False, font_style=self.font_style)
+        DrawingUtils.draw_text(self.canvas, self.get_label(), Vector(text_x, text_y), y_center=True, x_center=True, font_style=self.font_style)
 
 
 class LabelWrapper(LinearLayout):
-    def __init__(self, canvas, name, inner_drawable, padding=None):
+    def __init__(self, canvas, label, inner_drawable):
         """
         @type canvas: canvas.Canvas
-        @type name: basestring
+        @type label: Label
         @type inner_drawable: Drawable
         """
         super(LabelWrapper, self).__init__(canvas, LinearLayoutDirection.Horizontal)
 
-        self.name = name
-
-        name_child = Label(canvas, name, padding if padding else Margin.all(5))
-        self.add_child(name_child)
+        self.add_child(label)
         self.add_child(inner_drawable)
 
     def set_show_name(self, value):
@@ -535,7 +558,7 @@ class LabelWrapper(LinearLayout):
 
 
 class Image(Drawable):
-    def __init__(self, canvas, image_path, size=None):
+    def __init__(self, canvas, image_path, size=(-1,-1)):
         """
         Represents a drawable image.
         Image path has to be a valid path to a PNG image.
@@ -546,7 +569,7 @@ class Image(Drawable):
         super(Image, self).__init__(canvas)
 
         self.img = cairo.ImageSurface.create_from_png(image_path)
-        self.size = size if size else Size(self.img.get_width(), self.img.get_height())
+        self.size = Size.make_size(size).replace_default(Size(self.img.get_width(), self.img.get_height()))
 
     def get_rect(self):
         return RectangleBBox(self.position, self.size)
@@ -559,14 +582,13 @@ class Image(Drawable):
 
 
 class VariableDrawable(Label):
-    def __init__(self, canvas, variable):
+    def __init__(self, canvas, variable, **properties):
         """
         @type canvas: canvas.Canvas
         @type variable: debugee.Variable
         """
-        super(VariableDrawable, self).__init__(canvas, self.get_variable_value, Margin.all(5))
-
         self.variable = variable
+        super(VariableDrawable, self).__init__(canvas, self.get_variable_value, size=Size(-1, 20), **properties)
 
     def get_variable_value(self):
         return self.variable.value
@@ -584,32 +606,75 @@ class VariableDrawable(Label):
                                                    title, value, self._handle_value_change)
 
 
-class StackFrameDrawable(LinearLayout):
-    def __init__(self, canvas, frame):
+class CompositeLabel(LinearLayout):
+    def __init__(self, canvas, composite, **properties):
+        """
+        @type canvas: canvas.Canvas
+        @type composite: variable.Variable | debugee.Frame
+        """
+        super(CompositeLabel, self).__init__(canvas, LinearLayoutDirection.Vertical, **properties)
+        self.composite = composite
+
+        label = self.get_composite_label()
+        if label:
+            self.label = Label(canvas, label, FontStyle(italic=True), 0, Size(-1, 30), padding=Padding.all(5))
+            self.add_child(self.label)
+
+        for var in self.get_composite_children():
+            drawable = canvas.memtoview.transform_var(var)
+            if drawable:
+                drawable = LabelWrapper(self.canvas,
+                                        Label(self.canvas, "{} {}".format(var.type.name, var.name), size=Size(-1, 20),
+                                              padding=Padding.all(5)),
+                                        drawable)
+                self.add_child(drawable)
+
+        self.border_width = 1
+
+    def get_composite_label(self):
+        raise NotImplementedError()
+
+    def get_composite_children(self):
+        raise NotImplementedError()
+
+    def get_rect(self):
+        rect = super(CompositeLabel, self).get_rect()
+        size = rect.size.copy()
+        return RectangleBBox(rect.position.copy(), size) + Margin.all(self.border_width)
+
+    def draw(self):
+        super(CompositeLabel, self).draw()
+        DrawingUtils.draw_rectangle(self.canvas, self.position, (self.get_rect() + Margin.all(-self.border_width)).size)
+
+
+class StackFrameDrawable(CompositeLabel):
+    def __init__(self, canvas, frame, **properties):
         """
         @type canvas: canvas.Canvas
         @type frame: debugee.Frame
         """
-        super(StackFrameDrawable, self).__init__(canvas, LinearLayoutDirection.Vertical)
+        super(StackFrameDrawable, self).__init__(canvas, frame, **properties)
 
-        self.label = Label(canvas, "Frame {0}".format(frame.func), Margin.all(5), FontStyle(italic=True), 0)
-        self.add_child(self.label)
+    def get_composite_label(self):
+        return "Frame {0}".format(self.composite.func)
 
-        for var in frame.variables:
-            drawable = canvas.memtoview.transform_var(var)
-            if drawable:
-                drawable = LabelWrapper(self.canvas, "{} {}".format(var.type.name, var.name), drawable)
-                self.add_child(drawable)
+    def get_composite_children(self):
+        return self.composite.variables
 
-    def get_rect(self):
-        rect = super(StackFrameDrawable, self).get_rect()
-        size = rect.size.copy()
-        size = Size(size.width + 1, size.height + 1)
-        return RectangleBBox(rect.position.copy().add((-1, -1)), size)
 
-    def draw(self):
-        super(StackFrameDrawable, self).draw()
-        DrawingUtils.draw_rectangle(self.canvas, self.position, self.get_rect().size)
+class StructDrawable(CompositeLabel):
+    def __init__(self, canvas, struct, **properties):
+        """
+        @type canvas: canvas.Canvas
+        @type struct: debugee.Variable
+        """
+        super(StructDrawable, self).__init__(canvas, struct, **properties)
+
+    def get_composite_label(self):
+        return None
+
+    def get_composite_children(self):
+        return self.composite.children
 
 
 class PointerDrawable(Drawable):
@@ -659,29 +724,3 @@ class VectorDrawable(LinearLayout):
         @rtype: int
         """
         return self.max_elements
-
-
-class StructDrawable(LinearLayout):
-    def __init__(self, canvas, struct):
-        """
-        @type canvas: canvas.Canvas
-        @type struct: debugee.Variable
-        """
-        super(StructDrawable, self).__init__(canvas, LinearLayoutDirection.Vertical)
-        self.struct = struct
-
-        for child in struct.children:
-            drawable = self.canvas.memtoview.transform_var(child)
-            if drawable:
-                wrapper = LabelWrapper(self.canvas, child.name, drawable, Margin.all(5))
-                self.add_child(wrapper)
-
-    def get_rect(self):
-        rect = super(StructDrawable, self).get_rect()
-        size = rect.size.copy()
-        size = Size(size.width + 1, size.height + 1)
-        return RectangleBBox(rect.position.copy().add((-1, -1)), size)
-
-    def draw(self):
-        super(StructDrawable, self).draw()
-        DrawingUtils.draw_rectangle(self.canvas, self.position, self.get_rect().size)

@@ -51,7 +51,7 @@ class BreakpointManager(debugger.BreakpointManager):
         if bps:
             return self.parser.parse_breakpoints(bps.data)
         else:
-            return None
+            return []
 
     def find_breakpoint(self, location, line):
         """

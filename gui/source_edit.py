@@ -267,7 +267,7 @@ class SourceManager(Gtk.Notebook):
 
         Logger.debug("Stop at {0}".format(location))
 
-        if location[0]:
+        if location and location[0]:
             run_on_gui(self.set_exec_line, location[0], location[1])
 
     @require_gui_thread

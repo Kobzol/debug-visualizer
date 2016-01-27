@@ -18,6 +18,17 @@ class Size(object):
         self.width = width
         self.height = height
 
+    def replace_default(self, size):
+        """
+        Returns a new size that has values lower than one replaced from the given size.
+        @type size: Size
+        @rtype: Size
+        """
+        width = self.width if self.width >= 0 else size.width
+        height = self.height if self.height >= 0 else size.height
+
+        return Size(width, height)
+
     def copy(self):
         return Size(self.width, self.height)
 

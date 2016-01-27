@@ -95,7 +95,11 @@ class Margin(object):
         """
         @rtype: size.Size
         """
-        return Size(self.right - self.left, self.bottom - self.top)
+        return Size(self.right + self.left, self.bottom + self.top)
 
     def __repr__(self):
         return "Margin[Top: {}, Right: {}, Bottom: {}, Left: {}]".format(self.top, self.right, self.bottom, self.left)
+
+
+class Padding(Margin):
+    pass

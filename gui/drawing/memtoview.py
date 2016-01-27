@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import drawable
+from drawing.geometry import Padding
 from enums import TypeCategory
 
 
@@ -40,7 +41,7 @@ class MemToViewTransformer(object):
         @type var: debugee.Variable
         @rtype: drawable.VariableDrawable
         """
-        return drawable.VariableDrawable(self.canvas, var)
+        return drawable.VariableDrawable(self.canvas, var, padding=Padding.all(5))
 
     def create_vector(self, var):
         """
