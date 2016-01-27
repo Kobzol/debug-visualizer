@@ -254,7 +254,10 @@ class Communicator(object):
         self._reset()
 
     def _timer_read_output(self):
-        self.io_lock.acquire()
+        try:
+            self.io_lock.acquire()
+        except:
+            return
 
         try:
             output = self._readline(False)
