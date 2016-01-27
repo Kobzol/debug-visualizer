@@ -10,6 +10,88 @@ from drawing.mouse import MouseButtonState, MouseData, TranslationHandler
 from drawing.vector import Vector
 from enums import ProcessState
 from gui_util import run_on_gui, require_gui_thread
+from util import EventBroadcaster
+
+
+class ValueEntry(Gtk.Frame):
+    @require_gui_thread
+    def __init__(self):
+        Gtk.Frame.__init__(self)
+
+        self.set_label_align(0.0, 0.0)
+
+        self.box = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
+        self.box.set_margin_bottom(5)
+        self.box.set_margin_left(2)
+        self.text_entry = Gtk.Entry()
+        self.confirm_button = Gtk.Button(label="Set")
+
+        self.get_style_context().add_class("value-entry")
+
+        self.box.pack_start(self.text_entry, False, False, 0)
+        self.box.pack_start(self.confirm_button, False, False, 5)
+        self.add(self.box)
+        self.show_all()
+
+        self.confirm_button.connect("clicked", lambda btn: self._handle_confirm_click())
+
+        self.on_value_entered = EventBroadcaster()
+
+    @require_gui_thread
+    def set_value(self, value):
+        """
+        @type value: str
+        """
+        self.text_entry.set_text(value)
+
+    def _handle_confirm_click(self):
+        value = self.text_entry.get_text()
+        self.set_value("")
+
+        self.on_value_entered.notify(value)
+        self.hide()
+
+    def reset(self):
+        self.on_value_entered.clear()
+
+    def init(self, title, text, listener):
+        """
+        @type title: basestring
+        @type text: basestring
+        @type listener: function
+        """
+        self.set_label(title)
+        self.text_entry.set_text(text)
+        self.on_value_entered.subscribe(listener)
+
+
+class FixedGuiWrapper(Gtk.Fixed):
+    def __init__(self):
+        super(FixedGuiWrapper, self).__init__()
+
+        self.text_entry = ValueEntry()
+        self.put(self.text_entry, 0, 0)
+        self.text_entry.hide()
+
+    def hide_all(self):
+        for widget in self.get_children():
+            widget.hide()
+
+    def reset_widget_to(self, widget, position, *args):
+        """
+        @type widget: Gtk.Widget
+        @type position: drawing.vector.Vector
+        """
+        self.move(widget, position.x, position.y)
+        widget.reset()
+        widget.init(*args)
+
+    def toggle_widget_to(self, widget, position, *args):
+        if widget.props.visible:
+            widget.hide()
+        else:
+            self.reset_widget_to(widget, position, *args)
+            widget.show()
 
 
 class Canvas(Gtk.EventBox):
@@ -19,7 +101,7 @@ class Canvas(Gtk.EventBox):
         self.set_hexpand(True)
         self.set_vexpand(True)
 
-        self.fixed_wrapper = Gtk.Fixed()
+        self.fixed_wrapper = FixedGuiWrapper()
         self.add(self.fixed_wrapper)
 
         self.bg_color = Color(0.8, 0.8, 0.8, 1.0)
@@ -41,6 +123,7 @@ class Canvas(Gtk.EventBox):
 
         self.drawables = []
         self.tooltip_drawable = None
+        self.first_draw = True
 
     def _notify_handlers(self):
         mouse_data = MouseData(self.mouse_data.lb_state, self.mouse_data.rb_state, self.mouse_data.position * (1 / self.zoom))
@@ -82,6 +165,10 @@ class Canvas(Gtk.EventBox):
         @type width: int
         @type height: int
         """
+        if self.first_draw:
+            self.fixed_wrapper.hide_all()
+            self.first_draw = False
+
         self.cr = cr
 
         self.cr.scale(1.0, 1.0)
@@ -196,8 +283,7 @@ class MemoryCanvas(Canvas):
     def _set_frame_gui(self, frame):
         self.active_frame = frame
 
-        for widget in self.fixed_wrapper.get_children():
-            self.fixed_wrapper.remove(widget)
+        self.fixed_wrapper.hide_all()
 
         for var in frame.variables:
             var.on_value_changed.subscribe(self._handle_var_change)

@@ -288,56 +288,6 @@ class DrawingUtils(object):
         cr.restore()
 
 
-class ValueEntry(Gtk.Frame):
-    @require_gui_thread
-    def __init__(self, label):
-        """
-        @type label: basestring
-        """
-        Gtk.Frame.__init__(self)
-
-        self.set_label(label)
-        self.set_label_align(0.0, 0.0)
-
-        self.box = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
-        self.box.set_margin_bottom(5)
-        self.box.set_margin_left(2)
-        self.text_entry = Gtk.Entry()
-        self.confirm_button = Gtk.Button(label="Set")
-
-        self.get_style_context().add_class("value-entry")
-
-        self.box.pack_start(self.text_entry, False, False, 0)
-        self.box.pack_start(self.confirm_button, False, False, 5)
-        self.add(self.box)
-        self.show_all()
-
-        self.confirm_button.connect("clicked", lambda btn: self._handle_confirm_click())
-
-        self.on_value_entered = EventBroadcaster()
-
-    @require_gui_thread
-    def set_value(self, value):
-        """
-        @type value: str
-        """
-        self.text_entry.set_text(value)
-
-    def _handle_confirm_click(self):
-        value = self.text_entry.get_text()
-        self.set_value("")
-
-        self.on_value_entered.notify(value)
-        self.hide()
-
-    @require_gui_thread
-    def toggle(self):
-        if self.props.visible:
-            self.hide()
-        else:
-            self.show()
-
-
 class Drawable(object):
     @require_gui_thread
     def __init__(self, canvas):
@@ -618,11 +568,6 @@ class VariableDrawable(Label):
 
         self.variable = variable
 
-        self.value_entry = ValueEntry("Edit value of {}".format(variable.name))
-        self.value_entry.on_value_entered.subscribe(self._handle_value_change)
-        canvas.fixed_wrapper.put(self.value_entry, self.position.x, self.position.y)
-        self.value_entry.hide()
-
     def get_variable_value(self):
         return self.variable.value
 
@@ -633,9 +578,10 @@ class VariableDrawable(Label):
         """
         @type mouse_data: mouse.MouseData
         """
-        self.value_entry.set_value(self.get_variable_value())
-        self.value_entry.toggle()
-        self.canvas.fixed_wrapper.move(self.value_entry, mouse_data.position.x, mouse_data.position.y)
+        title = "Edit value of {}".format(self.variable.name)
+        value = self.get_variable_value()
+        self.canvas.fixed_wrapper.toggle_widget_to(self.canvas.fixed_wrapper.text_entry, mouse_data.position.copy(),
+                                                   title, value, self._handle_value_change)
 
 
 class StackFrameDrawable(LinearLayout):
