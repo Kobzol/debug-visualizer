@@ -1,45 +1,65 @@
 # -*- coding: utf-8 -*-
 
+import os
+
+import debugger
+from debugee import Breakpoint
 from enums import DebuggerState
 
 
-class BreakpointInfo(object):
-    def __init__(self, breakpoint, location, line):
-        self.breakpoint = breakpoint
-        self.location = location
-        self.line = line
-
-    def has_location(self, location, line):
-        return location == self.location and line == self.line
-
-
-class LldbBreakpointManager(object):
+class LldbBreakpointManager(debugger.BreakpointManager):
     def __init__(self, debugger):
-        self.debugger = debugger
-        self.breakpoints = []
+        super(LldbBreakpointManager, self).__init__(debugger)
 
     def get_breakpoints(self):
-        return [ self.debugger.target.GetBreakpointAtIndex(i) for i in self.debugger.target.GetNumBreakpoints()]
+        bps = [ self.debugger.target.GetBreakpointAtIndex(i) for i in xrange(self.debugger.target.GetNumBreakpoints())]
+        breakpoints = []
+        for bp in bps:
+            if bp.num_locations > 0:
+                location = bp.GetLocationAtIndex(0)
+                address = location.GetAddress().line_entry
+                line = address.line
+                file = os.path.abspath(address.file.fullpath)
+                breakpoints.append(Breakpoint(bp.id, file, line))
 
-    def add_breakpoint(self, location, line=None):
+        return breakpoints
+
+    def toggle_breakpoint(self, location, line):
+        bp = self.find_breakpoint(location, line)
+        if bp:
+            return self.remove_breakpoint(location, line)
+        else:
+            return self.add_breakpoint(location, line)
+
+    def add_breakpoint(self, location, line):
         self.debugger.require_state(DebuggerState.BinaryLoaded)
 
-        if line is not None:
-            bp = self.debugger.target.BreakpointCreateByLocation(location, line)
+        location = os.path.abspath(location)
+
+        bp = self.debugger.target.BreakpointCreateByLocation(location, line)
+
+        if bp.IsValid() and bp.num_locations > 0:
+            return True
         else:
-            bp = self.debugger.target.BreakpointCreateByName(location)
+            self.debugger.target.BreakpointDelete(bp.id)
+            return False
 
-        self.breakpoints.append(BreakpointInfo(bp, location, line))
+    def find_breakpoint(self, location, line):
+        location = os.path.abspath(location)
 
-        return bp
+        bps = self.get_breakpoints()
+        for bp in bps:
+            if bp.location == location and bp.line == line:
+                return bp
 
-    def find_breakpoint(self, breakpoint_id):
-        return self.debugger.target.FindBreakpointByID(breakpoint_id)
+        return None
 
     def remove_breakpoint(self, location, line):
         self.debugger.require_state(DebuggerState.BinaryLoaded)
 
-        breakpoints = [bp_info.breakpoint for bp_info in self.breakpoints if bp_info.has_location(location, line)]
-
-        for breakpoint in breakpoints:
-            self.debugger.target.BreakpointDelete(breakpoint.id)
+        bp = self.find_breakpoint(location, line)
+        if bp:
+            self.debugger.target.BreakpointDelete(bp.number)
+            return True
+        else:
+            return False

@@ -144,9 +144,3 @@ class MiDebugger(debugger.Debugger):
             self.io_manager.stop_io()
         finally:
             self.exit_lock.release()
-
-    def wait_for_stop(self):
-        while self.process_state not in (ProcessState.Stopped, ProcessState.Exited):
-            time.sleep(0.1)
-
-        return self.process_state

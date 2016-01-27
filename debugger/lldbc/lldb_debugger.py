@@ -1,42 +1,29 @@
 # -*- coding: utf-8 -*-
 
 import logging
+
+import util
+
 logging.basicConfig(level=logging.INFO)
 
+import lldb
 import threading
 import os
 import time
-import lldb
 
-import exceptions as exceptions
+import debugger
 from lldbc.lldb_breakpoint_manager import LldbBreakpointManager
 from lldbc.lldb_file_manager import LldbFileManager
 from lldbc.lldb_io_manager import LldbIOManager
 from lldbc.lldb_memory_manager import LldbMemoryManager
 from lldbc.lldb_thread_manager import LldbThreadManager
 from enums import ProcessState, StopReason, DebuggerState
-from util import EventBroadcaster, Flags
 from lldbc.lldb_variable_editor import LldbVariableEditor
 
 
-class ProcessExitedEventData(object):
-    def __init__(self, return_code, return_desc):
-        self.return_code = return_code
-        self.return_desc = return_desc
-
-
-class ProcessStoppedEventData(object):
-    def __init__(self, stop_reason, stop_desc=None, breakpoints=None):
-        if breakpoints is None:
-            breakpoints = []
-
-        self.stop_reason = stop_reason
-        self.stop_desc = stop_desc
-        self.breakpoints = breakpoints
-
-
-class LldbDebugger(object):
+class LldbDebugger(debugger.Debugger):
     def __init__(self):
+        super(LldbDebugger, self).__init__()
         self.debugger = lldb.SBDebugger.Create()
         self.debugger.SetAsync(True)
 
@@ -53,15 +40,7 @@ class LldbDebugger(object):
         self.event_thread_stop_flag = threading.Event()
         self.fire_events = True
 
-        self.state = Flags(DebuggerState, DebuggerState.Started)
-        self.process_state = ProcessState.Invalid
-
         self.exit_lock = threading.Lock()
-
-        self.on_debugger_state_changed = EventBroadcaster()
-        self.state.on_value_changed.redirect(self.on_debugger_state_changed)
-        self.on_process_state_changed = EventBroadcaster()
-        self.on_frame_changed = EventBroadcaster()
 
     def _check_events(self):
         event = lldb.SBEvent()
@@ -81,34 +60,14 @@ class LldbDebugger(object):
         self.process_state = state
 
         if state == ProcessState.Exited:
-            self.stop(False)
+            self.kill(False)
 
             return
         elif state == ProcessState.Stopped:
             thread = self.thread_manager.get_current_thread()
             stop_reason = StopReason(thread.stop_reason)
-            breakpoints = []
 
-            """if stop_reason == StopReason.Breakpoint:
-                for i in xrange(0, thread.GetStopReasonDataCount(), 2):
-                    bp_id = thread.GetStopReasonDataAtIndex(i)
-                    bp_loc_id = thread.GetStopReasonDataAtIndex(i + 1)
-                    bp = self.breakpoint_manager.find_breakpoint(bp_id)
-
-                    breakpoints.append((bp, bp.FindLocationByID(bp_loc_id)))
-
-            for bp in breakpoints:
-                is_memory_bp = self.memory_manager.is_memory_bp(bp[0])
-
-                if is_memory_bp:
-                    self.memory_manager.handle_memory_bp(bp[0]) # TODO: catch exceptions and propagate them
-                    self.exec_continue()
-
-                    return"""
-
-            self.on_process_state_changed.notify(state,
-                ProcessStoppedEventData(stop_reason, thread.GetStopDescription(100), breakpoints)
-            )
+            self.on_process_state_changed.notify(state, debugger.ProcessStoppedEventData(stop_reason))
 
             return
 
@@ -116,7 +75,7 @@ class LldbDebugger(object):
 
     def require_state(self, required_state):
         if not self.get_state().is_set(required_state):
-            raise exceptions.BadStateError(required_state, self.state)
+            raise util.BadStateError(required_state, self.state)
 
     def get_state(self):
         return self.state
@@ -140,7 +99,7 @@ class LldbDebugger(object):
         self.require_state(DebuggerState.BinaryLoaded)
 
         if self.process is not None:
-            self.stop(True)
+            self.kill(True)
 
         if type(arguments) is str:
             arguments = [arguments]
@@ -173,7 +132,7 @@ class LldbDebugger(object):
 
         if error.fail:
             self.process = None
-            self.stop(True)
+            self.kill(True)
             raise Exception(error.description)
 
     def exec_continue(self):
@@ -196,7 +155,7 @@ class LldbDebugger(object):
         self.require_state(DebuggerState.Running)
         self.thread_manager.get_current_thread().StepOut()
 
-    def stop(self, kill_process=False):
+    def kill(self, kill_process=False):
         self.exit_lock.acquire()
 
         try:
@@ -211,9 +170,8 @@ class LldbDebugger(object):
                         time.sleep(0.1)
 
                 return_code = self.process.GetExitStatus()
-                return_desc = self.process.GetExitDescription()
 
-                self.on_process_state_changed.notify(ProcessState.Exited, ProcessExitedEventData(return_code, return_desc))
+                self.on_process_state_changed.notify(ProcessState.Exited, debugger.ProcessExitedEventData(return_code))
                 self.process = None
 
             self.state.unset(DebuggerState.Running)
@@ -221,6 +179,24 @@ class LldbDebugger(object):
             if self.event_thread is not None:
                 self.event_thread_stop_flag.set()
                 self.event_thread = None
+
+            self.io_manager.stop_io()
+        finally:
+            self.exit_lock.release()
+
+    def stop_program(self, return_code=1):
+        self.exit_lock.acquire()
+
+        try:
+            if not self.state.is_set(DebuggerState.Running):
+                return
+
+            self.process.Kill()
+
+            self.process_state = ProcessState.Exited
+            self.on_process_state_changed.notify(ProcessState.Exited, debugger.ProcessExitedEventData(return_code))
+            util.Logger.debug("Debugger process ended")
+            self.state.unset(DebuggerState.Running)
 
             self.io_manager.stop_io()
         finally:

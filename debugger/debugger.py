@@ -2,6 +2,8 @@
 import os
 import tempfile
 
+import time
+
 import util
 from enums import DebuggerState, ProcessState
 
@@ -287,4 +289,10 @@ class Debugger(object):
         raise NotImplementedError()
 
     def wait_for_stop(self):
-        raise NotImplementedError()
+        while self.process_state not in (ProcessState.Stopped, ProcessState.Exited):
+            time.sleep(0.1)
+
+        return self.process_state
+
+    def quit(self):
+        pass
