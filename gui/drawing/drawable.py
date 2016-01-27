@@ -644,7 +644,8 @@ class CompositeLabel(LinearLayout):
 
     def draw(self):
         super(CompositeLabel, self).draw()
-        DrawingUtils.draw_rectangle(self.canvas, self.position, (self.get_rect() + Margin.all(-self.border_width)).size)
+        DrawingUtils.draw_rectangle(self.canvas, self.position, (self.get_rect() + Margin.all(-self.border_width)).size,
+                                    width=self.border_width)
 
 
 class StackFrameDrawable(CompositeLabel):
@@ -654,6 +655,9 @@ class StackFrameDrawable(CompositeLabel):
         @type frame: debugee.Frame
         """
         super(StackFrameDrawable, self).__init__(canvas, frame, **properties)
+
+        self.border_width = 0
+        self.label.border_width = 1
 
     def get_composite_label(self):
         return "Frame {0}".format(self.composite.func)
@@ -669,6 +673,8 @@ class StructDrawable(CompositeLabel):
         @type struct: debugee.Variable
         """
         super(StructDrawable, self).__init__(canvas, struct, **properties)
+
+        self.border_width = 0
 
     def get_composite_label(self):
         return None
