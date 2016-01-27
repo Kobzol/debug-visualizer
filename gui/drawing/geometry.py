@@ -53,7 +53,12 @@ class RectangleBBox(object):
                 self.position.y <= point.y <= self.position.y + self.height)
 
     def __add__(self, other):
-        if isinstance(other, Margin):
+        if isinstance(other, Padding):
+            size = self.size.copy()
+            size.width += other.left + other.right
+            size.height += other.top + other.bottom
+            return RectangleBBox(self.position.copy(), size)
+        elif isinstance(other, Margin):
             position = self.position.copy()
             position.x -= other.left
             position.y -= other.top
@@ -63,7 +68,7 @@ class RectangleBBox(object):
 
             return RectangleBBox(position, size)
         else:
-            raise AttributeError("RectangleBBox can be only added with margin, added with {}".format(other))
+            raise AttributeError("RectangleBBox can be only added with margin or padding, added with {}".format(other))
 
     def __repr__(self):
         return "Rectangle[Position: {}, Size: {}]".format(self.position, self.size)

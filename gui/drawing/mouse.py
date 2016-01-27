@@ -37,6 +37,9 @@ class MouseData(object):
     def copy(self):
         return MouseData(self.lb_state, self.rb_state, self.position.copy())
 
+    def __repr__(self):
+        return "MouseData: {}, {}, {}".format(self.lb_state, self.rb_state, self.position)
+
 
 class ClickHandler(object):
     def __init__(self, drawable):
