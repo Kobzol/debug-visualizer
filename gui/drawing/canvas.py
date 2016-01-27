@@ -4,7 +4,7 @@ import cairo
 from gi.repository import Gtk
 from gi.repository import Gdk
 
-from drawing.drawable import DrawingUtils, Color
+from drawing.drawable import DrawingUtils, Color, LinearLayout, LinearLayoutDirection
 from drawing.memtoview import MemToViewTransformer
 from drawing.mouse import MouseButtonState, MouseData, TranslationHandler
 from drawing.vector import Vector
@@ -126,7 +126,8 @@ class Canvas(Gtk.EventBox):
         self.first_draw = True
 
     def _notify_handlers(self):
-        mouse_data = MouseData(self.mouse_data.lb_state, self.mouse_data.rb_state, self.mouse_data.position * (1 / self.zoom))
+        position = self.mouse_data.position - self.translation
+        mouse_data = MouseData(self.mouse_data.lb_state, self.mouse_data.rb_state, position * (1.0 / self.zoom))
         for drawable in self.drawables:  # TODO: synchronize
             drawable.click_handler.handle_mouse_event(mouse_data.copy())
         self.translation_handler.handle_mouse_event(self.mouse_data.copy())
@@ -254,6 +255,16 @@ class Canvas(Gtk.EventBox):
         self.redraw()
 
 
+class ModelView(object):
+    def __init__(self, model, view):
+        """
+        @type model: object
+        @type view: drawable.Drawable
+        """
+        self.model = model
+        self.view = view
+
+
 class MemoryCanvas(Canvas):
     def __init__(self, debugger):
         """
@@ -267,31 +278,36 @@ class MemoryCanvas(Canvas):
 
         self.memtoview = MemToViewTransformer(self)
         self.active_frame = None
+        self.remote_memory = []
 
     def _handle_var_change(self, variable):
         self.redraw()
 
     def _handle_frame_change(self, frame):
-        self._set_frame(frame)
+        self._rebuild(frame)
 
     def _handle_process_state_change(self, state, event_data):
         if state == ProcessState.Stopped:
             frame = self.debugger.thread_manager.get_current_frame()
-            self._set_frame(frame)
+            self._rebuild(frame)
 
     @require_gui_thread
-    def _set_frame_gui(self, frame):
-        self.active_frame = frame
-
+    def _rebuild_gui(self, frame):
+        self.clear_drawables()
         self.fixed_wrapper.hide_all()
+        self.remote_memory = []
 
+        self.active_frame = ModelView(frame, self.memtoview.transform_frame(frame))
         for var in frame.variables:
             var.on_value_changed.subscribe(self._handle_var_change)
 
-        self.set_drawables([self.memtoview.transform_frame(frame)])
+        wrapper = LinearLayout(self, LinearLayoutDirection.Horizontal)
+        wrapper.add_child(self.active_frame.view)
 
-    def _set_frame(self, frame):
-        run_on_gui(self._set_frame_gui, frame)
+        self.set_drawables([wrapper])
+
+    def _rebuild(self, frame):
+        run_on_gui(self._rebuild_gui, frame)
 
 
 class CanvasToolbarWrapper(Gtk.VBox):
