@@ -189,7 +189,6 @@ class Canvas(Gtk.EventBox):
         cr.fill()
 
         self.cr.translate(self.translation.x, self.translation.y)
-
         self.cr.scale(self.zoom, self.zoom)
 
         for drawable in self.drawables:

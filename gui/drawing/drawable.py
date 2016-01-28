@@ -35,6 +35,17 @@ class FontStyle(object):
 
 
 class Color(object):
+    @staticmethod
+    def make_color(color):
+        """
+        @type color: Color | tuple of float
+        @rtype: Color
+        """
+        if isinstance(color, Color):
+            return color.copy()
+        else:
+            return Color(color[0], color[1], color[2], color[3])
+
     def __init__(self, red=0.0, green=0.0, blue=0.0, alpha=1.0):
         """
         Represents RGBA color.
@@ -63,6 +74,9 @@ class Color(object):
     @property
     def alpha(self):
         return self._alpha
+
+    def copy(self):
+        return Color(self.red, self.green, self.blue, self.alpha)
 
 
 class DrawingUtils(object):
@@ -289,16 +303,28 @@ class DrawingUtils(object):
 
 
 class Drawable(object):
+    @staticmethod
+    def get_default_bg_color():
+        return Color(0.5, 0.5, 0.5, 1.0)
+
     @require_gui_thread
     def __init__(self, canvas, **properties):
         self.canvas = canvas
 
         self.position = self._parse_property(properties, "position", Vector(0, 0), Vector.vectorize)
+        """@type position: drawing.vector.Vector"""
         self.margin = self._parse_property(properties, "margin", Margin.all(0))
+        """@type margin: drawing.geometry.Margin"""
         self.padding = self._parse_property(properties, "padding", Padding.all(0))
+        """@type padding: drawing.geometry.Padding"""
         self.request_size = self._parse_property(properties, "size", Size(-1, -1), Size.make_size)
+        """@type request_size: drawing.size.Size"""
         self.min_size = self._parse_property(properties, "min_size", Size(0, 0), Size.make_size)
+        """@type min_size: drawing.size.Size"""
         self.max_size = self._parse_property(properties, "max_size", Size(999, 999), Size.make_size)
+        """@type max_size: drawing.size.Size"""
+        self.bg_color = self._parse_property(properties, "bg_color", Drawable.get_default_bg_color(), Color.make_color)
+        """@type bg_color: drawing.drawable.Color"""
 
         self.children = []
         self._visible = True
@@ -419,7 +445,7 @@ class Drawable(object):
         @type key: basestring
         @type default: object
         @type modifier: function
-        @rtype: Vector | Size | Margin | Padding
+        @rtype: object
         """
         if key in properties:
             if modifier:
@@ -571,7 +597,8 @@ class Label(Drawable):
         rect = self.get_rect()
 
         # box
-        DrawingUtils.draw_rectangle(self.canvas, self.position, (rect + Margin.all(-self.border_width)).size, width=self.border_width, center=False)
+        DrawingUtils.draw_rectangle(self.canvas, self.position, (rect + Margin.all(-self.border_width)).size,
+                                    width=self.border_width, center=False, color=self.bg_color)
 
         text_x = self.position.x + rect.width / 2.0  # self.position.x + self.padding.left
         text_y = self.position.y + rect.height / 2.0  # self.position.y + self.padding.top
@@ -715,6 +742,15 @@ class StackFrameDrawable(CompositeLabel):
         self.label.border_width = 1
         self.label.min_size = Size(100, 25)
 
+        self.label.on_mouse_click.subscribe(self._handle_label_click)
+
+    def _handle_label_click(self, mouse_data):
+        """
+        @type mouse_data: drawing.mouse.MouseData
+        """
+        if self.canvas.debugger.thread_manager.get_current_frame().level != self.composite.level:
+            self.canvas.debugger.thread_manager.change_frame(self.composite.level)
+
     def create_composite_value(self, variable):
         drawable = CompositeLabel.create_composite_value(self, variable)
         drawable.label.min_size = Size(60, 20)
@@ -729,9 +765,9 @@ class StackFrameDrawable(CompositeLabel):
 
     def draw(self):
         if self.canvas.debugger.thread_manager.get_current_frame().level == self.composite.level:
-            self.label.label = "selected"
+            self.label.bg_color = Color(0.8, 0.2, 0.1)
         else:
-            self.label.label = self.get_composite_label()
+            self.label.bg_color = Drawable.get_default_bg_color()
 
         CompositeLabel.draw(self)
 
