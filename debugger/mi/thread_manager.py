@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import traceback
+
 import debugger
 from mi.parser import Parser
 from util import Logger
@@ -73,18 +75,37 @@ class ThreadManager(debugger.ThreadManager):
 
     def get_frames(self):
         """
-        @rtype: list of debugee.Frame | None
+        @rtype: list of debugee.Frame
         """
         output = self.debugger.communicator.send("-stack-list-frames")
 
         if output:
             return self.parser.parse_stack_frames(output.data)
         else:
-            return None
+            return []
 
-    def change_frame(self, frame_index):
+    def get_frames_with_variables(self):
+        """
+        Returns all stack frames with all their local variables and arguments.
+        @rtype: list of debugee.Frame
+        """
+        current_frame = self.get_current_frame()
+        frames = []
+        try:
+            for i, fr in enumerate(self.get_frames()):
+                self.change_frame(i, False)
+                frames.append(self.get_current_frame())
+        except:
+            traceback.print_exc()
+        finally:
+            self.change_frame(current_frame.level, False)
+
+        return frames
+
+    def change_frame(self, frame_index, notify=True):
         """
         @type frame_index: int
+        @type notify: bool
         @rtype: bool
         """
         if frame_index >= len(self.get_frames()):
@@ -93,9 +114,10 @@ class ThreadManager(debugger.ThreadManager):
         result = self.debugger.communicator.send("-stack-select-frame {0}".format(frame_index)).is_success()
 
         if result:
-            self.debugger.on_frame_changed.notify(self.get_current_frame())
+            if notify:
+                self.debugger.on_frame_changed.notify(self.get_current_frame())
 
-            Logger.debug("Changed to frame with id {0}".format(frame_index))
+                Logger.debug("Changed to frame with id {0}".format(frame_index))
 
             return True
         else:

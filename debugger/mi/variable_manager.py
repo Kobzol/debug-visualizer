@@ -274,7 +274,6 @@ class VariableManager(debugger.VariableManager):
 
         return registers
 
-
     def _get_name(self, expression):
         """
         Returns name from the given expression.

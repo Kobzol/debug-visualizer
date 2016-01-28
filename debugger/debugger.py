@@ -171,7 +171,13 @@ class ThreadManager(object):
 
     def get_frames(self):
         """
-        @rtype: list of debugee.Frame | None
+        @rtype: list of debugee.Frame
+        """
+        raise NotImplementedError()
+
+    def get_frames_with_variables(self):
+        """
+        @rtype: list of debugee.Frame
         """
         raise NotImplementedError()
 

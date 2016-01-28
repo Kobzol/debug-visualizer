@@ -287,7 +287,7 @@ class MemoryCanvas(Canvas):
         self.debugger.on_frame_changed.subscribe(self._handle_frame_change)
 
         self.memtoview = MemToViewTransformer(self)
-        self.active_frame = None
+        self.frames = []
         self.remote_memory = []
 
     def _handle_var_change(self, variable):
@@ -303,16 +303,26 @@ class MemoryCanvas(Canvas):
 
     @require_gui_thread
     def _rebuild_gui(self, frame):
+        """
+        @type frame: debugee.Frame
+        """
         self.clear_drawables()
         self.fixed_wrapper.hide_all()
         self.remote_memory = []
-
-        self.active_frame = ModelView(frame, self.memtoview.transform_frame(frame))
-        for var in frame.variables:
-            var.on_value_changed.subscribe(self._handle_var_change)
+        self.frames = []
 
         wrapper = LinearLayout(self, LinearLayoutDirection.Horizontal)
-        wrapper.add_child(self.active_frame.view)
+        stack_wrapper = LinearLayout(self, LinearLayoutDirection.Vertical)
+        wrapper.add_child(stack_wrapper)
+
+        for fr in self.debugger.thread_manager.get_frames_with_variables():
+            fr_wrapper = ModelView(fr, self.memtoview.transform_frame(fr))
+            self.frames.append(fr_wrapper)
+            fr_wrapper.view.margin.bottom = 20
+            stack_wrapper.add_child(fr_wrapper.view)
+
+        for var in frame.variables:  # TODO
+            var.on_value_changed.subscribe(self._handle_var_change)
 
         self.set_drawables([wrapper])
 

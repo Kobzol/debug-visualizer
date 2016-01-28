@@ -664,7 +664,7 @@ class CompositeLabel(LinearLayout):
 
         label = self.get_composite_label()
         if label:
-            self.label = Label(canvas, label, FontStyle(italic=True), 0, size=Size(-1, 25), padding=Padding.all(5))
+            self.label = Label(canvas, self.get_composite_label, FontStyle(italic=True), 0, size=Size(-1, 25), padding=Padding.all(5))
             self.add_child(self.label)
 
         for var in self.get_composite_children():
@@ -726,6 +726,14 @@ class StackFrameDrawable(CompositeLabel):
 
     def get_composite_children(self):
         return self.composite.variables
+
+    def draw(self):
+        if self.canvas.debugger.thread_manager.get_current_frame().level == self.composite.level:
+            self.label.label = "selected"
+        else:
+            self.label.label = self.get_composite_label()
+
+        CompositeLabel.draw(self)
 
 
 class StructDrawable(CompositeLabel):
