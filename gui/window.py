@@ -150,12 +150,12 @@ class MainWindow(Gtk.Window):
         elif state == ProcessState.Stopped:
             self.app.debugger.variable_manager.get_registers()
             location = self.app.debugger.file_manager.get_current_location()
-            if location[0]:
+            if location and location[0]:
                 run_on_gui(self.add_status_message, "Process stopped at {0}:{1} - {2}"
                                         .format(location[0], location[1], event_data.stop_reason))
             else:
-                run_on_gui(self.add_status_message, "Process stopped - {0} ({1})"
-                                        .format(event_data.stop_reason, event_data.stop_desc))
+                run_on_gui(self.add_status_message, "Process stopped - {0}"
+                                        .format(event_data.stop_reason))
         elif state == ProcessState.Running:
             run_on_gui(self.add_status_message, "Process is running...")
 

@@ -90,6 +90,10 @@ class ThreadManager(debugger.ThreadManager):
         @rtype: list of debugee.Frame
         """
         current_frame = self.get_current_frame()
+
+        if not current_frame:
+            return []
+
         frames = []
         try:
             for i, fr in enumerate(self.get_frames()):

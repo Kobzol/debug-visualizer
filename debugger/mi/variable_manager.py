@@ -257,13 +257,13 @@ class VariableManager(debugger.VariableManager):
         """
         register_names = self.debugger.communicator.send("-data-list-register-names")
         if not register_names:
-            return None
+            return []
 
         register_names = self.parser.parse(register_names.data)["register-names"]
 
         register_values = self.debugger.communicator.send("-data-list-register-values --skip-unavailable x")
         if not register_values:
-            return None
+            return []
 
         registers = []
         register_values = self.parser.parse(register_values.data)["register-values"]
