@@ -244,10 +244,10 @@ class DrawingUtils(object):
             position.y -= size.height / 2
 
         DrawingUtils.set_color(canvas, color)
-        cr.set_line_width(width)
         cr.rectangle(position.x, position.y, size.width, size.height)
 
         if stroke:
+            cr.set_line_width(width)
             cr.stroke()
         else:
             cr.fill()
@@ -528,13 +528,12 @@ class ToggleDrawable(Drawable):
 
 
 class Label(Drawable):
-    def __init__(self, canvas, label, font_style=None, border_width=1, **properties):
+    def __init__(self, canvas, label, font_style=None, **properties):
         """
         @type canvas: canvas.Canvas
         @type label: str | callable
         @type padding: Margin
         @type font_style: FontStyle
-        @type border_width: int
         """
         super(Label, self).__init__(canvas, **properties)
 
@@ -543,7 +542,6 @@ class Label(Drawable):
 
         self.font_style = font_style
         self.label = label if label is not None else ""
-        self.border_width = border_width
 
     def get_label(self):
         if isinstance(self.label, basestring):
@@ -586,7 +584,7 @@ class Label(Drawable):
         if not self.visible:
             return RectangleBBox(self.position)
 
-        return Drawable.get_rect(self) + Margin.all(self.border_width)
+        return Drawable.get_rect(self)
 
     def get_tooltip(self):
         return self.get_label()
@@ -598,8 +596,8 @@ class Label(Drawable):
         rect = self.get_rect()
 
         # box
-        DrawingUtils.draw_rectangle(self.canvas, self.position, (rect + Margin.all(-self.border_width)).size,
-                                    width=self.border_width, center=False, color=self.bg_color, stroke=False)
+        DrawingUtils.draw_rectangle(self.canvas, self.position, rect.size,
+                                    center=False, color=self.bg_color, stroke=False)
 
         text_x = self.position.x + rect.width / 2.0  # self.position.x + self.padding.left
         text_y = self.position.y + rect.height / 2.0  # self.position.y + self.padding.top
@@ -692,7 +690,8 @@ class CompositeLabel(LinearLayout):
 
         label = self.get_composite_label()
         if label:
-            self.label = Label(canvas, self.get_composite_label, FontStyle(italic=True), 0, size=Size(-1, 25), padding=Padding.all(5))
+            self.label = Label(canvas, self.get_composite_label, FontStyle(italic=True), size=Size(-1, 25),
+                               padding=Padding.all(5), margin=Margin(0, 0, 5, 0))
             self.add_child(self.label)
 
         for var in self.get_composite_children():
@@ -700,35 +699,27 @@ class CompositeLabel(LinearLayout):
             if drawable:
                 self.add_child(drawable)
 
-        self.border_width = 1
-
     def create_composite_value(self, variable):
         """
         @type variable: debugee.Variable
         @rtype: Drawable
         """
         drawable = self.canvas.memtoview.transform_var(variable)
-        return LabelWrapper(self.canvas,
+        wrapper = LabelWrapper(self.canvas,
                             Label(self.canvas, "{} {}".format(variable.type.name, variable.name),
                                   min_size=Size(20, 20),
                                   max_size=Size(40, 20),
-                                  padding=Padding.all(5)),
+                                  padding=Padding.all(5),
+                                  margin=Margin(0, 1, 0, 0)),
                             drawable)
+        wrapper.margin.bottom = 4
+        return wrapper
 
     def get_composite_label(self):
         raise NotImplementedError()
 
     def get_composite_children(self):
         raise NotImplementedError()
-
-    def get_rect(self):
-        rect = super(CompositeLabel, self).get_rect()
-        return rect + Margin.all(self.border_width)
-
-    def draw(self):
-        super(CompositeLabel, self).draw()
-        DrawingUtils.draw_rectangle(self.canvas, self.position, (self.get_rect() + Margin.all(-self.border_width)).size,
-                                    width=self.border_width)
 
 
 class StackFrameDrawable(CompositeLabel):
@@ -739,10 +730,7 @@ class StackFrameDrawable(CompositeLabel):
         """
         super(StackFrameDrawable, self).__init__(canvas, frame, **properties)
 
-        self.border_width = 0
-        self.label.border_width = 1
         self.label.min_size = Size(100, 25)
-
         self.label.on_mouse_click.subscribe(self._handle_label_click)
 
     def _handle_label_click(self, mouse_data):
@@ -784,12 +772,11 @@ class StructDrawable(CompositeLabel):
         """
         super(StructDrawable, self).__init__(canvas, struct, **properties)
 
-        self.border_width = 0
-
     def create_composite_value(self, variable):
         drawable = CompositeLabel.create_composite_value(self, variable)
         drawable.label.min_size = Size(40, 20)
         drawable.label.max_size = drawable.label.min_size.copy()
+        drawable.margin.bottom = 1
         return drawable
 
     def get_composite_label(self):
