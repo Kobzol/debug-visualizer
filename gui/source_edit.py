@@ -105,6 +105,22 @@ class SourceEditor(GtkSource.View):
         self.connect("button-press-event", lambda widget, event: self._handle_mouse_click(event))
         self.on_symbol_hover = EventBroadcaster()
 
+        self.debugger.breakpoint_manager.on_breakpoint_changed.subscribe(self._handle_model_breakpoint_change)
+        self.breakpoint_lines = []
+
+    def _handle_model_breakpoint_change(self, breakpoint):
+        """
+        @type breakpoint: debugee.Breakpoint
+        """
+        lines = []
+
+        if self.file:
+            for bp in self.debugger.breakpoint_manager.get_breakpoints():
+                if os.path.abspath(bp.location) == os.path.abspath(self.file):
+                    lines.append(bp.line - 1)
+
+        self.breakpoint_lines = lines
+
     def _handle_mouse_move(self, event):
         x, y = self.window_to_buffer_coords(Gtk.TextWindowType.WIDGET, event.x, event.y)
         iter = self.get_iter_at_location(x, y)
@@ -127,14 +143,7 @@ class SourceEditor(GtkSource.View):
         return self.file
 
     def get_breakpoint_lines(self):
-        lines = []
-
-        if self.file:
-            for bp in self.debugger.breakpoint_manager.get_breakpoints():
-                if os.path.abspath(bp.location) == os.path.abspath(self.file):
-                    lines.append(bp.line - 1)
-
-        return lines
+        return self.breakpoint_lines
 
     @require_gui_thread
     def toggle_breakpoint(self, line):

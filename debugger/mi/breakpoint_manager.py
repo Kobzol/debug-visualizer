@@ -27,7 +27,12 @@ class BreakpointManager(debugger.BreakpointManager):
         if line is not None:
             location += ":" + str(line)
 
-        return self.debugger.communicator.send("-break-insert {0}".format(location)).is_success()
+        success = self.debugger.communicator.send("-break-insert {0}".format(location)).is_success()
+
+        if success:
+            self.on_breakpoint_changed.notify(self.find_breakpoint(location, line))
+
+        return success
 
     def toggle_breakpoint(self, location, line):
         """
@@ -78,6 +83,10 @@ class BreakpointManager(debugger.BreakpointManager):
         bp = self.find_breakpoint(location, line)
 
         if bp:
-            return self.debugger.communicator.send("-break-delete {0}".format(bp.number)).is_success()
+            success = self.debugger.communicator.send("-break-delete {0}".format(bp.number)).is_success()
+
+            if success:
+                self.on_breakpoint_changed.notify(bp)
+            return success
         else:
             return False

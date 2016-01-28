@@ -47,6 +47,7 @@ class BreakpointManager(object):
         @type debugger: Debugger
         """
         self.debugger = debugger
+        self.on_breakpoint_changed = util.EventBroadcaster()
 
     def add_breakpoint(self, location, line):
         """
