@@ -768,10 +768,13 @@ class StackFrameDrawable(CompositeLabel):
         return self.composite.variables
 
     def draw(self):
-        if self.canvas.debugger.thread_manager.get_current_frame().level == self.composite.level:
-            self.label.bg_color = Color(0.8, 0.2, 0.1)
-        else:
-            self.label.bg_color = Drawable.get_default_bg_color()
+        frame = self.canvas.debugger.thread_manager.get_current_frame()
+
+        if frame:
+            if frame.level == self.composite.level:
+                self.label.bg_color = Color(0.8, 0.2, 0.1)
+            else:
+                self.label.bg_color = Drawable.get_default_bg_color()
 
         CompositeLabel.draw(self)
 
