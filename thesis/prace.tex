@@ -1,13 +1,21 @@
-\documentclass[bc,male,java,dept460]{diploma}						% jednostranny dokument
-%\documentclass[bc,male,java,dept460,twoside]{diploma}		% oboustranny dokument
+\documentclass[bc,male,python,dept460]{diploma}						% jednostranny dokument
+%\documentclass[bc,male,python,dept460,twoside]{diploma}		% oboustranny dokument
 
-\usepackage[czech]{babel}
-\usepackage[backend=biber,sorting=none]{biblatex}
+\usepackage[english, czech]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[
+	backend=biber,
+	autolang=other,
+	style=iso-numeric,
+	sorting=none,
+	sortlocale=cs_CZ,
+  bibencoding=UTF8]{biblatex}
 \usepackage[bottom]{footmisc}
 
-\addbibresource{references.bib}
+\renewcommand\multinamedelim{\addcomma\space}	%  redefinice oddělování jmén autorů dle ISO690:2011
+\renewcommand\finalnamedelim{\addspace\mainsstring{and}\space}
 
-\newcommand{\lineparagraph}[1]{\paragraph{#1}\mbox{}\\}
+\addbibresource{references.bib}
 
 % remark - poznámka
 % definition - definice
@@ -25,8 +33,6 @@
 
 \SubmissionDate{29. dubna 2016}
 
-\PrintPublicationAgreement{true}
-
 \AccessRestriction{Zde vložte text dohodnutého omezení přístupu k Vaší práci, chránící například firemní know-how.
 Zde vložte text dohodnutého omezení přístupu k Vaší práce, chránící například firemní know-how.
 A zavazujete se, že\par
@@ -42,11 +48,11 @@ Konec textu dohodnutého omezení přístupu k Vaší práci.}
 
 \Thanks{Rád bych na tomto místě poděkoval všem, kteří mi s prací pomohli, protože bez nich by tato práce nevznikla.}
 
-\CzechAbstract{Tato bakalářská práce se zabývá vizualizací ladění programů napsaných v jazyce C a C++. První část popisuje
-obecné principy ladění programů. Jsou zde popsány konstrukce, které se při ladění používají, způsob, jakým ladící nástroje
-provádějí ladění programů a také existující ladících nástrojy a jejich grafické nástavby. Druhá část popisuje možnosti komunikace
-s ladícími nástroji. Je v ní popsána implementace grafického nástroje, který vizualizuje pamět a stav procesu během jeho ladění
-za využití existujících ladících nástrojů  }
+\CzechAbstract{Tato bakalářská práce se zabývá vizualizací ladění programů napsaných v jazyce C a C++. První část pojednává o
+obecných principech ladění programů. %Jsou zde popsány konstrukce, které se při ladění používají, způsob, jakým ladící nástroje
+%provádějí ladění programů a také existující ladících nástrojy a jejich grafické nástavby.
+Druhá část popisuje běžně používané ladící nástroje a jejich grafické nádstavby.
+Třetí část se zabývá implementací grafického nástroje, který vizualizuje pamět a stav procesu během jeho ladění za využití existujících ladících nástrojů  }
 
 \CzechKeywords{ladění programů, vizualizace paměti}
 
@@ -94,14 +100,25 @@ za využití existujících ladících nástrojů  }
 
 % Zacneme uvodem
 \section{Úvod}
-	Ladění je nezbytná součást vývoje programů, která dovoluje programátorům detailně sledovat a ovládat průběh běžícího procesu a také
-	číst a zapisovat jeho paměť. K tomuto slouží ladící nástroje, které vytváří asociaci mezi zdrojovým kódem a binárním spustitelným
-	souborem a poskytují tak tvůrci kódu možnost ladit kód na vysoké úrovni abstrakce, tj. na úrovni samotného zdrojového kódu.
+	Ladění je nezbytná součást vývoje programů, která dovoluje programátorům detailně sledovat a ovládat laděný proces, aby v něm mohli odhalit
+	chyby a lépe pochopit jeho průběh. K tomuto slouží ladící programy, které vytváří asociaci mezi zdrojovým kódem a binárním spustitelným
+	souborem a poskytují tak tvůrci kódu možnost ladit kód na vysoké úrovni abstrakce, tj. na úrovni samotného zdrojového kódu. Cílem této práce
+	je vývoj grafického rozhraní, které bude nezávislé na použitém ladícím programu a bude umožňovat vizualizaci laděného programu pro lepší
+	pochopení jeho vnitřního stavu.
+	
+	\par První kapitola popisuje obecné principy ladění, které jsou společné pro všechny ladící programy. Druhá kapitola pojednává o existujících
+	ladících programech a jejich grafických rozhraních. Třetí kapitola se věnuje návrhu a vývoji rozhraní pro přístup k ladícím programům a grafického
+	rozhraní pro vizualizaci ladění programů.
+	
+	\par Tato práce je zaměřená na programy pro operační systémy založené na Linuxovém jádře. Pojmem Linuxový systém se v této práci myslí
+	libovolná distribuce Linuxu. Pro označení programů, které umožňují ladění jiných programů, je v této práci používán termín debugger,
+	jelikož se jedná o často používaný programátorský termín a v češtině pro něj neexistuje zavedená alternativa.
 	
 \section{Principy ladění programů}
 	Tato kapitola popisuje obecné principy fungování ladících nástrojů, způsob mapování binárních instrukcí programu zpět do jeho zdrojového kódu,
 	krokování běžícího procesu a běžné konstrukce používané při ladění. Konkrétně je popis zaměřen na programy napsané v jazycích C a C++
-	v prostředí UNIXových systémů na platformě Intel x86. Popsané principy jsou ale obecné a lze je aplikovat na libovolnou operační systém.
+	v prostředí Linuxových systémů používající procesory z rodiny Intel x86. %TODO: důvod?%
+	Popsané principy jsou ale obecné a lze je aplikovat na libovolný operační systém.
 		
 	\subsection{Signály}
 		Pro ladění programu je nutné mít možnost číst jeho paměť, aby šly zkoumat hodnoty proměnných za jeho běhu, a také ho zastavit, jelikož
@@ -111,21 +128,21 @@ za využití existujících ladících nástrojů  }
 		Slouží pro meziprocesní komunikaci a fungují jako softwarová obdoba hardwarových přerušení procesoru.
 		Jakmile proces obdrží signál, který očekává, tak si uloží hodnoty svých registrů a přejde do procedury, která tento signál obslouží.
 		Pokud proces obdrží signál, pro který si nepřipravil žádnou reakci, tak se provede implicitně nadefinovaná akce pro daný typ signálu.
-		V UNIXových systémech je definováno několik desítek standardních signálů, v závislosti na verzi a typu operačního systému.
+		V Linuxových systémech je definováno několik desítek standardních signálů, v závislosti na verzi a typu operačního systému.
 		Na signály SIGKILL, sloužící k okamžitému ukončení procesu a SIGSTOP, sloužící k zastavení procesu, nemá proces možnost zareagovat ani
 		zjistit, že mu byly poslány.
 	
 	\subsection{Krokování}
 		Operační systémy obvykle poskytují nástroj, pomocí kterého lze buď spustit proces, anebo se připojit k již běžícímu procesu, a následně ho ovládat
-		a přistupovat k jeho paměti. UNIXové systémy pro tento účel poskytují systémové volání \textbf{ptrace}\cite{ptrace}, které umožňuje zachytávat signály
-		zaslané sledovanému procesu. Proces sledovaný pomocí funkce ptrace je zastaven při přijetí jakéhokoliv signálu (kromě signálu SIGKILL, který se pokusí proces
-		okamžitě ukončit). Tohoto mechanismu využívají ladící nástroje, které proces sledovaný pomocí ptrace můžou po jeho zastavení znovu spustit,
-		přistupovat k jeho paměti a ovlivňovat jeho průběh. Pokud je sledovaný proces potomkem procesu, který ho sleduje, bude při jeho spuštění vyvolán
-		signál SIGTRAP, který dovolí rodičovi odchytit začátek provádění potomka. Jakmile je proces zastavený, může ho ladící nástroj tzv. krokovat, tedy spouštět
-		instrukci po instrukci. K tomu lze použít funkci ptrace s příznakem PTRACE\_SINGLESTEP, která provede přesně jednu instrukci v laděném procesu (proces se také
-		zastaví, pokud se dostane na vstupní nebo výstupní bod systémového volání)\cite{ptrace}. Ladící nástroje obvykle nabízí krokování na vyšší úrovni než
-		pouze po jedné instrukci, jelikož to by bylo zbytečně zdlouhavé (u vyšších programovacích jazyků se jeden řádek zdrojového kódu může mapovat na desítky
-		až stovky instrukcí). Obvykle jsou dostupné následující typy krokování:
+		a přistupovat k jeho paměti. Linuxové systémy pro tento účel poskytují systémové volání \textbf{ptrace}\footnote{http://linux.die.net/man/2/ptrace},
+		které umožňuje zachytávat signály zaslané sledovanému procesu. Proces sledovaný pomocí funkce ptrace je zastaven při přijetí jakéhokoliv signálu
+		(kromě signálu SIGKILL, který se pokusí proces okamžitě ukončit). Tohoto mechanismu využívají ladící nástroje, které proces sledovaný pomocí
+		ptrace můžou po jeho zastavení znovu spustit, přistupovat k jeho paměti a ovlivňovat jeho průběh. Pokud je sledovaný proces potomkem procesu,
+		který ho sleduje, bude při jeho spuštění vyvolán signál SIGTRAP, který dovolí rodičovi odchytit začátek provádění potomka. Jakmile je proces
+		zastavený, může ho ladící nástroj tzv. krokovat, tedy spouštět instrukci po instrukci. K tomu lze použít funkci ptrace s příznakem PTRACE\_SINGLESTEP,
+		která provede přesně jednu instrukci v laděném procesu (proces se také zastaví, pokud se dostane na vstupní nebo výstupní bod systémového volání).
+		Ladící nástroje obvykle nabízí krokování na vyšší úrovni než pouze po jedné instrukci, jelikož to by bylo zbytečně zdlouhavé (u vyšších programovacích
+		jazyků se jeden řádek zdrojového kódu může mapovat na desítky až stovky instrukcí). Obvykle jsou dostupné následující typy krokování:
 		\begin{description}
 			\item[Step over] - krokování po řádku zdrojového kódu
 			\item[Step in] - stejná funkce jako step over, ale program se zastaví, pokud vstoupí dovnitř funkce
@@ -137,9 +154,10 @@ za využití existujících ladících nástrojů  }
 		spustitelného programu i instrukce zpět na zdrojový kód. Jelikož programy psané v jazycích C a C++ jsou kompilované a po jejich překladu nejsou
 		ve výsledném binárním souboru téměř žádné informace o jejich zdrojovém kódu, musí být přeloženy ve speciálním režimu, který při překladu vygeneruje
 		metadata s mapováním zdrojového kódu a vloží je do přeloženého programu. V překladačích jazyka C/C++ se tohoto dá standardně dosáhnout použitím
-		řepínače \textbf{-g}. Existuje několik formátů ukládání těchto metadat, dnešním de facto standardem na UNIXových systémech je DWARF\cite{dwarf}.
-		Ten ukládá proměnné, datové typy, procedury a další údaje ze zdrojového kódu ve stromové struktuře. Pro ušetření místa obsahuje instrukce pro
-		speciální konečný automat, který implementují ladící nástroje a pomocí něho poté získávají informace o původním zdrojovém kódu.
+		řepínače \textbf{-g}. Existuje několik formátů ukládání těchto metadat, dnešním de facto standardem na Linuxových systémech je DWARF
+		\footnote{http://dwarfstd.org}. Ten ukládá proměnné, datové typy, procedury a další údaje ze zdrojového kódu ve stromové struktuře.
+		Pro ušetření místa obsahuje instrukce pro speciální konečný automat, který implementují ladící nástroje a pomocí něho poté získávají
+		informace o původním zdrojovém kódu.
 		
 		\vspace{5mm}
 		
@@ -171,7 +189,7 @@ za využití existujících ladících nástrojů  }
 				Pokud je potřeba zastavit program ne na konkrétním místě, ale při změně dané hodnoty v paměti, lze použít watchpoint. Ten se může hodit například pro
 				kontrolu změn globálních proměnných. Pokud nenabízí procesor hardwarovou podporu pro watchpointy, ladící nástroj prochází laděný proces instrukci po
 				instrukci, testuje hodnotu sledované paměti a pokud se tato hodnota změní, tak program zastaví. Tento proces může zpomalit laděný proces až o
-				dva řády\cite{gdb-watchpoint}.
+				dva řády\footnote{https://sourceware.org/gdb/onlinedocs/gdb/Set-Watchpoints.html}.
 			\item[Catchpoint]
 				Tuto konstrukci lze použít pro zachycení událostí procesu, jako jsou načtení sdílené knihovny, vyvolání hardwarové či softwarové výjimky, provedení
 				systémového volání anebo přijetí signálu. Většina těchto událostí je ze své podstaty asynchronní, nelze u nich tedy dopředu určit, kdy budou zavolány
@@ -183,10 +201,10 @@ za využití existujících ladících nástrojů  }
 	použity při implementaci vizualizačního nástroje. Jsou zde taky popsány jejich vybrané grafické nádstavby.
 
 	\subsection{GDB}
-		GDB (The GNU Debugger) je standardním ladícím nástrojem pro UNIXové systémy, často je v těchto systémech už předinstalovaný.
+		GDB (The GNU Debugger) je standardním ladícím nástrojem pro Linuxové systémy, často je v těchto systémech už předinstalovaný.
 		Jeho hlavním zaměřením je ladění programů napsaných v jazycích C a C++, ale podporuje mimo jiné i Adu, Objective-C, Pascal, Fortran, Javu
 		a Go\cite{gdb-languages}. Podporuje velké množství rodin procesorů, například ARM, AVR, Itanium, MIPS, PowerPC, SPARC a samozřejmě x86 i x86-64.
-		Lze jej spustit i na platformě Windows pomocí prostředí emulujících UNIX (např. Cygwin nebo MinGW). Byl vydán v roce 1986 a k roku
+		Lze jej spustit i na platformě Windows pomocí prostředí emulujících Linux, jako je Cygwin nebo MinGW. Byl vydán v roce 1986 a k roku
 		2016 stále vycházejí nové verze.
 		
 		\par Umí spolupracovat s programy přeloženými libovolným překladačem jazyků C a C++, pokud je dodržen jejich standard. Navíc ještě obsahuje
@@ -227,13 +245,13 @@ za využití existujících ladících nástrojů  }
 		GDB nemá vlastní grafické rozhraní, je ovládán z příkazové řádky. Kromě toho ale podporuje také spouštění skriptů v Pythonu pomocí API,
 		které bylo použito pro implementaci vizualizačního nástroje a je popsáno dále v textu.
 	\subsection{LLDB}
-		Ladící nástroj LLDB je založen na sadě knihoven, které využívají infrastruktury LLVM a překladače Clang. LLVM je univerzální překladače, který dokáže
-		překládat velké množství jazyků do své vnitřní, jazykově nezávislé reprezentace, kterou umí optimalizovat a vygenerovat z ní dále spustitelný soubor
-		pro libovolnou kompatibilní platformu\cite{llvm}. Obsahuje také kompletní implementaci standardní knihovny jazyka C++, která plně podporuje jeho nejnovější
-		standard, C++11. Clang je nádstavbou LLVM, která analyzuje a překládá programy v jazyce C a C++. Celá LLVM architektura
-		je postavena na modulárních komponentech, které spolupracují a dají se lehce využít ve formě knihovny. Nabízí tak modernější alternativu k programům
-		GCC a GDB. Ty jsou sice stabilnější a prověřenější, ale jelikož existují už desítky let a musí udržovat zpětnou kompatibilitu, tak je těžší je
-		využít jako modul do jiného programu a pomaleji přecházejí k novým standardům.
+		Ladící nástroj LLDB\footnote{http://llvm.org} je založen na sadě knihoven, které využívají infrastruktury LLVM a překladače Clang.
+		LLVM je univerzální překladače, který dokáže překládat velké množství jazyků do své vnitřní, jazykově nezávislé reprezentace, kterou umí
+		optimalizovat a vygenerovat z ní dále spustitelný soubor pro libovolnou kompatibilní platformu. Obsahuje také kompletní implementaci standardní
+		knihovny jazyka C++, která plně podporuje jeho nejnovější standard, C++11. Clang je nádstavbou LLVM, která analyzuje a překládá programy v jazyce
+		C a C++. Celá LLVM architektura je postavena na modulárních komponentech, které spolupracují a dají se lehce využít ve formě knihovny.
+		Nabízí tak modernější alternativu k programům GCC a GDB. Ty jsou sice stabilnější a prověřenější, ale jelikož existují už desítky let a musí udržovat
+		zpětnou kompatibilitu, tak je těžší je využít jako modul do jiného programu. Z tohoto důvodu rovněž pomaleji přecházejí k novým standardům.
 		
 		\vspace{5mm}
 		
@@ -243,101 +261,152 @@ za využití existujících ladících nástrojů  }
 		některé pokročilejší funkce, které nabízí GDB, například zpětné provádění instrukcí.
 
 	\subsection{Grafická rozhraní}
-		V této sekci jsou popsány vybrané grafické nádstavby pro GDB a LLDB.
+		Grafických rozhraní pro debuggery GDB a LLDB existuje několik desítek. Některé z nich jsou samostatné programy podporující pouze ladění, další jsou
+		jednou z mnoha součástí integrovaných vývojových prostředí. Rozhraní těchto nástrojů se obvykle skládá z textového editoru, který obsahuje zdrojový kód,
+		ovládacích prvků, které kontrolují průběh laděného procesu. Dále také často nabízí manipulaci a zobrazování registrů, lokálních proměnných a parametrů
+		funkcí. Ukázky uživatelského rozhraní jednotlivých programů si lze prohlédnout v příloze \ref{appendix:gui}. Následuje popis jednoho zástupce
+		ze skupiny samostatných (DDD), integrovaných (Clion) a textových (TUI) uživatelského rozhraní pro ladění programů.
 	
 		\begin{description}
-			\item[DDD]
-				DDD, neboli Data Display Debugger, je grafické prostředí podporující velké množství ladících nástrojů, mimo jiné GDB, pydb, DBX nebo Ladebug.
-				Mimo klasického zobrazování zdrojového kódu programu nabízí i pokročilé vizualizační funkce. Umí kreslit grafy z hodnot paměti procesu
-				anebo zobrazovat vztahy mezi objekty v paměti ve formě grafu. Jeho poslední verze vyšla v roce 2009, není už tedy v současnosti aktivně udržován.
 			\item[TUI]
 				Text User Interface je grafickým rozhraním vestavěným přímo v GDB, které zobrazuje stav průběhu v několik terminálových oknech pro větší přehlednost
 				programu. Je postaveno na knihovně curses, která umožňuje vytvářet textové uživatelské rozhraní s pokročilými funkcemi přímo v terminálu. TUI lze
 				spustit předáním parametru \textbf{-tui} při spouštění GDB anebo stisknutím kláves CTRL+X či spuštěním příkazu \emph{tui enable} za jeho běhu.
 				LLDB obsahuje podobné rozhraní také, ale není zatím oficiální součástí nástroje, jedná se pouze o nezávazně vyvíjený doplněk.
-			\item[KGdb]
-				
+			\item[DDD]
+				DDD, neboli Data Display Debugger, je grafické prostředí podporující velké množství ladících nástrojů, mimo jiné GDB, pydb, DBX nebo Ladebug.
+				Mimo klasického zobrazování zdrojového kódu programu nabízí i pokročilé vizualizační funkce. Umí kreslit grafy z hodnot paměti procesu
+				anebo zobrazovat vztahy mezi objekty v paměti ve formě grafu. Jeho poslední verze vyšla v roce 2009, není už tedy v současnosti aktivně udržován.		
+			\item[Clion]
+				Clion je integrované vývojové prostředí založené na vývojové platformě IntelliJ. Nabízí mimo jiné statickou analýzu kódu psaného v jazycích
+				C a C++, což pomáhá v odhalování velkého množství chyb již během psaní programu. Tato analýza zároveň usnadňuje ladění kódu poskytováním
+				automatického doplňování výrazů a proměnných, které lze v laděném procesu sledovat. Během ladění Clion zobrazuje vedle názvů proměnných
+				ve zdrojovém kódu jejich současnou hodnotu, což velmi urychluje pochopení stavu výpočtu.
 		\end{description}
-		Clion
-		Eclipse (UltraGDB)
-		NetBeans
-		Code::Blocks
-		KGdb
-		WinGDB
-		
-		\subsubsection{Srovnání grafických rozhraní}
-			\begin{table}
-			\begin{tabular}{|c|c|c|c|c|}
-				\hline
-				Název 	& IDE & Aktivní	& GDB & LLDB 	\\
-				DDD 		& Ne 	& Ne 			& Ano & Ne 		\\
-				TUI 		& Ne 	& Ano 		& Ano & Ano		\\
-				\hline
-			\end{tabular}
-			\caption{Srovnání grafických rozhraní ladících nástrojů}
-			\label{tab:debugger-gui}
-			\end{table}
 
-\section{Implementace vizualizačního nástroje}
-	Jazyky C a C++ jsou velmi komplexní a dovolují programátorům pracovat s hardwarem počítače na hodně nízké úrovni. Kvůli mnohým svým vlastnostem,
-	jako je absence automatické správy paměti nebo možnost provádět nebezpečné operace s ukazateli do paměti, jsou ale také velmi náchylné ke vzniku
-	četných chyb. Používání ladícího nástroje, který dokáže detailně zkoumat paměť běžícího procesu a krokovat ho, je tedy v těchto jazycích nutností.
-	Existující ladící programy jako je GDB nebo LLDB fungují dobře, ale poskytují uživateli pouze ladění v příkazové řádce, což je pro velké programy
-	velmi pomalé a nepřehledné řešení. Nad těmito nástroji proto vznikly různé grafické rozšíření, ať už samostatné, anebo integrované ve vývojových
-	prostředích. Ty obvykle poskytují mnohem pohodlnější ladění programů, které je díky tomuto i snadněji zařazené do celého pracovního postupu vytváření
-	kódu.
+\section{Vizualizační nástroj Devi}
+	Tato kapitola obsahuje popis vizualizace ladění a návrh a implementaci vizualizačního nástroje.
+
+	\subsection{Popis problému}
+	Jazyky C a C++ jsou velmi komplexní a dovolují programátorům pracovat s hardwarem počítače na značně nízké úrovni. Kvůli mnohým vlastnostem,
+	jako je absence automatické správy paměti nebo možnost provádět potencionálně nebezpečné operace s paměťovými ukazateli, jsou velmi náchylné ke vzniku
+	těžko odhalitelných chyb. Používání debuggeru, který dokáže detailně zkoumat paměť běžícího procesu a krokovat ho, je tedy v těchto jazycích nutností,
+	bez které by byl vývoj C a C++ aplikací výrazně pomalejší.
+	Existující debuggery, jako je GDB nebo LLDB, mají velké množství užitečných funkcí, ale samy o sobě poskytují svému uživateli pouze ladění
+	pomocí terminálu. To je pro velké programy velmi pomalé a nepřehledné řešení. Nad těmito nástroji proto vznikla různá grafické rozšíření,
+	ať už samostatná nebo integrovaná v komplexních vývojových prostředích. Tato uživatelská rozhraní umožňují mnohem pohodlnější a jednodušší ladění programů.
+	Díky tomu může být ladění přirozenou součástí vývoje programů, a ne pouze obtížnou činností nutnou při hledání skrytých chyb.
+	I když grafické uživatelské rozhraní ladění značně usnadňuje, tak reprezentace paměti se v něm většinou omezuje na pouhý textový výpis názvů proměnných
+	a jejich hodnot. To postačuje pro hledání chyb v programu, ale nedovoluje to plně zobrazit vztahy mezi objekty a jejich umístění v paměti.
+	Zobrazení grafické reprezentace objektů v paměti může být také užitečné pro pochopení a sledování průběhu určitých (např. třídících) algoritmů.
+
+	\subsection{Specifikace požadavků}
+	Cílem této práce bylo navrhnout a naimplementovat program, který bude ladění programu vizualizovat ve formě grafu objektů v paměti, a otestovat,
+	jestli tato grafická reprezentace usnadňuje ladění programů a pochopení průběhu jednoduchých algoritmů.
+	Program by také měl poskytovat přístup k běžným funkcím debuggerů.
+	Následuje seznam základních funkcí, které by měl svým uživatelům nabízet.
+	
+	\begin{itemize}
+		\item Asynchronní komunikace s debuggerem
+		\item Načítání binárních i zdrojových souborů
+		\item Zobrazování zdrojového i strojového kódu programu
+		\item Vytváření a odebírání breakpointů
+		\item Manipulace s procesem (spuštění, pozastavení, zastavení)
+		\item Krokování (krok po řádku, krok dovnitř funkce, krok ven z funkce)
+		\item Komunikace s procesem v reálném čase (přes standardní vstup a výstup)
+		\item Přepínání zásobníkových rámců
+		\item Přepínání vláken
+		\item Zobrazování registrů a paměti na úrovni bytů
+		\item Manipulace s hodnotami proměnných
+		\item Vizualizace objektů v paměti ve formě grafu
+	\end{itemize}
+	
+	S touto sadou funkcí by měl být tento program plně použitelný pro ladění reálně používaných aplikací.
+	
+	\subsection{Architektura}
+	\par Pro implementaci programu jsem zvolil programovací jazyk \textbf{Python}\footnote{http://www.python.org} ve verzi 2.7. Novější verze 3.x nebyla použita
+	z důvodu zachování kompatibility s již existujícími API pro debuggery, které v době tvorby této práce Python 3 ještě zcela nepodporovaly. Aplikaci jsem psal
+	tak, aby bylo v případě potřeby snadné ji přepsat do Pythonu 3. Pro tuto konverzi lze použít i automatizované nástroje, například \textbf{2to3}
+	\footnote{https://docs.python.org/2/library/2to3.html}.
+	Python jsem vybral, protože je vhodný k rychlému vývoji aplikací, existuje pro něj několik rozhraní pracujících s debuggery a umí snadno používat
+	kód napsaný v jazycích C a C++. Navíc je multiplatformní, což by usnadnilo případný port aplikace na jiný operační systém.
 	
 	\vspace{5mm}
 	
-	\par Cílem této práce bylo navrhnout a naimplementovat program, který bude ladění programu vizualizovat ve formě grafu, a otestovat, jestli tento
-	postup pomáhá při ladění programů a vizualizaci jednoduchých algoritmů. Mimo jiné by tento program měl nabízet také funkce, které jsou obvyklé v jiných
-	grafických rozhraních pro ladící nástroje, jako je krokování programu, zobrazování zdrojového kódu, přepínání zásobníkových rámců a ovládání vláken.
-	V této kapitole je popsána architektura a implementace tohoto programu.
+	\par Pro vývoj grafického rozhraní programu jsem vybral knihovnu \textbf{GTK+ 3}\footnote{http://www.gtk.org}. Jedná se o volně dostupný
+	\footnote{Pod licencí LGPL 2.1}, multiplatformní grafický software umožňující tvorbu uživatelského rozhraní, který je používán mimo jiné i
+	některými manažery plochy pro Linux (např. v GNOME\footnote{https://www.gnome.org/technologies}). Kromě možnosti tvorby vlastních
+	GUI prvků obsahuje několik desítek běžně používaných prvků, které jsou předpřipravené k okamžitému použití a usnadňují tak rychlý vývoj aplikací.
 	
 	\vspace{5mm}
 	
-	\par Pro implementaci programu byl vybrán programovací jazyk Python\footnote{http://www.python.org} ve verzi 2.7. Novější verze Python 3 nebyla použita
-	z důvodu zachování kompatibility s API pro LLDB, které Python 3 nepodporuje. Python byl vybrán, protože je vhodný k rychlému vývoji aplikací, existuje pro
-	něj několik rozhraní pracujících s ladícími nástroji a umí snadno používat existující kód v jazycích C a C++. Navíc je multiplatformní, což by usnadnilo
-	případný port aplikace na jiný operační systém. Pro vývoj grafického rozhraní programu byla použita knihovna GTK+ 3\footnote{http://www.gtk.org}, což je
-	volně dostupný\footnote{Pod licencí LGPL 2.1}, multiplatformní grafický software umožňující tvorbu uživatelského rozhraní. Kromě možnosti tvorby vlastních
-	GUI prvků obsahuje několik desítek často používaných prvků, které jsou předpřipravené k okamžitému použití a usnadňují tak rychlý vývoj aplikací.
-
-	\subsection{Architektura nástroje}
-		Nástroj tvoří dvě samostatné komponenty, aplikace s klasickým grafickým rozhraním, která slouží k interakci s uživatelem nástroje, a knihovny, která
-		poskytuje rozhraní pro komunikaci s ladícími nástroji. Následuje popis obou komponent.
+	\par Vizualizační nástroj jsem pojmenoval a dále jej v textu budu označovat jako \textit{Devi}.
+	Nástroj je tvořen dvěmi samostatnými komponentami, aplikací s grafickým rozhraním, která slouží k vizualizaci a k interakci s laděným procesem, a knihovny,
+	která poskytuje rozhraní pro komunikaci s libovolným debuggerem. Obrázek \ref{fig:DeviArchitecture} zachycuje pohled na architekturu aplikace z vysoké úrovně.
+	Uživatelské rozhraní komunikuje s knihovnou, která zprostředkovává komunikaci s debuggerem. Na obrázku jsou uvedeny tři implementace této komunikační vrstvy,
+	které jsou popsány dále v textu. Debugger zajišťuje komunikaci a manipulaci s laděným procesem. Celá aplikace je tak rozdělena do několika
+	vrstev, které jsou na sobě nezávislé.
+	
+	\InsertFigure{Figures/bak_architektura}{\textwidth}{Architektura Devi}{fig:DeviArchitecture}
 		
-		\InsertFigure{Figures/bak_architektura}{0.7\textwidth}{Architektura nástroje}{fig:AppArchitecture}
-		
-		\subsubsection{API pro komunikaci s ladícími nástroji}
-			Tato komponenta je knihovna napsaná v Pythonu, která tvoří rozhraní pro komunikaci s libovolným ladícím nástrojem. Toto rozhraní definuje abstraktní typy
-			popisující laděný proces a není tak závislé na použitém ladícím nástroji. Není nijak závislé ani na grafické komponentě nástroje, lze jej tedy vyjmout
-			a použít pro programové ovládání ladících nástrojů i v jiném projektu. Pro účely této práce bylo vytvořeno několik implementací pro komunikaci s GDB
-			a LLDB, které budou dále popsány.
-
-			\lineparagraph{Python API pro GDB}
-			GDB obsahuje rozhraní \cite{gdb-python}, které nabízí možnost načtení skriptů v Pythonu 2, které můžou ovládat GDB a přistupovat k jeho API. To nabízí
-			většinu nejpoužívanějších funkcí GDB ve formě tříd a metod. Funkce GDB, které v API nejsou obsaženy, lze vyvolat pomocí přímého provádění textových
-			příkazů. Nevýhoda tohoto API je, že neumí samo spustit instanci GDB a musí tak být načteno v již běžícím procesu GDB. Nelze jej tedy použít přímo
-			v kódu aplikace, protože samotné API běží v jiném procesu. Tento problém byl vyřešen komunikací se skriptem běžícím v procesu GDB pomocí TCP/IP.
-			Jelikož je ale toto řešení komplikovanější než ostatní způsoby práce s GDB a při testování nebylo stabilní, tak jeho implementace nebyla dokončena
-			a byl zvolen jiný postup, který je popsán níže.
+		\subsubsection{Knihovna pro komunikaci s debuggery}
+			Tato knihovna tvoří rozhraní pro komunikaci s libovolným ladícím nástrojem. Definuje abstraktní typy popisující laděný proces a není tak závislá na
+			použitém ladícím nástroji. Není nijak závislá ani na grafickém rozhraní nástroje, lze ji tedy použít pro programovatelné ovládání debuggerů i v jiném
+			projektu.
 			
-			\lineparagraph{Protokol GDB/MI}
+			\vspace{5mm}
+			
+			\par Knihovna obsahuje třídy představující části laděného procesu, které jsou dostatečně obecné na to, aby se daly aplikovat na libovolný
+			proces i debugger. Následuje popis těchto tříd, které lze nalézt v modulu \textit{debugger.debugee}.
+			
+			\begin{description}
+				\item[Type] - představuje datový typ proměnné, obsahuje jeho název, kategorii a velikost
+				\item[Variable] - představuje proměnnou, obsahuje její název, datový typ, adresu v paměti, hodnotu a potomky
+				\item[Frame] - představuje rámec zásobníku, obsahuje jeho úroveň v zásobníku a název a lokaci funkce, z které je vyvolán % TODO
+				\item[InferiorThread] - představuje vlákno procesu, obsahuje jeho identifikátor, název, stav a současný zásobníkový rámec
+				\item[ThreadInfo] - uchovává seznam všech vláken v procesu a také současně zvolené vlákno
+				\item[Breakpoint] - představuje breakpoint, obsahuje jeho identifikátor a zdrojový soubor a řádek, na kterém je umístěn
+				\item[Register] - představuje registr procesoru, obsahuje jeho název a hodnotu
+			\end{description}
+			
+			\vspace{5mm}
+			
+			\par Dále jsou v knihovně třídy, které tvoří obecné API pro přístup k debuggeru. Slouží jako rodičovské třídy pro jednotlivé implementace
+			komunikace s debuggerem. Jejich smyslem není implementovat společné chování, jelikož jednotlivé debuggery a implementace přístupu k nim
+			se od sebe můžou značně lišit, a tak poskytují pouze rozhraní. Následuje seznam tříd tohoto rozhraní.
+			
+			\begin{description}
+				\item[Debugger] - představuje abstrakci ladícího nástroje, který umožňuje načtení binárního souboru programu, jeho spuštění, zastavení
+				a krokování. Dále také uchovává stav laděného procesu a obsahuje všechny ostatní komponenty rozhraní vyjmenované níže.
+				\item[VariableManager] - stará se o čtení registrů a paměti procesu a o získávání a změnu jeho proměnných
+				\item[ThreadManager] - stará se o získávání a volbu vláken a zásobníkových rámců
+				\item[FileManager] - stará se o získávání současné pozice a hlavního souboru laděného procesu. Poskytuje také převod zdrojového kódu
+				na strojový kód.
+				\item[BreakpointManager] - stará se o přidávání, mazání a načítání breakpointů
+				\item[IOManager] - stará se o komunikaci s laděným procesem pomocí čtení z jeho standardního a chybového výstupu a zápisu do jeho standardního vstupu
+			\end{description}
+			
+			Pro účely této práce jsem v této knihovně vytvořil několik implementací pro komunikaci s GDB a LLDB, které budou dále popsány.
+
+			\paragraph{Python API pro GDB}
+			GDB obsahuje rozhraní \footnote{https://sourceware.org/gdb/onlinedocs/gdb/Python-API.html}, které nabízí možnost načtení skriptů v Pythonu 2, které
+			můžou ovládat GDB a přistupovat k jeho API. To nabízí většinu nejpoužívanějších funkcí GDB ve formě tříd a metod. Funkce GDB, které v API nejsou
+			obsaženy, lze vyvolat pomocí přímého provádění textových příkazů. Nevýhoda tohoto API je, že neumí samo spustit instanci GDB a musí tak být
+			načteno v již běžícím procesu GDB. Nelze jej tedy použít přímo v kódu aplikace, protože samotné API běží v jiném procesu. Tento problém byl vyřešen
+			komunikací se skriptem běžícím v procesu GDB pomocí TCP/IP. Jelikož je ale toto řešení komplikovanější než ostatní způsoby práce s GDB a při testování
+			nebylo stabilní, tak jeho implementace nebyla dokončena a byl zvolen jiný postup, který je popsán níže.
+			
+			\paragraph{Protokol GDB/MI}
 			MI je komunikační rozhraní pro ovládání GDB pomocí textových příkazů. Nejedná se o klasické příkazy používané při manuálním ovládání GDB, ale o
 			speciální příkazy přizpůsobené pro jednoduché strojové zpracování. Obdobně jako Python API pro GDB, obsahuje rozhraní pro nejpoužívanější funkce GDB a
 			zbytek funkcí lze používat pomocí běžných textových příkazů. Použití MI je běžným a doporučeným \cite{gdb-mi-usage} způsobem pro programovou komunikaci
 			s GDB a psaní grafických rozhraní. Existují volně dostupné knihovny pro Python i C/C++, které umí komunikovat s GDB pomocí MI protokolu, nicméně za
 			účelem pochopení fungování tohoto protokolu a maximální volnosti v implementaci byl vytvořen vlastní komunikační modul.
 			
-			\lineparagraph{Python API pro LLDB}
+			\paragraph{Python API pro LLDB}
 			Stejně jako GDB, i LLDB poskytuje API v Pythonu. Lze jej načíst do procesu LLDB a automatizovat průběh ladění, navíc jej ale lze také použít jako
 			knihovnu, která sama vytváří instance LLDB a je tedy jednoduché ji použít přímo v externím kódu. Stejně jako samotné LLDB je ale zatím ve vývoji
 			a obsahuje drobné chyby, například nepřesné zobrazování stavu vláken.
-		
-			\lineparagraph{Debugger v Pythonu}
-			(Dopsat debugger?)
-			
 			
 	\subsection{Vizualizační část}
 	
@@ -346,6 +415,11 @@ za využití existujících ladících nástrojů  }
 
 \section{Závěr}
 \label{sec:Conclusion}
+\subsection{Další vývoj}
+IDE - kompilace, projekty, doplňování kódu
+backendy pro více ladících nástrojů
+rozšíření vizualizace
+
 
 \bigskip
 \begin{flushright}
@@ -354,10 +428,17 @@ Jakub Beránek
 
 %\printbibliography
 \printbibheading[title=Reference, heading=bibintoc]
-\printbibliography[type=book,heading=subbibintoc,title={Knižní zdroje}]
-\printbibliography[nottype=book,heading=subbibintoc,title={Online zdroje}]
+\printbibliography
 
 \appendix
+\section{Grafická rozhraní debuggerů}
+\label{appendix:gui}
+\InsertFigure{Figures/appendix_gui_gdb_tui}{\textwidth}{Textové rozhraní GDB (TUI)}{fig:AppendixGuiGdbTui}
+\InsertFigure{Figures/appendix_gui_ddd}{\textwidth}{Rozhraní programu DDD}{fig:AppendixGuiDDD}
+\InsertFigure{Figures/appendix_gui_clion}{\textwidth}{Rozhraní programu CLion (zdroj: https://www.jetbrains.com/clion)}{fig:AppendixGuiClion}
+%\InsertFigure{Figures/appendix_gui_gede}{\textwidth}{Rozhraní programu Gede (http://gede.acidron.com/)}{fig:AppendixGuiGede}
+
+
 \clearpage
 
 \end{document}
