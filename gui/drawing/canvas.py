@@ -128,11 +128,6 @@ class Canvas(Gtk.EventBox):
         self.tooltip_drawable = None
         self.first_draw = True
 
-    def _update_move_cooldown(self):
-        new_time = time.time()
-        self.move_cooldown.update(new_time - self.move_time)
-        self.move_time = new_time
-
     def _notify_handlers(self):
         position = self.mouse_data.position - self.translation
         mouse_data = MouseData(self.mouse_data.lb_state, self.mouse_data.rb_state, position * (1.0 / self.zoom))
