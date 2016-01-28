@@ -313,23 +313,28 @@ class Drawable(object):
 
     @require_gui_thread
     def __init__(self, canvas, **properties):
+        """
+        @type canvas: drawing.canvas.Canvas
+        """
         self.canvas = canvas
 
         self.position = self._parse_property(properties, "position", Vector(0, 0), Vector.vectorize)
         """@type position: drawing.vector.Vector"""
-        self.margin = self._parse_property(properties, "margin", Margin.all(0))
+        self._margin = self._parse_property(properties, "margin", Margin.all(0))
         """@type margin: drawing.geometry.Margin"""
-        self.padding = self._parse_property(properties, "padding", Padding.all(0))
+        self._padding = self._parse_property(properties, "padding", Padding.all(0))
         """@type padding: drawing.geometry.Padding"""
-        self.request_size = self._parse_property(properties, "size", Size(-1, -1), Size.make_size)
+        self._request_size = self._parse_property(properties, "size", Size(-1, -1), Size.make_size)
         """@type request_size: drawing.size.Size"""
-        self.min_size = self._parse_property(properties, "min_size", Size(0, 0), Size.make_size)
+        self._min_size = self._parse_property(properties, "min_size", Size(0, 0), Size.make_size)
         """@type min_size: drawing.size.Size"""
-        self.max_size = self._parse_property(properties, "max_size", Size(999, 999), Size.make_size)
+        self._max_size = self._parse_property(properties, "max_size", Size(999, 999), Size.make_size)
         """@type max_size: drawing.size.Size"""
         self.bg_color = self._parse_property(properties, "bg_color", Drawable.get_default_bg_color(), Color.make_color)
         """@type bg_color: drawing.drawable.Color"""
 
+        self.parent = None
+        """@type parent: Drawable"""
         self.children = []
         self._visible = True
 
@@ -352,6 +357,82 @@ class Drawable(object):
     @visible.setter
     def visible(self, value):
         self._visible = value
+        self.invalidate()
+
+    @property
+    def margin(self):
+        """
+        @rtype: drawing.geometry.Margin
+        """
+        return self._margin
+
+    @margin.setter
+    def margin(self, value):
+        """
+        @type value: drawing.geometry.Margin
+        """
+        self._margin = value
+        self.invalidate()
+
+    @property
+    def padding(self):
+        """
+        @rtype: drawing.geometry.Padding
+        """
+        return self._padding
+
+    @padding.setter
+    def padding(self, value):
+        """
+        @type value: drawing.geometry.Padding
+        """
+        self._padding = value
+        self.invalidate()
+
+    @property
+    def request_size(self):
+        """
+        @rtype: drawing.size.Size
+        """
+        return self._request_size
+
+    @request_size.setter
+    def request_size(self, value):
+        """
+        @type value: drawing.size.Size
+        """
+        self._request_size = value
+        self.invalidate()
+
+    @property
+    def min_size(self):
+        """
+        @rtype: drawing.size.Size
+        """
+        return self._min_size
+
+    @min_size.setter
+    def min_size(self, value):
+        """
+        @type value: drawing.size.Size
+        """
+        self._min_size = value
+        self.invalidate()
+
+    @property
+    def max_size(self):
+        """
+        @rtype: drawing.size.Size
+        """
+        return self._max_size
+
+    @max_size.setter
+    def max_size(self, value):
+        """
+        @type value: drawing.size.Size
+        """
+        self._max_size = value
+        self.invalidate()
 
     def get_content_size(self):
         raise NotImplementedError()
@@ -372,8 +453,9 @@ class Drawable(object):
 
     def add_child(self, child):
         self.children.append(child)
+        child.parent = self
         self.click_handler.propagate_handler(child.click_handler)
-        self.place_children()  # TODO: place children after their visibility changes
+        self.place_children()
 
     def set_position(self, position):
         self.position = position.copy()
@@ -418,6 +500,12 @@ class Drawable(object):
         """
         self.canvas.set_drawable_tooltip(self, None)
 
+    def on_child_changed(self, child):
+        """
+        @type child: Drawable
+        """
+        self.invalidate()
+
     def get_tooltip(self):
         """
         @rtype: basestring | None
@@ -437,6 +525,15 @@ class Drawable(object):
         if self.visible:
             for child in self.children:
                 child.draw()
+
+    def invalidate(self):
+        """
+        Invalidates this drawable, placing it's children and sending it's parent a message that it has changd.
+        @return:
+        """
+        if self.parent:
+            self.parent.on_child_changed(self)
+        self.place_children()
 
     def _parse_property(self, properties, key, default, modifier=None):
         """
