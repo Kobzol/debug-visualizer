@@ -83,16 +83,27 @@ class Vector(object):
         return Vector(self.x, self.y)
 
     def __add__(self, other):
+        """
+        @type other: Vector
+        @rtype: Vector
+        """
         assert isinstance(other, Vector)
 
         return self.add(other)
 
     def __sub__(self, other):
+        """
+        @type other: Vector
+        @rtype: Vector
+        """
         assert isinstance(other, Vector)
 
         return Vector(self.x - other.x, self.y - other.y)
 
     def __neg__(self):
+        """
+        @rtype: Vector
+        """
         return Vector(-self.x, -self.y)
 
     def __mul__(self, other):
@@ -108,6 +119,10 @@ class Vector(object):
             raise TypeError
 
     def __div__(self, other):
+        """
+        @type other: Number
+        @rtype: Vector
+        """
         assert isinstance(other, numbers.Number)
 
         return Vector(self.x / other, self.y / other)
