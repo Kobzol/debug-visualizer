@@ -111,6 +111,7 @@ class Canvas(Gtk.EventBox):
         self.connect("button-press-event", lambda widget, button_event: self._handle_press(button_event, True))
         self.connect("button-release-event", lambda widget, button_event: self._handle_press(button_event, False))
         self.connect("motion-notify-event", lambda widget, move_event: self._handle_mouse_move(move_event))
+        self.connect("scroll-event", lambda widget, scroll_event: self._handle_mouse_scroll(scroll_event))
 
         self.mouse_data = MouseData(MouseButtonState.Up, MouseButtonState.Up, Vector(0, 0))
         self.translation_handler = TranslationHandler(self)
@@ -153,6 +154,15 @@ class Canvas(Gtk.EventBox):
         self.mouse_data.position = Vector(move_event.x, move_event.y)
         self._notify_handlers()
         self.redraw()
+
+    def _handle_mouse_scroll(self, scroll_event):
+        """
+        @type scroll_event: Gdk.EventScroll
+        """
+        if scroll_event.direction == Gdk.ScrollDirection.UP:
+            self.zoom_in()
+        elif scroll_event.direction == Gdk.ScrollDirection.DOWN:
+            self.zoom_out()
 
     def _handle_draw(self, cr):
         should_draw, rectangle = Gdk.cairo_get_clip_rectangle(cr)
