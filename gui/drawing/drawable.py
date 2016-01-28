@@ -232,7 +232,7 @@ class DrawingUtils(object):
             point_from = point_to
 
     @staticmethod
-    def draw_rectangle(canvas, position, size, color=Color(), width=1, center=False):
+    def draw_rectangle(canvas, position, size, color=Color(), width=1, center=False, stroke=True):
         cr = canvas.cr
         cr.save()
 
@@ -246,7 +246,11 @@ class DrawingUtils(object):
         DrawingUtils.set_color(canvas, color)
         cr.set_line_width(width)
         cr.rectangle(position.x, position.y, size.width, size.height)
-        cr.stroke()
+
+        if stroke:
+            cr.stroke()
+        else:
+            cr.fill()
 
         cr.restore()
 
@@ -598,7 +602,7 @@ class Label(Drawable):
 
         # box
         DrawingUtils.draw_rectangle(self.canvas, self.position, (rect + Margin.all(-self.border_width)).size,
-                                    width=self.border_width, center=False, color=self.bg_color)
+                                    width=self.border_width, center=False, color=self.bg_color, stroke=False)
 
         text_x = self.position.x + rect.width / 2.0  # self.position.x + self.padding.left
         text_y = self.position.y + rect.height / 2.0  # self.position.y + self.padding.top

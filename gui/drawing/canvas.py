@@ -4,12 +4,14 @@ import cairo
 from gi.repository import Gtk
 from gi.repository import Gdk
 
+import time
+
 from drawing.drawable import DrawingUtils, Color, LinearLayout, LinearLayoutDirection
 from drawing.memtoview import MemToViewTransformer
 from drawing.mouse import MouseButtonState, MouseData, TranslationHandler
 from drawing.vector import Vector
 from enums import ProcessState
-from gui_util import run_on_gui, require_gui_thread
+from gui_util import run_on_gui, require_gui_thread, Cooldown
 from util import EventBroadcaster
 
 
@@ -126,12 +128,20 @@ class Canvas(Gtk.EventBox):
         self.tooltip_drawable = None
         self.first_draw = True
 
+        self.move_cooldown = Cooldown(0.2)
+        self.move_time = time.time()
+
+    def _update_move_cooldown(self):
+        new_time = time.time()
+        self.move_cooldown.update(new_time - self.move_time)
+        self.move_time = new_time
+
     def _notify_handlers(self):
         position = self.mouse_data.position - self.translation
         mouse_data = MouseData(self.mouse_data.lb_state, self.mouse_data.rb_state, position * (1.0 / self.zoom))
         for drawable in self.drawables:  # TODO: synchronize
-            drawable.click_handler.handle_mouse_event(mouse_data.copy())
-        self.translation_handler.handle_mouse_event(self.mouse_data.copy())
+            drawable.click_handler.handle_mouse_event(mouse_data)
+        self.translation_handler.handle_mouse_event(self.mouse_data)
 
     def _handle_press(self, button_event, mouse_down):
         """
@@ -151,9 +161,12 @@ class Canvas(Gtk.EventBox):
         """
         @type move_event: Gdk.EventMotion
         """
-        self.mouse_data.position = Vector(move_event.x, move_event.y)
-        self._notify_handlers()
-        self.redraw()
+        self._update_move_cooldown()
+
+        if self.move_cooldown.reset_if_ready():
+            self.mouse_data.position = Vector(move_event.x, move_event.y)
+            self._notify_handlers()
+            self.redraw()
 
     def _handle_mouse_scroll(self, scroll_event):
         """
@@ -314,14 +327,15 @@ class MemoryCanvas(Canvas):
         stack_wrapper = LinearLayout(self, LinearLayoutDirection.Vertical)
         wrapper.add_child(stack_wrapper)
 
-        for fr in self.debugger.thread_manager.get_frames_with_variables():
-            fr_wrapper = ModelView(fr, self.memtoview.transform_frame(fr))
-            self.frames.append(fr_wrapper)
-            fr_wrapper.view.margin.bottom = 20
-            stack_wrapper.add_child(fr_wrapper.view)
+        if frame:
+            for fr in self.debugger.thread_manager.get_frames_with_variables():
+                fr_wrapper = ModelView(fr, self.memtoview.transform_frame(fr))
+                self.frames.append(fr_wrapper)
+                fr_wrapper.view.margin.bottom = 20
+                stack_wrapper.add_child(fr_wrapper.view)
 
-        for var in frame.variables:  # TODO
-            var.on_value_changed.subscribe(self._handle_var_change)
+            for var in frame.variables:  # TODO
+                var.on_value_changed.subscribe(self._handle_var_change)
 
         self.set_drawables([wrapper])
 

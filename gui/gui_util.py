@@ -19,3 +19,28 @@ def require_gui_thread(func):
         assert_is_gui_thread()
         return func(*args, **kwargs)
     return check
+
+
+class Cooldown(object):
+    def __init__(self, value):
+        """
+        @type value: float
+        """
+        self.value = value
+        self.delta = 0.0
+
+    def update(self, delta):
+        self.delta += delta
+
+    def is_ready(self):
+        return self.delta >= self.value
+
+    def reset(self):
+        self.delta = 0.0
+
+    def reset_if_ready(self):
+        if self.is_ready():
+            self.reset()
+            return True
+        else:
+            return False

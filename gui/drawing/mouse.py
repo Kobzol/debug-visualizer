@@ -146,3 +146,6 @@ class TranslationHandler(object):
 
         self.position = mouse_data.position.copy()
         self.mouse_state = mouse_data.rb_state
+
+    def is_dragging(self):
+        return self.mouse_state == MouseButtonState.Down
