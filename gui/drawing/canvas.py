@@ -128,9 +128,6 @@ class Canvas(Gtk.EventBox):
         self.tooltip_drawable = None
         self.first_draw = True
 
-        self.move_cooldown = Cooldown(0.2)
-        self.move_time = time.time()
-
     def _update_move_cooldown(self):
         new_time = time.time()
         self.move_cooldown.update(new_time - self.move_time)
@@ -161,12 +158,9 @@ class Canvas(Gtk.EventBox):
         """
         @type move_event: Gdk.EventMotion
         """
-        self._update_move_cooldown()
-
-        if self.move_cooldown.reset_if_ready():
-            self.mouse_data.position = Vector(move_event.x, move_event.y)
-            self._notify_handlers()
-            self.redraw()
+        self.mouse_data.position = Vector(move_event.x, move_event.y)
+        self._notify_handlers()
+        self.redraw()
 
     def _handle_mouse_scroll(self, scroll_event):
         """

@@ -373,6 +373,7 @@ class Drawable(object):
     def add_child(self, child):
         self.children.append(child)
         self.click_handler.propagate_handler(child.click_handler)
+        self.place_children()  # TODO: place children after their visibility changes
 
     def set_position(self, position):
         self.position = position.copy()
@@ -427,16 +428,12 @@ class Drawable(object):
         if not self.visible:
             return RectangleBBox(self.position)
 
-        self.place_children()
-
         return RectangleBBox(self.position, self.get_computed_size() + self.padding.to_size())
 
     def place_children(self):
         pass
 
     def draw(self):
-        self.place_children()
-
         if self.visible:
             for child in self.children:
                 child.draw()
