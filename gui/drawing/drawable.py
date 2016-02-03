@@ -920,7 +920,15 @@ class PointerDrawable(VariableDrawable):
 
             drawable = self.canvas.memory_model.get_drawable_by_address(self.variable.value)
             if drawable:
-                DrawingUtils.draw_arrow(self.canvas, self.get_center(), drawable.get_center(), Color(1))
+                start = self.get_center()
+                target_rect = drawable.get_rect()
+                target = drawable.get_center()
+                target.x += target_rect.width / 2.0
+                path = [start,
+                        Vector(start.x, target.y),
+                        target]
+
+                DrawingUtils.draw_arrow_path(self.canvas, path, Color(1))
 
 
 class VectorValueDrawable(Label, VariableContainer):
