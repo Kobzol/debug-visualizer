@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from gi.repository import Gtk
-from gi.repository import Gdk
 
 import os
 
@@ -9,8 +8,6 @@ import paths
 from config import Config
 
 from drawing.canvas import MemoryCanvas, CanvasToolbarWrapper
-from drawing.drawable import Image, ToggleDrawable
-from drawing.size import Size
 from enums import ProcessState
 from gui_util import require_gui_thread, run_on_gui
 from memory_view import MemoryView, RegisterList
@@ -49,6 +46,7 @@ class MainWindow(Gtk.Window):
         self.connect("delete-event", lambda *x: self.quit())
 
         self.set_default_size(1024, 768)
+        self.set_icon_from_file(paths.get_resource("img/circle.png"))
 
         self._init_components(app)
 
@@ -75,7 +73,8 @@ class MainWindow(Gtk.Window):
         menu_signals = {
             "menu-binary-load": lambda *x: self.binary_load_dialog(),
             "menu-source-open": lambda *x: self.source_open_dialog(),
-            "menu-quit": lambda *x: self.quit()
+            "menu-quit": lambda *x: self.quit(),
+            "menu-about-dialog": lambda *x: self._show_about_dialog()
         }
         Config.GUI_MAIN_WINDOW_MENU.connect_signals(menu_signals)
         self.menu = Config.GUI_MAIN_WINDOW_MENU.get_object("menu")
@@ -157,6 +156,12 @@ class MainWindow(Gtk.Window):
                                         .format(event_data.stop_reason))
         elif state == ProcessState.Running:
             run_on_gui(self.add_status_message, "Process is running...")
+
+    @require_gui_thread
+    def _show_about_dialog(self):
+        dialog = Config.GUI_MAIN_WINDOW_MENU.get_object("about_dialog")
+        dialog.run()
+        dialog.hide()
 
     @require_gui_thread
     def add_status_message(self, text):

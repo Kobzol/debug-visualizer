@@ -27,7 +27,7 @@ class FileOpenDialog(object):
         response = self.dialog.run()
         if response == Gtk.ResponseType.OK:
             return self.dialog.get_filename()
-        elif response == Gtk.ResponseType.CANCEL:
+        else:
             return None
 
     @require_gui_thread

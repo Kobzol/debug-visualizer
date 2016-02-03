@@ -2,6 +2,43 @@
 <!-- Generated with glade 3.16.1 -->
 <interface>
   <requires lib="gtk+" version="3.10"/>
+  <object class="GtkAboutDialog" id="about_dialog">
+    <property name="can_focus">False</property>
+    <property name="type_hint">dialog</property>
+    <property name="program_name">Devi</property>
+    <property name="version">0.5</property>
+    <property name="comments" translatable="yes">Debugger visualizer created for a bachelor thesis at VSB-TUO.
+Author: Jakub Beránek</property>
+    <property name="authors">Jakub Beránek</property>
+    <property name="artists">Breakpoint icon created by &lt;a href="http://www.iconarchive.com/artist/danieledesantis.html"&gt;Daniele De Santis&lt;/a&gt;
+Current line icon designed by &lt;a href="http://www.flaticon.com"&gt;Freepik&lt;/a&gt;</property>
+    <property name="logo_icon_name">gtk-about</property>
+    <property name="license_type">gpl-3-0</property>
+    <child internal-child="vbox">
+      <object class="GtkBox" id="about_dialog_vbox">
+        <property name="can_focus">False</property>
+        <property name="orientation">vertical</property>
+        <property name="spacing">2</property>
+        <child internal-child="action_area">
+          <object class="GtkButtonBox" id="aboutdialog-action_area1">
+            <property name="can_focus">False</property>
+            <property name="layout_style">end</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
+  <object class="GtkImage" id="image1">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-about</property>
+  </object>
   <object class="GtkImage" id="image_open">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -67,6 +104,31 @@
                 <property name="image">image_quit</property>
                 <property name="use_stock">False</property>
                 <signal name="activate" handler="menu-quit" swapped="no"/>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="menu_about">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">_About</property>
+        <property name="use_underline">True</property>
+        <child type="submenu">
+          <object class="GtkMenu" id="menu_about_wrapper">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <object class="GtkImageMenuItem" id="menu_about_dialog">
+                <property name="label" translatable="yes">_About</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="use_underline">True</property>
+                <property name="image">image1</property>
+                <property name="use_stock">False</property>
+                <signal name="activate" handler="menu-about-dialog" swapped="no"/>
               </object>
             </child>
           </object>
