@@ -41,14 +41,14 @@ class MainWindow(Gtk.Window):
         """
         @type app: app.VisualiserApp
         """
-        Gtk.Window.__init__(self, title="Visualizing debugger")
+        Gtk.Window.__init__(self, title="Devi")
 
         self.app = app
         self.accel_group = Gtk.AccelGroup()
         self.add_accel_group(self.accel_group)
         self.connect("delete-event", lambda *x: self.quit())
 
-        self.set_default_size(800, 600)
+        self.set_default_size(1024, 768)
 
         self._init_components(app)
 
