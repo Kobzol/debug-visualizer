@@ -178,9 +178,12 @@ class VariableManager(debugger.VariableManager):
             value = None
             children = []
 
-            if type.type_category in (TypeCategory.Builtin, TypeCategory.Pointer,
-                                      TypeCategory.Reference, TypeCategory.Function):
+            if type.type_category == TypeCategory.Builtin:
                 value = data
+            elif type.type_category == TypeCategory.Pointer:
+                value = data[data.rfind(" ") + 1:].lower()
+            elif type.type_category in (TypeCategory.Reference, TypeCategory.Function):
+                pass # TODO
             elif type.type_category == TypeCategory.String:
                 value = data.strip("\"")
             elif type.type_category in (TypeCategory.Class, TypeCategory.Struct):
@@ -193,7 +196,7 @@ class VariableManager(debugger.VariableManager):
                     for member in members:
                         children.append(self.get_variable("{0}.{1}".format(expression, member)))
 
-            elif type.type_category == TypeCategory.Vector:
+            elif type.type_category == TypeCategory.Vector: # TODO
                 length = self.debugger.communicator.send("call {0}.size()".format(expression))
 
                 if length:

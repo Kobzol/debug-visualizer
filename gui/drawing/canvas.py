@@ -6,7 +6,7 @@ from gi.repository import Gdk
 
 import time
 
-from drawing.drawable import DrawingUtils, Color, LinearLayout, LinearLayoutDirection
+from drawing.drawable import DrawingUtils, Color, LinearLayout, LinearLayoutDirection, VariableContainer
 from drawing.memtoview import MemToViewTransformer
 from drawing.mouse import MouseButtonState, MouseData, TranslationHandler
 from drawing.vector import Vector
@@ -131,7 +131,7 @@ class Canvas(Gtk.EventBox):
     def _notify_handlers(self):
         position = self.mouse_data.position - self.translation
         mouse_data = MouseData(self.mouse_data.lb_state, self.mouse_data.rb_state, position * (1.0 / self.zoom))
-        for drawable in self.drawables:  # TODO: synchronize
+        for drawable in self.get_drawables():  # TODO: synchronize
             drawable.click_handler.handle_mouse_event(mouse_data)
         self.translation_handler.handle_mouse_event(self.mouse_data)
 
@@ -193,8 +193,14 @@ class Canvas(Gtk.EventBox):
         self.cr.translate(self.translation.x, self.translation.y)
         self.cr.scale(self.zoom, self.zoom)
 
-        for drawable in self.drawables:
+        for drawable in self.get_drawables():
             drawable.draw()
+
+    def get_drawables(self):
+        """
+        @rtype: list of drawing.drawable.Drawable
+        """
+        return self.drawables
 
     def set_drawables(self, drawables):
         self.drawables = drawables
@@ -269,11 +275,62 @@ class Canvas(Gtk.EventBox):
 class ModelView(object):
     def __init__(self, model, view):
         """
-        @type model: object
+        @type model: debugee.Variable | debugee.Frame
         @type view: drawable.Drawable
         """
         self.model = model
         self.view = view
+
+
+class MemoryModel(object):
+    def __init__(self):
+        self.frames = []
+        self.heap = []
+        self.addr_to_drawable_map = {}
+
+    def add_frame(self, frame):
+        """
+        @type frame: ModelView
+        """
+        self.frames.append(frame)
+
+        for drawable in frame.view.children:
+            var = self._get_var_from_drawable(drawable)
+            if var and var.address:
+                self.addr_to_drawable_map[var.address] = drawable
+
+    def get_drawable_by_address(self, address):
+        """
+        @type address: str
+        @rtype: drawing.drawable.Drawable | None
+        """
+        if address in self.addr_to_drawable_map:
+            return self.addr_to_drawable_map[address]
+        else:
+            return None
+
+    def get_drawables(self):
+        """
+        @rtype: list of drawing.drawable.Drawable
+        """
+        return [mv.view for mv in self.frames + self.heap]
+
+    def _get_var_from_drawable(self, drawable):
+        if isinstance(drawable, VariableContainer):
+            return drawable.variable
+        else:
+            for child in drawable.children:
+                var = self._get_var_from_drawable(child)
+                if var:
+                    return var
+
+        return None
+
+    def _get_frame_models(self):
+        """
+        @rtype: list of debugee.Frame
+        """
+        return [fr.model for fr in self.frames]
 
 
 class MemoryCanvas(Canvas):
@@ -288,8 +345,7 @@ class MemoryCanvas(Canvas):
         self.debugger.on_frame_changed.subscribe(self._handle_frame_change)
 
         self.memtoview = MemToViewTransformer(self)
-        self.frames = []
-        self.remote_memory = []
+        self.memory_model = MemoryModel()
 
     def _handle_var_change(self, variable):
         self.redraw()
@@ -302,15 +358,17 @@ class MemoryCanvas(Canvas):
             frame = self.debugger.thread_manager.get_current_frame()
             self._rebuild(frame)
 
+    def get_drawables(self):
+        return self.memory_model.get_drawables()
+
     @require_gui_thread
     def _rebuild_gui(self, frame):
         """
         @type frame: debugee.Frame
         """
-        self.clear_drawables()
         self.fixed_wrapper.hide_all()
-        self.remote_memory = []
-        self.frames = []
+
+        self.memory_model = MemoryModel()
 
         wrapper = LinearLayout(self, LinearLayoutDirection.Horizontal)
         stack_wrapper = LinearLayout(self, LinearLayoutDirection.Vertical)
@@ -319,14 +377,14 @@ class MemoryCanvas(Canvas):
         if frame:
             for fr in self.debugger.thread_manager.get_frames_with_variables():
                 fr_wrapper = ModelView(fr, self.memtoview.transform_frame(fr))
-                self.frames.append(fr_wrapper)
+                self.memory_model.add_frame(fr_wrapper)
                 fr_wrapper.view.margin.bottom = 20
                 stack_wrapper.add_child(fr_wrapper.view)
 
             for var in frame.variables:  # TODO
                 var.on_value_changed.subscribe(self._handle_var_change)
 
-        self.set_drawables([wrapper])
+        self.redraw()
 
     def _rebuild(self, frame):
         run_on_gui(self._rebuild_gui, frame)

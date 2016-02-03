@@ -518,6 +518,16 @@ class Drawable(object):
 
         return RectangleBBox(self.position, self.get_computed_size() + self.padding.to_size())
 
+    def get_center(self):
+        """
+        Returns the center of the drawable.
+        @rtype: canvas.vector.Vector
+        """
+        rect = self.get_rect()
+        x = rect.x + rect.width / 2.0
+        y = rect.y + rect.height / 2.0
+        return Vector(x, y)
+
     def place_children(self):
         pass
 
@@ -751,7 +761,12 @@ class Image(Drawable):
         DrawingUtils.draw_image_from_surface(self.canvas, Vector(x, y), self.get_image(), self.get_computed_size())
 
 
-class VariableDrawable(Label):
+class VariableContainer(object):
+    def __init__(self):
+        self.variable = None
+
+
+class VariableDrawable(Label, VariableContainer):
     def __init__(self, canvas, variable, **properties):
         """
         @type canvas: canvas.Canvas
@@ -819,7 +834,7 @@ class CompositeLabel(LinearLayout):
         raise NotImplementedError()
 
 
-class StackFrameDrawable(CompositeLabel):
+class StackFrameDrawable(CompositeLabel, VariableContainer):
     def __init__(self, canvas, frame, **properties):
         """
         @type canvas: canvas.Canvas
@@ -861,12 +876,13 @@ class StackFrameDrawable(CompositeLabel):
         CompositeLabel.draw(self)
 
 
-class StructDrawable(CompositeLabel):
+class StructDrawable(CompositeLabel, VariableContainer):
     def __init__(self, canvas, struct, **properties):
         """
         @type canvas: canvas.Canvas
         @type struct: debugee.Variable
         """
+        self.variable = struct
         super(StructDrawable, self).__init__(canvas, struct, **properties)
 
     def create_composite_value(self, variable):
@@ -883,17 +899,31 @@ class StructDrawable(CompositeLabel):
         return self.composite.children
 
 
-class PointerDrawable(Drawable):
-    def __init__(self, canvas, pointer):
+class PointerDrawable(VariableDrawable):
+    def __init__(self, canvas, pointer, **properties):
         """
         @type canvas: canvas.Canvas
         @type pointer: debugee.Variable
         """
-        super(PointerDrawable, self).__init__(canvas)
-        self.pointer = pointer
+        super(PointerDrawable, self).__init__(canvas, pointer, **properties)
+        self.variable = pointer
+
+    def draw(self):
+        int_value = int(self.variable.value, 16)
+
+        if int_value == 0: # NULL pointer
+            self.label = "NULL"
+            super(PointerDrawable, self).draw()
+        else:
+            self.label = ""
+            super(PointerDrawable, self).draw()
+
+            drawable = self.canvas.memory_model.get_drawable_by_address(self.variable.value)
+            if drawable:
+                DrawingUtils.draw_arrow(self.canvas, self.get_center(), drawable.get_center(), Color(1))
 
 
-class VectorValueDrawable(Label):
+class VectorValueDrawable(Label, VariableContainer):
     def __init__(self, canvas, variable):
         """
         @type canvas: canvas.Canvas
@@ -909,14 +939,14 @@ class VectorValueDrawable(Label):
             return "C"
 
 
-class VectorDrawable(LinearLayout):
+class VectorDrawable(LinearLayout, VariableContainer):
     def __init__(self, canvas, vector):
         """
         @type canvas: drawing.canvas.Canvas
         @type vector: debugee.Variable
         """
         super(VectorDrawable, self).__init__(canvas, LinearLayoutDirection.Horizontal)
-        self.vector = vector
+        self.variable = vector
         self.max_elements = 3
 
         for i in xrange(0, min((self.max_elements, len(vector.children)))):
