@@ -166,13 +166,7 @@ class VariableManager(debugger.VariableManager):
 
             address_output = self.debugger.communicator.send("p &{0}".format(expression))
             if address_output:
-                address = self.parser.parse_print_expression(address_output.cli_data)
-                if address[0] == "(":
-                    address = address[address.rfind(" ") + 1:]
-                elif address[:2] == "0x":
-                    address = address[:address.find(" ")]
-                else:
-                    address = None
+                address = self._parse_address(address_output.cli_data)
 
             name = self._get_name(expression)
             value = None
@@ -182,7 +176,14 @@ class VariableManager(debugger.VariableManager):
                 value = data
             elif type.type_category == TypeCategory.Pointer:
                 value = data[data.rfind(" ") + 1:].lower()
-            elif type.type_category in (TypeCategory.Reference, TypeCategory.Function):
+            elif type.type_category == TypeCategory.Reference:
+                value = data[data.find("@") + 1:data.find(":")]
+                address = self.debugger.communicator.send("p &(&{0})".format(expression))
+                if address:
+                    address = self._parse_address(address.cli_data)
+                else:
+                    address = "0x0"
+            elif type.type_category == TypeCategory.Function:
                 pass # TODO
             elif type.type_category == TypeCategory.String:
                 value = data.strip("\"")
@@ -289,3 +290,16 @@ class VariableManager(debugger.VariableManager):
             return match.group(0)
         else:
             return expression
+
+    def _parse_address(self, expression):
+        """
+        @type expression: basestring
+        @rtype: basestring | None
+        """
+        address = self.parser.parse_print_expression(expression)
+        if address[0] == "(":
+            return address[address.rfind(" ") + 1:]
+        elif address[:2] == "0x":
+            return address[:address.find(" ")]
+        else:
+            return None
