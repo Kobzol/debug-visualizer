@@ -5,7 +5,7 @@ import re
 import debugger
 from enums import BasicTypeCategory, TypeCategory
 from mi.parser import Parser
-from debugee import Type, Variable, Register
+from debugee import Type, Variable, Register, PointerVariable
 
 basic_type_map = {
     "bool" : BasicTypeCategory.Bool,
@@ -174,8 +174,13 @@ class VariableManager(debugger.VariableManager):
 
             if type.type_category == TypeCategory.Builtin:
                 value = data
+                variable = Variable(address, name, value, type, expression)
+
             elif type.type_category == TypeCategory.Pointer:
                 value = data[data.rfind(" ") + 1:].lower()
+                target_type = self.get_type("*{0}".format(expression))
+                variable = PointerVariable(target_type, address, name, value, type, expression)
+
             elif type.type_category == TypeCategory.Reference:
                 value = data[data.find("@") + 1:data.find(":")]
                 address = self.debugger.communicator.send("p &(&{0})".format(expression))
@@ -183,10 +188,17 @@ class VariableManager(debugger.VariableManager):
                     address = self._parse_address(address.cli_data)
                 else:
                     address = "0x0"
+
+                target_type = self.get_type("*{0}".format(expression))
+                variable = PointerVariable(target_type, address, name, value, type, expression)
+
             elif type.type_category == TypeCategory.Function:
-                pass # TODO
+                variable = Variable(address, name, value, type, expression) # TODO
+
             elif type.type_category == TypeCategory.String:
                 value = data.strip("\"")
+                variable = Variable(address, name, value, type, expression)
+
             elif type.type_category in (TypeCategory.Class, TypeCategory.Struct):
                 result = self.debugger.communicator.send(
                     "python print([field.name for field in gdb.lookup_type(\"{0}\").fields()])".format(type.name)
@@ -196,6 +208,7 @@ class VariableManager(debugger.VariableManager):
                     members = self.parser.parse_struct_member_names(result.cli_data[0])
                     for member in members:
                         children.append(self.get_variable("{0}.{1}".format(expression, member)))
+                variable = Variable(address, name, value, type, expression)
 
             elif type.type_category == TypeCategory.Vector: # TODO
                 length = self.debugger.communicator.send("call {0}.size()".format(expression))
@@ -205,10 +218,11 @@ class VariableManager(debugger.VariableManager):
                     for i in xrange(length):
                         expr = "*({0}._M_impl._M_start + {1})".format(expression, i)
                         children.append(self.get_variable(expr))
+                variable = Variable(address, name, value, type, expression)
+
             else:
                 pass  # TODO
 
-            variable = Variable(address, name, value, type, expression)
             variable.on_value_changed.subscribe(self.update_variable)
 
             for child in children:

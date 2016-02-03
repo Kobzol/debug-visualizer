@@ -34,7 +34,7 @@ class Type(object):
 
     def __init__(self, name, type_category, basic_type_category, size):
         """
-        @type name: str
+        @type name: basestring
         @type type_category: enums.TypeCategory
         @type basic_type_category: enums.BasicTypeCategory
         @type size: int
@@ -92,11 +92,11 @@ class Variable(object):
 
     def __init__(self, address=None, name=None, value=None, type=None, path=None):
         """
-        @type address: str
-        @type name: str
-        @type value: str
+        @type address: basestring
+        @type name: basestring
+        @type value: basestring
         @type type: Type
-        @type path: str
+        @type path: basestring
         """
         self.address = address
         self.name = name
@@ -127,6 +127,15 @@ class Variable(object):
 
     def __repr__(self):
         return "Variable: {0} ({1}) = {2}".format(self.type, self.path if self.path else self.name, self.value)
+
+
+class PointerVariable(Variable):
+    def __init__(self, target_type, *args, **kwargs):
+        """
+        @type target_type: Type
+        """
+        super(PointerVariable, self).__init__(*args, **kwargs)
+        self.target_type = target_type
 
 
 class Frame(object):

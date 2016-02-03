@@ -333,6 +333,9 @@ class Drawable(object):
         self.bg_color = self._parse_property(properties, "bg_color", Drawable.get_default_bg_color(), Color.make_color)
         """@type bg_color: drawing.drawable.Color"""
 
+        self.name = self._parse_property(properties, "name", "")
+        """@type name: basestring"""
+
         self.parent = None
         """@type parent: Drawable"""
         self.children = []
@@ -455,7 +458,7 @@ class Drawable(object):
         self.children.append(child)
         child.parent = self
         self.click_handler.propagate_handler(child.click_handler)
-        self.place_children()
+        self.invalidate()
 
     def set_position(self, position):
         self.position = position.copy()
@@ -918,7 +921,7 @@ class PointerDrawable(VariableDrawable):
             self.label = ""
             super(PointerDrawable, self).draw()
 
-            drawable = self.canvas.memory_model.get_drawable_by_address(self.variable.value)
+            drawable = self.canvas.memory_model.get_drawable_by_pointer(self.variable)
             if drawable:
                 start = self.get_center()
                 target_rect = drawable.get_rect()

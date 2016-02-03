@@ -283,9 +283,16 @@ class ModelView(object):
 
 
 class MemoryModel(object):
-    def __init__(self):
+    def __init__(self, canvas):
+        """
+        @type canvas: MemoryCanvas
+        """
+        self.canvas = canvas
         self.frames = []
         self.heap = []
+        self.heap_wrapper = None
+        self.stack_wrapper = None
+        self.wrapper = None
         self.addr_to_drawable_map = {}
 
     def add_frame(self, frame):
@@ -299,21 +306,36 @@ class MemoryModel(object):
             if var and var.address:
                 self.addr_to_drawable_map[var.address] = drawable
 
-    def get_drawable_by_address(self, address):
+    def get_drawable_by_pointer(self, pointer):
         """
-        @type address: str
+        @type pointer: debugee.PointerVariable
         @rtype: drawing.drawable.Drawable | None
         """
-        if address in self.addr_to_drawable_map:
-            return self.addr_to_drawable_map[address]
+        if pointer.value in self.addr_to_drawable_map:
+            return self.addr_to_drawable_map[pointer.value]
         else:
-            return None
+            heap_var = self.canvas.debugger.variable_manager.get_variable("{{{}}}({})".format(
+                pointer.target_type.name,
+                pointer.value
+            ))
+
+            if heap_var:
+                drawable = self.canvas.memtoview.transform_var(heap_var)
+                mv = ModelView(heap_var, drawable)
+                self.addr_to_drawable_map[pointer.value] = drawable
+                self.heap.append(mv)
+                self.heap_wrapper.add_child(drawable)
+                self.canvas.redraw()
+
+                return drawable
+            else:
+                return None
 
     def get_drawables(self):
         """
         @rtype: list of drawing.drawable.Drawable
         """
-        return [mv.view for mv in self.frames + self.heap]
+        return [self.wrapper]
 
     def _get_var_from_drawable(self, drawable):
         if isinstance(drawable, VariableContainer):
@@ -326,11 +348,28 @@ class MemoryModel(object):
 
         return None
 
-    def _get_frame_models(self):
+    def prepare_gui(self, selected_frame=None):
         """
-        @rtype: list of debugee.Frame
+        @type selected_frame: debugee.Frame
         """
-        return [fr.model for fr in self.frames]
+        self.wrapper = LinearLayout(self.canvas, LinearLayoutDirection.Horizontal, name="wrapper")
+
+        self.stack_wrapper = LinearLayout(self.canvas, LinearLayoutDirection.Vertical)
+        self.wrapper.add_child(self.stack_wrapper)
+
+        self.heap_wrapper = LinearLayout(self.canvas, LinearLayoutDirection.Vertical)
+        self.heap_wrapper.margin.left = 80
+        self.wrapper.add_child(self.heap_wrapper)
+
+        if selected_frame:
+            for i, fr in enumerate(self.canvas.debugger.thread_manager.get_frames_with_variables()):
+                fr_wrapper = ModelView(fr, self.canvas.memtoview.transform_frame(fr))
+                self.add_frame(fr_wrapper)
+                fr_wrapper.view.margin.bottom = 20
+                self.stack_wrapper.add_child(fr_wrapper.view)
+
+            for var in selected_frame.variables:
+                var.on_value_changed.subscribe(self.canvas._handle_var_change)
 
 
 class MemoryCanvas(Canvas):
@@ -345,7 +384,9 @@ class MemoryCanvas(Canvas):
         self.debugger.on_frame_changed.subscribe(self._handle_frame_change)
 
         self.memtoview = MemToViewTransformer(self)
-        self.memory_model = MemoryModel()
+        self.memory_model = None
+
+        self._rebuild(None)
 
     def _handle_var_change(self, variable):
         self.redraw()
@@ -368,21 +409,8 @@ class MemoryCanvas(Canvas):
         """
         self.fixed_wrapper.hide_all()
 
-        self.memory_model = MemoryModel()
-
-        wrapper = LinearLayout(self, LinearLayoutDirection.Horizontal)
-        stack_wrapper = LinearLayout(self, LinearLayoutDirection.Vertical)
-        wrapper.add_child(stack_wrapper)
-
-        if frame:
-            for fr in self.debugger.thread_manager.get_frames_with_variables():
-                fr_wrapper = ModelView(fr, self.memtoview.transform_frame(fr))
-                self.memory_model.add_frame(fr_wrapper)
-                fr_wrapper.view.margin.bottom = 20
-                stack_wrapper.add_child(fr_wrapper.view)
-
-            for var in frame.variables:  # TODO
-                var.on_value_changed.subscribe(self._handle_var_change)
+        self.memory_model = MemoryModel(self)
+        self.memory_model.prepare_gui(frame)
 
         self.redraw()
 
