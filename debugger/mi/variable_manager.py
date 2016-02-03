@@ -170,6 +170,7 @@ class VariableManager(debugger.VariableManager):
 
             name = self._get_name(expression)
             value = None
+            variable = None
             children = []
 
             if type.type_category == TypeCategory.Builtin:
@@ -223,11 +224,12 @@ class VariableManager(debugger.VariableManager):
             else:
                 pass  # TODO
 
-            variable.on_value_changed.subscribe(self.update_variable)
+            if variable:
+                variable.on_value_changed.subscribe(self.update_variable)
 
-            for child in children:
-                if child:
-                    variable.add_child(child)
+                for child in children:
+                    if child:
+                        variable.add_child(child)
 
             return variable
 
@@ -239,12 +241,12 @@ class VariableManager(debugger.VariableManager):
         Updates the variable's value in the debugged process.
         @type variable: debugee.Variable
         """
-        format = "set variable {0} = {1}"
+        format = "set variable *{0} = {1}"
 
         if variable.type.type_category == TypeCategory.String:
-            format = "call {0}.assign(\"{1}\")"
+            format = "call static_cast<std::string*>({0})->assign(\"{1}\")"
 
-        result = self.debugger.communicator.send(format.format(variable.path, variable.value))
+        result = self.debugger.communicator.send(format.format(variable.address, variable.value))
 
         return result.is_success()
 
