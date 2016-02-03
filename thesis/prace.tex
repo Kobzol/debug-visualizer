@@ -64,7 +64,7 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 \AddAcronym{GDB}{The GNU Project Debugger}
 \AddAcronym{GNU}{GNU's Not Unix!}
 \AddAcronym{GUI}{Graphical user interface}
-
+\AddAcronym{IPC}{Inter-process communication}
 
 % Zadame cestu a jmeno souboru ci nekolika souboru s digitalizovanou podobou zadani prace
 % Pri sazbe se pak hledaji soubory Figures/Zadani1.jpg, Figures/Zadani2.jpg atd.
@@ -142,11 +142,11 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 		zastavený, může ho ladící nástroj tzv. krokovat, tedy spouštět instrukci po instrukci. K tomu lze použít funkci ptrace s příznakem PTRACE\_SINGLESTEP,
 		která provede přesně jednu instrukci v laděném procesu (proces se také zastaví, pokud se dostane na vstupní nebo výstupní bod systémového volání).
 		Ladící nástroje obvykle nabízí krokování na vyšší úrovni než pouze po jedné instrukci, jelikož to by bylo zbytečně zdlouhavé (u vyšších programovacích
-		jazyků se jeden řádek zdrojového kódu může mapovat na desítky až stovky instrukcí). Obvykle jsou dostupné následující typy krokování:
+		jazyků se jeden řádek zdrojového kódu může mapovat na desítky až stovky instrukcí). Obvykle jsou dostupné následující krokovací akce:
 		\begin{description}
-			\item[Step over] - krokování po řádku zdrojového kódu
-			\item[Step in] - stejná funkce jako step over, ale program se zastaví, pokud vstoupí dovnitř funkce
-			\item[Step out] - program bude pokračovat, dokud neskončí funkce, ve které se právě nachází
+			\item[Krok po řádku] - program se obnoví, provede instrukce odpovídající jednomu řádku zdrojového kódu a poté se opět zastaví
+			\item[Krok dovnitř funkce] - funguje stejně jako krok po řádku, ale program se zastaví i při zavolání funkce
+			\item[Krok ven z funkce] - program bude pokračovat, dokud neskončí funkce, ve které se právě nachází
 		\end{description}
 		
 	\subsection{Obousměrné mapování zdrojového kódu na instrukce}
@@ -284,10 +284,7 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 				ve zdrojovém kódu jejich současnou hodnotu, což velmi urychluje pochopení stavu výpočtu.
 		\end{description}
 
-\section{Vizualizační nástroj Devi}
-	Tato kapitola obsahuje popis vizualizace ladění a návrh a implementaci vizualizačního nástroje.
-
-	\subsection{Popis problému}
+\section{Implementace vizualizačního nástroje}
 	Jazyky C a C++ jsou velmi komplexní a dovolují programátorům pracovat s hardwarem počítače na značně nízké úrovni. Kvůli mnohým vlastnostem,
 	jako je absence automatické správy paměti nebo možnost provádět potencionálně nebezpečné operace s paměťovými ukazateli, jsou velmi náchylné ke vzniku
 	těžko odhalitelných chyb. Používání debuggeru, který dokáže detailně zkoumat paměť běžícího procesu a krokovat ho, je tedy v těchto jazycích nutností,
@@ -325,9 +322,8 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 	
 	\subsection{Architektura}
 	\par Pro implementaci programu jsem zvolil programovací jazyk \textbf{Python}\footnote{http://www.python.org} ve verzi 2.7. Novější verze 3.x nebyla použita
-	z důvodu zachování kompatibility s již existujícími API pro debuggery, které v době tvorby této práce Python 3 ještě zcela nepodporovaly. Aplikaci jsem psal
-	tak, aby bylo v případě potřeby snadné ji přepsat do Pythonu 3. Pro tuto konverzi lze použít i automatizované nástroje, například \textbf{2to3}
-	\footnote{https://docs.python.org/2/library/2to3.html}.
+	z důvodu zachování kompatibility s již existujícími API pro debuggery, které v době tvorby této práce Python 3 ještě zcela nepodporovaly. Pro případnou
+	budoucí konverzi do Pythonu 3 lze použít automatizované nástroje, například \textbf{2to3} \footnote{https://docs.python.org/2/library/2to3.html}.
 	Python jsem vybral, protože je vhodný k rychlému vývoji aplikací, existuje pro něj několik rozhraní pracujících s debuggery a umí snadno používat
 	kód napsaný v jazycích C a C++. Navíc je multiplatformní, což by usnadnilo případný port aplikace na jiný operační systém.
 	
@@ -343,70 +339,95 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 	\par Vizualizační nástroj jsem pojmenoval a dále jej v textu budu označovat jako \textit{Devi}.
 	Nástroj je tvořen dvěmi samostatnými komponentami, aplikací s grafickým rozhraním, která slouží k vizualizaci a k interakci s laděným procesem, a knihovny,
 	která poskytuje rozhraní pro komunikaci s libovolným debuggerem. Obrázek \ref{fig:DeviArchitecture} zachycuje pohled na architekturu aplikace z vysoké úrovně.
-	Uživatelské rozhraní komunikuje s knihovnou, která zprostředkovává komunikaci s debuggerem. Na obrázku jsou uvedeny tři implementace této komunikační vrstvy,
+	Uživatelské rozhraní komunikuje s knihovnou, která zprostředkovává komunikaci s debuggerem. Na obrázku jsou zobrazeny tři implementace této komunikační vrstvy,
 	které jsou popsány dále v textu. Debugger zajišťuje komunikaci a manipulaci s laděným procesem. Celá aplikace je tak rozdělena do několika
 	vrstev, které jsou na sobě nezávislé.
 	
 	\InsertFigure{Figures/bak_architektura}{\textwidth}{Architektura Devi}{fig:DeviArchitecture}
 		
-		\subsubsection{Knihovna pro komunikaci s debuggery}
-			Tato knihovna tvoří rozhraní pro komunikaci s libovolným ladícím nástrojem. Definuje abstraktní typy popisující laděný proces a není tak závislá na
-			použitém ladícím nástroji. Není nijak závislá ani na grafickém rozhraní nástroje, lze ji tedy použít pro programovatelné ovládání debuggerů i v jiném
-			projektu.
-			
-			\vspace{5mm}
-			
-			\par Knihovna obsahuje třídy představující části laděného procesu, které jsou dostatečně obecné na to, aby se daly aplikovat na libovolný
-			proces i debugger. Následuje popis těchto tříd, které lze nalézt v modulu \textit{debugger.debugee}.
-			
-			\begin{description}
-				\item[Type] - představuje datový typ proměnné, obsahuje jeho název, kategorii a velikost
-				\item[Variable] - představuje proměnnou, obsahuje její název, datový typ, adresu v paměti, hodnotu a potomky
-				\item[Frame] - představuje rámec zásobníku, obsahuje jeho úroveň v zásobníku a název a lokaci funkce, z které je vyvolán % TODO
-				\item[InferiorThread] - představuje vlákno procesu, obsahuje jeho identifikátor, název, stav a současný zásobníkový rámec
-				\item[ThreadInfo] - uchovává seznam všech vláken v procesu a také současně zvolené vlákno
-				\item[Breakpoint] - představuje breakpoint, obsahuje jeho identifikátor a zdrojový soubor a řádek, na kterém je umístěn
-				\item[Register] - představuje registr procesoru, obsahuje jeho název a hodnotu
-			\end{description}
-			
-			\vspace{5mm}
-			
-			\par Dále jsou v knihovně třídy, které tvoří obecné API pro přístup k debuggeru. Slouží jako rodičovské třídy pro jednotlivé implementace
-			komunikace s debuggerem. Jejich smyslem není implementovat společné chování, jelikož jednotlivé debuggery a implementace přístupu k nim
-			se od sebe můžou značně lišit, a tak poskytují pouze rozhraní. Následuje seznam tříd tohoto rozhraní.
-			
-			\begin{description}
-				\item[Debugger] - představuje abstrakci ladícího nástroje, který umožňuje načtení binárního souboru programu, jeho spuštění, zastavení
-				a krokování. Dále také uchovává stav laděného procesu a obsahuje všechny ostatní komponenty rozhraní vyjmenované níže.
-				\item[VariableManager] - stará se o čtení registrů a paměti procesu a o získávání a změnu jeho proměnných
-				\item[ThreadManager] - stará se o získávání a volbu vláken a zásobníkových rámců
-				\item[FileManager] - stará se o získávání současné pozice a hlavního souboru laděného procesu. Poskytuje také převod zdrojového kódu
-				na strojový kód.
-				\item[BreakpointManager] - stará se o přidávání, mazání a načítání breakpointů
-				\item[IOManager] - stará se o komunikaci s laděným procesem pomocí čtení z jeho standardního a chybového výstupu a zápisu do jeho standardního vstupu
-			\end{description}
-			
-			Pro účely této práce jsem v této knihovně vytvořil několik implementací pro komunikaci s GDB a LLDB, které budou dále popsány.
+	\subsection{Knihovna pro komunikaci s debuggery}
+		Tato knihovna tvoří rozhraní pro komunikaci s libovolným ladícím nástrojem. Definuje abstraktní typy popisující laděný proces a není tak závislá na
+		použitém ladícím nástroji. Není nijak závislá ani na grafickém rozhraní nástroje, lze ji tedy použít pro programovatelné ovládání debuggerů i v jiném
+		projektu. Knihovna obsahuje třídy představující části laděného procesu, které jsou dostatečně obecné na to, aby se daly aplikovat na libovolný
+		proces i debugger. Následuje popis těchto typů.
+		
+		\begin{description}
+			\item[Type] představuje datový typ proměnné, obsahuje jeho název, kategorii a velikost
+			\item[Variable] představuje proměnnou, obsahuje její název, datový typ, adresu v paměti, hodnotu a potomky
+			\item[Frame] představuje rámec zásobníku, obsahuje jeho úroveň v zásobníku a název a lokaci funkce, z které je vyvolán % TODO
+			\item[InferiorThread] představuje vlákno procesu, obsahuje jeho identifikátor, název, stav a současný zásobníkový rámec
+			\item[ThreadInfo] uchovává seznam všech vláken v procesu a také současně zvolené vlákno
+			\item[Breakpoint] představuje breakpoint, obsahuje jeho identifikátor a zdrojový soubor a řádek, na kterém je umístěn
+			\item[Register] představuje registr procesoru, obsahuje jeho název a hodnotu
+		\end{description}
+		
+		\vspace{5mm}
+		
+		\par Dále jsou v knihovně třídy, které tvoří obecné API pro přístup k debuggeru. Slouží jako rodičovské třídy pro jednotlivé implementace
+		komunikace s debuggerem. Jejich smyslem není implementovat společné chování, jelikož jednotlivé debuggery a implementace přístupu k nim
+		se od sebe můžou značně lišit, a tak poskytují pouze rozhraní. Následuje seznam tříd tohoto rozhraní.
+		
+		\begin{description}
+			\item[Debugger] představuje abstrakci ladícího nástroje, který umožňuje načtení binárního souboru programu, jeho spuštění, zastavení
+			a krokování. Dále také uchovává stav laděného procesu a obsahuje všechny ostatní komponenty rozhraní vyjmenované níže.
+			\item[VariableManager] - se stará o čtení registrů a paměti procesu a o získávání a změnu jeho proměnných
+			\item[ThreadManager] se stará o získávání a volbu vláken a zásobníkových rámců
+			\item[FileManager] se stará o získávání současné pozice a hlavního souboru laděného procesu. Poskytuje také převod zdrojového kódu
+			na strojový kód.
+			\item[BreakpointManager] se stará o přidávání, mazání a načítání breakpointů
+			\item[IOManager] se stará o komunikaci s laděným procesem pomocí čtení z jeho standardního a chybového výstupu a zápisu do jeho standardního vstupu
+		\end{description}
+		
+		Pro účely této práce jsem v této knihovně vytvořil a otestoval několik implementací pro komunikaci s GDB a LLDB.
 
-			\paragraph{Python API pro GDB}
-			GDB obsahuje rozhraní \footnote{https://sourceware.org/gdb/onlinedocs/gdb/Python-API.html}, které nabízí možnost načtení skriptů v Pythonu 2, které
-			můžou ovládat GDB a přistupovat k jeho API. To nabízí většinu nejpoužívanějších funkcí GDB ve formě tříd a metod. Funkce GDB, které v API nejsou
-			obsaženy, lze vyvolat pomocí přímého provádění textových příkazů. Nevýhoda tohoto API je, že neumí samo spustit instanci GDB a musí tak být
-			načteno v již běžícím procesu GDB. Nelze jej tedy použít přímo v kódu aplikace, protože samotné API běží v jiném procesu. Tento problém byl vyřešen
-			komunikací se skriptem běžícím v procesu GDB pomocí TCP/IP. Jelikož je ale toto řešení komplikovanější než ostatní způsoby práce s GDB a při testování
-			nebylo stabilní, tak jeho implementace nebyla dokončena a byl zvolen jiný postup, který je popsán níže.
+		\subsubsection{Python API pro GDB}
+		GDB obsahuje rozhraní \footnote{https://sourceware.org/gdb/onlinedocs/gdb/Python-API.html}, které nabízí možnost načtení skriptů v Pythonu 2, které
+		můžou ovládat GDB a přistupovat k jeho vnitřním funkcím. Většina nejpoužívanějších funkcí GDB je tak dostupná ve formě tříd a funkcí.
+		Funkce GDB, které v API nejsou obsaženy, lze vyvolat pomocí přímého provádění textových příkazů.
+		Nevýhoda tohoto přístupu je, že toto API neumí samo spustit instanci GDB a musí tak být načteno v již běžícím GDB procesu.
+		Nelze jej tedy použít přímo v kódu jiné aplikace bez použití IPC. Tento problém jsem vyřešil TCP komunikací se skriptem běžícím
+		v procesu GDB. Jelikož je ale toto řešení komplikovanější než ostatní způsoby práce s GDB a při testování
+		nebylo stabilní, tak jsem jeho implementaci nadále nerozšiřoval.
+		
+		\subsubsection{Python API pro LLDB}
+		Stejně jako GDB, i LLDB poskytuje API v Pythonu. Lze jej načíst do procesu LLDB a automatizovat tak průběh ladění, stejně jako u dříve zmíněného GDB
+		rozhraní. Navíc jej ale lze také použít jako knihovnu, která sama vytváří instanci LLDB a je tedy jednoduché ji použít přímo v externím kódu.
+		Pomocí tohoto API jsem vytvořil komunikační vrstvu, která implementuje většinu potřebných funkcí pro tvorbu vizualizačního nástroje.
+		Nicméně stejně jako celé LLDB je toto API zatím ve vývoji a obsahuje drobné chyby, například nepřesné zobrazování stavu vláken. Kvůli těmto nedostatkům
+		jsem do této implementace nepřidával podporu ladění vícevláknových aplikací.
+		
+		\subsubsection{Protokol GDB/MI}
+		MI je komunikační rozhraní pro ovládání GDB pomocí textových příkazů. Nejedná se o klasické příkazy používané při manuálním ovládání GDB, ale o
+		speciální příkazy přizpůsobené pro jednoduché strojové zpracování. Obdobně jako Python API pro GDB, obsahuje rozhraní pro nejpoužívanější funkce GDB a
+		zbytek funkcí lze používat pomocí běžných textových příkazů. Použití MI je běžným a doporučeným \cite{gdb-mi-usage} způsobem pro programovou komunikaci
+		s GDB a tvorbu grafických rozhraní. Existují volně dostupné knihovny pro Python i C/C++, které umí komunikovat s GDB pomocí MI protokolu, nicméně za
+		účelem pochopení fungování tohoto protokolu a možnosti přizpůsobení komunikace jsem vytvořil vlastní komunikační modul, který je popsán dále v textu.
+		
+		\begin{description}
+			\item[Komunikace s debuggerem]
+			\item[Komunikace s laděným procesem]
+			MI implicitně přesměrovává veškerý výstup z laděného procesu na svůj vlastní výstup. Toto chování není moc užitečné, jelikož se výstup a vstup laděného
+			procesu mísí s vstupem a výstupem samotného ovládání GDB. Pro vyřešení tohoto problému lze v GDB pomocí příkazu \textit{-inferior-tty-set}
+			\footnote{https://sourceware.org/gdb/onlinedocs/gdb/GDB\_002fMI-Miscellaneous-Commands.html} nastavit terminál, s kterým bude laděný proces komunikovat.
+			Při použití tohoto řešení se mi nepovedlo komunikovat s procesem v reálném čase kvůli vnitřnímu bufferování terminálu a problému s čtením z terminálu z
+			jiného vlákna. % TODO: dát pryč předchozí větu?
+			Rozhodl jsem se tedy použít třetí řešení, které při komunikaci s laděným procesem naprosto obchází GDB.
+			% TODO: vložit obrázek s nákresem I/O komunikace
 			
-			\paragraph{Protokol GDB/MI}
-			MI je komunikační rozhraní pro ovládání GDB pomocí textových příkazů. Nejedná se o klasické příkazy používané při manuálním ovládání GDB, ale o
-			speciální příkazy přizpůsobené pro jednoduché strojové zpracování. Obdobně jako Python API pro GDB, obsahuje rozhraní pro nejpoužívanější funkce GDB a
-			zbytek funkcí lze používat pomocí běžných textových příkazů. Použití MI je běžným a doporučeným \cite{gdb-mi-usage} způsobem pro programovou komunikaci
-			s GDB a psaní grafických rozhraní. Existují volně dostupné knihovny pro Python i C/C++, které umí komunikovat s GDB pomocí MI protokolu, nicméně za
-			účelem pochopení fungování tohoto protokolu a maximální volnosti v implementaci byl vytvořen vlastní komunikační modul.
+			\par Před zapnutím laděného procesu se v systémové složce pro dočasná data vytvoří tři speciální soubory, jeden pro vstup a dva pro výstup
+			(klasický a chybový).
+			Tyto soubory jsou vytvořeny pomocí systémového volání \textit{mkfifo}\footnote{http://linux.die.net/man/3/mkfifo}, které vytváří pojmenovanou FIFO pípu
+			% TODO: pípa?
+			reprezentovanou souborem. Takto vytvořené soubory lze poté otevřít pro čtení nebo zápis. Narozdíl od klasických souborů ale musí být tato pípa otevřená na
+			obou svých koncích zároveň. Pokud se tedy nějaký proces pokusí otevřít pípu pro čtení, bude zablokován, dokud se nějaký jiný proces nepokusí otevřít danou
+			pípu pro čtení. Obsah pípy není uložen na souborovém disku, ale je v paměti, lze tak pomocí ní komunikovat v reálném čase mezi procesy, což jsem využil
+			pro komunikace s laděným procesem. Na straně knihovny se vytvoří vlákno, které tyto soubory otevře a neustále z nich čte data. Umí také laděnému procesu
+			zaslat data na jeho standardní vstup. Při zapnutí laděného procesu v GDB je poté jeho standardní výstup i vstup přesměrován do těchto souborů pomocí
+			standardního přesměrování vstupu a výstupu ze shellu. % TODO: co je shell?
 			
-			\paragraph{Python API pro LLDB}
-			Stejně jako GDB, i LLDB poskytuje API v Pythonu. Lze jej načíst do procesu LLDB a automatizovat průběh ladění, navíc jej ale lze také použít jako
-			knihovnu, která sama vytváří instance LLDB a je tedy jednoduché ji použít přímo v externím kódu. Stejně jako samotné LLDB je ale zatím ve vývoji
-			a obsahuje drobné chyby, například nepřesné zobrazování stavu vláken.
+			
+			Po ukočení laděného procesu se poté tyto dočasné soubory smažou.
+		\end{description}
 			
 	\subsection{Vizualizační část}
 	
