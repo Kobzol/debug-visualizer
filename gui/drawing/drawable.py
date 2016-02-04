@@ -784,6 +784,9 @@ class VariableDrawable(Label, VariableContainer):
     def _handle_value_change(self, value):
         self.variable.value = value
 
+    def get_tooltip(self):
+        return "Value: {}\nAddress: {}".format(self.variable.value, self.variable.address)
+
     def handle_mouse_click(self, mouse_data):
         """
         @type mouse_data: mouse.MouseData
