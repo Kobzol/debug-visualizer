@@ -122,10 +122,11 @@ class SourceEditor(GtkSource.View):
         self.breakpoint_lines = lines
 
     def _handle_mouse_move(self, event):
-        x, y = self.window_to_buffer_coords(Gtk.TextWindowType.WIDGET, event.x, event.y)
+        x, y = self.window_to_buffer_coords(Gtk.TextWindowType.TEXT, event.x, event.y)
         iter = self.get_iter_at_location(x, y)
-
-        symbol = self.analyser.get_symbol_name(iter.get_line() + 1, iter.get_line_offset())
+        line = iter.get_line() + 1
+        column = iter.get_line_offset() + 1
+        symbol = self.analyser.get_symbol_name(line, column)
 
         if symbol is not None:
             self.on_symbol_hover.notify(self, symbol)
