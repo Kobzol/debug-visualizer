@@ -96,6 +96,34 @@ class FixedGuiWrapper(Gtk.Fixed):
             widget.show()
 
 
+class LayeredDrawScheduler(object):
+    def __init__(self, size):
+        """
+        @type size: int
+        """
+        self.size = size
+        self.draw_actions = [[] for i in xrange(size)]
+
+    @property
+    def last_level(self):
+        return self.size - 1
+
+    def reset(self):
+        self.draw_actions = [[] for i in xrange(self.size)]
+
+    def register_action(self, level, action, *args, **kwargs):
+        """
+        @type level: int
+        @type action: callable
+        """
+        self.draw_actions[level].append((action, args, kwargs))
+
+    def invoke_actions(self):
+        for level in self.draw_actions:
+            for action in level:
+                action[0](*action[1], **action[2])
+
+
 class Canvas(Gtk.EventBox):
     def __init__(self):
         super(Canvas, self).__init__()
@@ -127,6 +155,8 @@ class Canvas(Gtk.EventBox):
         self.drawables = []
         self.tooltip_drawable = None
         self.first_draw = True
+
+        self.draw_scheduler = LayeredDrawScheduler(3)
 
     def _notify_handlers(self):
         position = self.mouse_data.position - self.translation
@@ -193,8 +223,12 @@ class Canvas(Gtk.EventBox):
         self.cr.translate(self.translation.x, self.translation.y)
         self.cr.scale(self.zoom, self.zoom)
 
+        self.draw_scheduler.reset()
+
         for drawable in self.get_drawables():
             drawable.draw()
+
+        self.draw_scheduler.invoke_actions()
 
     def get_drawables(self):
         """

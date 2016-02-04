@@ -912,26 +912,31 @@ class PointerDrawable(VariableDrawable):
         self.variable = pointer
 
     def draw(self):
-        int_value = int(self.variable.value, 16)
+        try:
+            int_value = int(self.variable.value, 16)
 
-        if int_value == 0: # NULL pointer
-            self.label = "NULL"
+            if int_value == 0:  # NULL pointer
+                self.label = "NULL"
+                super(PointerDrawable, self).draw()
+            else:
+                self.label = ""
+                super(PointerDrawable, self).draw()
+
+                drawable = self.canvas.memory_model.get_drawable_by_pointer(self.variable)
+                if drawable:
+                    start = self.get_center()
+                    target_rect = drawable.get_rect()
+                    target = drawable.get_center()
+                    target.x += target_rect.width / 2.0
+                    path = [start,
+                            Vector(start.x, target.y),
+                            target]
+
+                    self.canvas.draw_scheduler.register_action(self.canvas.draw_scheduler.last_level,
+                       lambda: DrawingUtils.draw_arrow_path(self.canvas, path, Color(1)))
+        except:
+            self.label = "Invalid"
             super(PointerDrawable, self).draw()
-        else:
-            self.label = ""
-            super(PointerDrawable, self).draw()
-
-            drawable = self.canvas.memory_model.get_drawable_by_pointer(self.variable)
-            if drawable:
-                start = self.get_center()
-                target_rect = drawable.get_rect()
-                target = drawable.get_center()
-                target.x += target_rect.width / 2.0
-                path = [start,
-                        Vector(start.x, target.y),
-                        target]
-
-                DrawingUtils.draw_arrow_path(self.canvas, path, Color(1))
 
 
 class VectorValueDrawable(Label, VariableContainer):
