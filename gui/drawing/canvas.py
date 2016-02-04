@@ -159,8 +159,7 @@ class Canvas(Gtk.EventBox):
         self.draw_scheduler = LayeredDrawScheduler(3)
 
     def _notify_handlers(self):
-        position = self.mouse_data.position - self.translation
-        mouse_data = MouseData(self.mouse_data.lb_state, self.mouse_data.rb_state, position * (1.0 / self.zoom))
+        mouse_data = self.get_mouse_data()
         for drawable in self.get_drawables():  # TODO: synchronize
             drawable.click_handler.handle_mouse_event(mouse_data)
         self.translation_handler.handle_mouse_event(self.mouse_data)
@@ -229,6 +228,13 @@ class Canvas(Gtk.EventBox):
             drawable.draw()
 
         self.draw_scheduler.invoke_actions()
+
+    def get_mouse_data(self):
+        """
+        @rtype: drawing.mouse.MouseData
+        """
+        position = self.mouse_data.position - self.translation
+        return MouseData(self.mouse_data.lb_state, self.mouse_data.rb_state, position * (1.0 / self.zoom))
 
     def get_drawables(self):
         """
