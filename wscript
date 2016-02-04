@@ -16,10 +16,12 @@ def options(opt):
     opt.add_option("-l", "--lldb", default="", action="store", help="version of LLDB to use")
 
     opt.load("python")
+    opt.load("compiler_c")
 
 
 def configure(conf):
     conf.load("python")
+    conf.load("compiler_c")
 
     patch_lldb(conf)
 
@@ -30,6 +32,10 @@ def configure(conf):
     conf.check_python_module("gi.repository.Gtk")
     conf.check_python_module("jsonpickle")
     conf.check_python_module("epydoc")
+
+
+def build(ctx):
+    ctx.recurse("debugger/mi")
 
 
 def cleanall(ctx):

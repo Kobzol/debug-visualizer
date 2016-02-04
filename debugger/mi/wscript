@@ -1,0 +1,6 @@
+def build(ctx):
+    ctx.shlib(
+        source="alloc_hook.c",
+        lib="dl",
+        target="allochook"
+    )
