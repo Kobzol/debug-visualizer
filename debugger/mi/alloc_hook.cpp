@@ -4,9 +4,13 @@
 
 #include <dlfcn.h>
 
-#include <assert.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <cassert>
+#include <cstdlib>
+#include <cstdio>
+
+#include <mutex>
+
+#define ALLOC_FILE_TMP_VALUE ((FILE*) 1)
 
 typedef void* (*malloc_orig_t)(size_t size);
 static malloc_orig_t malloc_orig = NULL;
@@ -19,7 +23,18 @@ static realloc_orig_t realloc_orig = NULL;
 
 static FILE* alloc_file = NULL;
 
-#define ALLOC_FILE_TMP_VALUE ((FILE*) 1)
+static std::mutex alloc_mutex;
+
+template <typename T>
+void load_symbol(T& target, const char* name)
+{
+    std::lock_guard<std::mutex> guard(alloc_mutex);
+
+    if (!target)
+    {
+        target = (T) dlsym(RTLD_NEXT, name);
+    }
+}
 
 void close_file(void)
 {
@@ -29,12 +44,9 @@ void close_file(void)
     }
 }
 
-void* malloc(size_t size)
+void open_alloc_file()
 {
-    if (!malloc_orig)
-    {
-        malloc_orig = (malloc_orig_t) dlsym(RTLD_NEXT, "malloc");
-    }
+    std::lock_guard<std::mutex> guard(alloc_mutex);
 
     if (!alloc_file)
     {
@@ -47,6 +59,19 @@ void* malloc(size_t size)
 
         assert(alloc_file);
         atexit(close_file);
+    }
+}
+
+void* malloc(size_t size)
+{
+    if (!malloc_orig)
+    {
+        load_symbol(malloc_orig, "malloc");
+    }
+
+    if (!alloc_file)
+    {
+        open_alloc_file();
     }
 
     if (alloc_file && alloc_file != ALLOC_FILE_TMP_VALUE)
@@ -63,7 +88,12 @@ void free(void* addr)
 {
     if (!free_orig)
     {
-        free_orig = (free_orig_t) dlsym(RTLD_NEXT, "free");
+        load_symbol(free_orig, "free");
+    }
+
+    if (!alloc_file)
+    {
+        open_alloc_file();
     }
 
     if (alloc_file && alloc_file != ALLOC_FILE_TMP_VALUE)
@@ -78,7 +108,12 @@ void* realloc(void* addr, size_t size)
 {
     if (!realloc_orig)
     {
-        realloc_orig = (realloc_orig_t) dlsym(RTLD_NEXT, "realloc");
+        load_symbol(realloc_orig, "realloc");
+    }
+
+    if (!alloc_file)
+    {
+        open_alloc_file();
     }
 
     if (alloc_file && alloc_file != ALLOC_FILE_TMP_VALUE)

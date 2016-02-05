@@ -16,12 +16,12 @@ def options(opt):
     opt.add_option("-l", "--lldb", default="", action="store", help="version of LLDB to use")
 
     opt.load("python")
-    opt.load("compiler_c")
+    opt.load("compiler_cxx")
 
 
 def configure(conf):
     conf.load("python")
-    conf.load("compiler_c")
+    conf.load("compiler_cxx")
 
     patch_lldb(conf)
 

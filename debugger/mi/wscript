@@ -1,6 +1,7 @@
 def build(ctx):
     ctx.shlib(
-        source="alloc_hook.c",
+        source="alloc_hook.cpp",
+        cxxflags="-std=c++11",
         lib="dl",
         target="allochook"
     )
