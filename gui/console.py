@@ -100,7 +100,7 @@ class IOConsole(Console):
 
     @require_gui_thread
     def _handle_key(self, key):
-        if key.keyval == Gdk.KEY_Return:
+        if key.keyval in (Gdk.KEY_Return, Gdk.KEY_KP_Enter):
             self._emit_buffer()
 
     @require_gui_thread
@@ -142,6 +142,9 @@ class IOConsole(Console):
 
     @require_gui_thread
     def _emit_buffer(self):
+        if not self.debugger.io_manager.stdin:
+            return
+
         input_buffer = self._collect_buffer()
 
         try:
