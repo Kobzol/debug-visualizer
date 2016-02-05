@@ -23,7 +23,7 @@ class FontStyle(object):
         @type color: Color
         @type bold: bool
         @type italic: bool
-        @type font_family: basestring
+        @type font_family: str
         """
         if not color:
             color = Color()
@@ -95,7 +95,7 @@ class DrawingUtils(object):
     def get_text_size(canvas, text, font_style=None):
         """
         @type canvas: canvas.Canvas
-        @type text: basestring
+        @type text: str
         @type font_style: FontStyle
         """
         if not font_style:
@@ -260,7 +260,7 @@ class DrawingUtils(object):
         Draws an image given by a file path.
         @type canvas: canvas.Canvas
         @type position: vector.Vector
-        @type img_path: basestring
+        @type img_path: str
         @type size: size.Size
         @type center: boolean
         """
@@ -334,7 +334,7 @@ class Drawable(object):
         """@type bg_color: drawing.drawable.Color"""
 
         self.name = self._parse_property(properties, "name", "")
-        """@type name: basestring"""
+        """@type name: str"""
 
         self.parent = None
         """@type parent: Drawable"""
@@ -511,7 +511,7 @@ class Drawable(object):
 
     def get_tooltip(self):
         """
-        @rtype: basestring | None
+        @rtype: str | None
         """
         return None
 
@@ -553,7 +553,7 @@ class Drawable(object):
         Parses property from property dictionary.
         Modifier modifies the resulting value.
         @type properties: dict
-        @type key: basestring
+        @type key: str
         @type default: object
         @type modifier: function
         @rtype: object
@@ -745,7 +745,7 @@ class Image(Drawable):
         Represents a drawable image.
         Image path has to be a valid path to a PNG image.
         @type canvas: canvas.Canvas
-        @type image_path: basestring
+        @type image_path: str
         @type size: Size
         """
         super(Image, self).__init__(canvas, **properties)
@@ -823,6 +823,9 @@ class CompositeLabel(LinearLayout):
         @rtype: Drawable
         """
         drawable = self.canvas.memtoview.transform_var(variable)
+        if not drawable:
+            drawable = Label(self.canvas, "Invalid")
+
         wrapper = LabelWrapper(self.canvas,
                             Label(self.canvas, "{} {}".format(variable.type.name, variable.name),
                                   min_size=Size(20, 20),
@@ -913,34 +916,50 @@ class PointerDrawable(VariableDrawable):
         """
         super(PointerDrawable, self).__init__(canvas, pointer, **properties)
         self.variable = pointer
+        self.dragging = False
+
+    def handle_mouse_click(self, mouse_data):
+        self.dragging = not self.dragging
 
     def draw(self):
+        if self.dragging:
+            self.canvas.draw_scheduler.register_action(self.canvas.draw_scheduler.last_level,
+                lambda: DrawingUtils.draw_arrow(
+                    self.canvas, self.get_center(), self.canvas.get_mouse_data().position, Color(1)
+                ))
+            return
+
         try:
             int_value = int(self.variable.value, 16)
 
             if int_value == 0:  # NULL pointer
-                self.label = "NULL"
-                super(PointerDrawable, self).draw()
+                self._draw_label("Null")
             else:
-                self.label = ""
-                super(PointerDrawable, self).draw()
-
-                drawable = self.canvas.memory_model.get_drawable_by_pointer(self.variable)
-                if drawable:
-                    start = self.get_center()
-                    target_rect = drawable.get_rect()
-                    target = drawable.get_center()
-                    target.x += target_rect.width / 2.0
-                    path = [start,
-                            Vector(start.x, target.y),
-                            target]
-
-                    self.canvas.draw_scheduler.register_action(self.canvas.draw_scheduler.last_level,
-                       lambda: DrawingUtils.draw_arrow_path(self.canvas, path, Color(1)))
+                self._draw_label("")
+                self._draw_arrow()
         except:
-            self.label = "Invalid"
-            super(PointerDrawable, self).draw()
+            self._draw_label("Invalid")
 
+    def _draw_arrow(self):
+        drawable = self.canvas.memory_model.get_drawable_by_pointer(self.variable)
+        if drawable:
+            start = self.get_center()
+            target_rect = drawable.get_rect()
+            target = drawable.get_center()
+            target.x += target_rect.width / 2.0
+            path = [start,
+                    Vector(start.x, target.y),
+                    target]
+
+            self.canvas.draw_scheduler.register_action(self.canvas.draw_scheduler.last_level,
+               lambda: DrawingUtils.draw_arrow_path(self.canvas, path))
+
+    def _draw_label(self, label):
+        """
+        @type label: str
+        """
+        self.label = label
+        super(PointerDrawable, self).draw()
 
 class VectorValueDrawable(Label, VariableContainer):
     def __init__(self, canvas, variable):
