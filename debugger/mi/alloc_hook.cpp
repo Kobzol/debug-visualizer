@@ -15,11 +15,14 @@
 typedef void* (*malloc_orig_t)(size_t size);
 static malloc_orig_t malloc_orig = NULL;
 
-typedef void (*free_orig_t)(void* addr);
-static free_orig_t free_orig = NULL;
+typedef void* (*calloc_orig_t)(size_t num, size_t size);
+static calloc_orig_t calloc_orig = NULL;
 
 typedef void* (*realloc_orig_t)(void* addr, size_t size);
 static realloc_orig_t realloc_orig = NULL;
+
+typedef void (*free_orig_t)(void* addr);
+static free_orig_t free_orig = NULL;
 
 static FILE* alloc_file = NULL;
 
@@ -82,6 +85,28 @@ void* malloc(size_t size)
         return addr;
     }
     else return malloc_orig(size);
+}
+
+void* calloc(size_t num, size_t size)
+{
+    if (!calloc_orig)
+    {
+        load_symbol(calloc_orig, "calloc");
+    }
+
+    if (!alloc_file)
+    {
+        open_alloc_file();
+    }
+
+    if (alloc_file && alloc_file != ALLOC_FILE_TMP_VALUE)
+    {
+        void* addr = calloc_orig(num, size);
+        fprintf(alloc_file, "calloc %p %d\n", addr, num * size);
+
+        return addr;
+    }
+    else return calloc_orig(num, size);
 }
 
 void free(void* addr)
