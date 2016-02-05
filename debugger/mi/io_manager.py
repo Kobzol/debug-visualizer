@@ -4,6 +4,7 @@ import os
 import threading
 
 import debugger
+import util
 
 
 class IOManager(debugger.IOManager):
@@ -28,7 +29,7 @@ class IOManager(debugger.IOManager):
         if len(self.file_threads) > 0:
             return
 
-        stdin, stdout, stderr = [self.create_pipe() for _ in xrange(3)]
+        stdin, stdout, stderr = [util.create_pipe() for _ in xrange(3)]
 
         self.file_paths += (stdin, stdout, stderr)
 

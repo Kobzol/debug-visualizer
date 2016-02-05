@@ -2,7 +2,24 @@
 
 import logging
 import inspect
+import os
+import tempfile
 from threading import Event, Thread
+
+
+def create_pipe():
+    """
+    Creates a named FIFO pipe in the temp dir.
+    @rtype: basestring
+    """
+    tmpdir = tempfile.gettempdir()
+    temp_name = next(tempfile._get_candidate_names())
+
+    fifo = os.path.join(tmpdir, temp_name + ".fifo")
+
+    os.mkfifo(fifo)
+
+    return os.path.abspath(fifo)
 
 
 class Logger(object):

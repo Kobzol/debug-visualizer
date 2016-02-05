@@ -24,16 +24,6 @@ class IOManager(object):
         self.stdout = None
         self.stderr = None
 
-    def create_pipe(self):
-        tmpdir = tempfile.gettempdir()
-        temp_name = next(tempfile._get_candidate_names())
-
-        fifo = os.path.join(tmpdir, temp_name + ".fifo")
-
-        os.mkfifo(fifo)
-
-        return os.path.abspath(fifo)
-
     def handle_io(self):
         raise NotImplementedError()
 

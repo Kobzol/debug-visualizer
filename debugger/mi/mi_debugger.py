@@ -11,6 +11,7 @@ from enums import ProcessState, DebuggerState
 from mi.breakpoint_manager import BreakpointManager
 from mi.communicator import Communicator
 from mi.file_manager import FileManager
+from mi.heap_manager import HeapManager
 from mi.io_manager import IOManager
 from mi.thread_manager import ThreadManager
 from mi.variable_manager import VariableManager
@@ -28,6 +29,7 @@ class MiDebugger(debugger.Debugger):
         self.file_manager = FileManager(self)
         self.thread_manager = ThreadManager(self)
         self.variable_manager = VariableManager(self)
+        self.heap_manager = HeapManager(self)
 
         self.exit_lock = threading.Lock()
 
@@ -76,7 +78,12 @@ class MiDebugger(debugger.Debugger):
         self.require_state(DebuggerState.BinaryLoaded)
 
         stdin, stdout, stderr = self.io_manager.handle_io()
+        alloc_file = self.heap_manager.watch()
 
+        shlib_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../build/debugger/mi/liballochook.so")
+
+        self.communicator.send("set environment DEVI_ALLOC_FILE_PATH={}".format(alloc_file))
+        self.communicator.send("set environment LD_PRELOAD={}".format(shlib_path))
         result = self.communicator.send("run 1>{0} 2>{1} <{2}".format(stdout, stderr, stdin))
 
         util.Logger.debug("Launching program: {0}".format(result))
@@ -124,6 +131,7 @@ class MiDebugger(debugger.Debugger):
             self.state.unset(DebuggerState.Running)
 
             self.io_manager.stop_io()
+            self.heap_manager.stop()
         finally:
             self.exit_lock.release()
 
@@ -142,5 +150,6 @@ class MiDebugger(debugger.Debugger):
             self.state.unset(DebuggerState.Running)
 
             self.io_manager.stop_io()
+            self.heap_manager.stop()
         finally:
             self.exit_lock.release()
