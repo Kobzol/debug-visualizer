@@ -2,8 +2,8 @@
 
 import os
 import threading
-import sys
 import select
+import traceback
 
 import util
 
@@ -17,6 +17,9 @@ class HeapBlock(object):
         self.address = address
         self.size = size
 
+    def __repr__(self):
+        return "[{}: {} bytes]".format(self.address, self.size)
+
 
 class HeapManager(object):
     def __init__(self, debugger):
@@ -24,11 +27,15 @@ class HeapManager(object):
         @type debugger: debugger.Debugger
         """
         self.heap = []
+        """@type heap: list of HeapBlock"""
         self.read_thread = None
         self.debugger = debugger
         self.alloc_path = None
         self.file = None
         self.stop_flag = threading.Event()
+
+        self.on_heap_change = util.EventBroadcaster()
+        self.on_free_error = util.EventBroadcaster()
 
     def watch(self):
         """
@@ -73,11 +80,71 @@ class HeapManager(object):
                         if line:
                             self._handle_message(line)
         except:
-            pass
+            traceback.print_exc()
+
+    def find_block_by_address(self, addr):
+        """
+        @type addr: str
+        @rtype: HeapBlock | None
+        """
+        for block in self.heap:
+            if block.address == addr:
+                return block
+
+        return None
+
+    def _handle_malloc(self, addr, size, notify=True):
+        """
+        @type addr: str
+        @type size: str
+        """
+        size = int(size)
+        block = HeapBlock(addr, size)
+        self.heap.append(block)
+
+        if notify:
+            self.on_heap_change.notify(self.heap)
+
+    def _handle_realloc(self, addr, new_addr, size):
+        """
+        @type addr: str
+        @type new_addr: str
+        @type size: str
+        """
+        self._handle_free(addr, False)
+        self._handle_malloc(new_addr, size, False)
+
+        self.on_heap_change.notify(self.heap)
+
+    def _handle_free(self, addr, notify=True):
+        """
+        @type addr: str
+        """
+        if addr == "NULL":
+            return
+
+        block = self.find_block_by_address(addr)
+        if not block:
+            self.on_free_error.notify(addr)
+
+        self.heap.remove(block)
+
+        if notify:
+            self.on_heap_change.notify(self.heap)
 
     def _handle_message(self, message):
         """
         @type message: str
         """
-        print(message) # TODO: handle messages
-        sys.stdout.flush()
+        msg_parts = message.split(" ")
+        action = msg_parts[0]
+        args = msg_parts[1:]
+
+        if action in ("malloc", "calloc"):
+            self._handle_malloc(*args)
+        elif action == "realloc":
+            self._handle_realloc(*args)
+        elif action == "free":
+            self._handle_free(*args)
+        else:
+            raise Exception("Unknown allocation action: {}".format(action))

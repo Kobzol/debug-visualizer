@@ -81,6 +81,7 @@ void* malloc(size_t size)
     {
         void* addr = malloc_orig(size);
         fprintf(alloc_file, "malloc %p %d\n", addr, size);
+        fflush(alloc_file);
 
         return addr;
     }
@@ -103,30 +104,11 @@ void* calloc(size_t num, size_t size)
     {
         void* addr = calloc_orig(num, size);
         fprintf(alloc_file, "calloc %p %d\n", addr, num * size);
+        fflush(alloc_file);
 
         return addr;
     }
     else return calloc_orig(num, size);
-}
-
-void free(void* addr)
-{
-    if (!free_orig)
-    {
-        load_symbol(free_orig, "free");
-    }
-
-    if (!alloc_file)
-    {
-        open_alloc_file();
-    }
-
-    if (alloc_file && alloc_file != ALLOC_FILE_TMP_VALUE)
-    {
-        fprintf(alloc_file, "free %p\n", addr);
-    }
-
-    free_orig(addr);
 }
 
 void* realloc(void* addr, size_t size)
@@ -145,8 +127,34 @@ void* realloc(void* addr, size_t size)
     {
         void* addr_new = realloc_orig(addr, size);
         fprintf(alloc_file, "realloc %p %p %d\n", addr, addr_new, size);
+        fflush(alloc_file);
 
         return addr_new;
     }
     else return realloc_orig(addr, size);
+}
+
+void free(void* addr)
+{
+    if (!free_orig)
+    {
+        load_symbol(free_orig, "free");
+    }
+
+    if (!alloc_file)
+    {
+        open_alloc_file();
+    }
+
+    if (alloc_file && alloc_file != ALLOC_FILE_TMP_VALUE)
+    {
+        if (addr == NULL)
+        {
+            fprintf(alloc_file, "free NULL\n");
+        }
+        else fprintf(alloc_file, "free %p\n", addr);
+        fflush(alloc_file);
+    }
+
+    free_orig(addr);
 }
