@@ -309,8 +309,8 @@ class VariableManager(debugger.VariableManager):
 
     def _parse_address(self, expression):
         """
-        @type expression: basestring
-        @rtype: basestring | None
+        @type expression: str
+        @rtype: str | None
         """
         address = self.parser.parse_print_expression(expression)
         if address[0] == "(":

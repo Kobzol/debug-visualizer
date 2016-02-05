@@ -11,7 +11,7 @@ import util
 class HeapBlock(object):
     def __init__(self, address, size):
         """
-        @type address: basestring
+        @type address: str
         @type size: int
         """
         self.address = address
@@ -32,7 +32,7 @@ class HeapManager(object):
 
     def watch(self):
         """
-        @rtype: basestring
+        @rtype: str
         """
         assert self.read_thread is None
 
@@ -60,7 +60,7 @@ class HeapManager(object):
 
     def _read_thread(self, alloc_path):
         """
-        @type alloc_path: basestring
+        @type alloc_path: str
         """
         try:
             with open(alloc_path, "r", buffering=1) as alloc_file:
@@ -77,7 +77,7 @@ class HeapManager(object):
 
     def _handle_message(self, message):
         """
-        @type message: basestring
+        @type message: str
         """
         print(message) # TODO: handle messages
         sys.stdout.flush()

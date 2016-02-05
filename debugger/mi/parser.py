@@ -185,8 +185,8 @@ class Parser(object):
     def _modify_labels(self, data):
         """
         Changes keys in the form ([a-zA-Z-_])+\s*= to "\1": (replaces = with :, removes whitespace and adds quotes).
-        @type data: basestring
-        @rtype: basestring
+        @type data: str
+        @rtype: str
         """
         in_str = False
         in_ident = False

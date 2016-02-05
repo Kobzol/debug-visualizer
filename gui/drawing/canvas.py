@@ -58,8 +58,8 @@ class ValueEntry(Gtk.Frame):
 
     def init(self, title, text, listener):
         """
-        @type title: basestring
-        @type text: basestring
+        @type title: str
+        @type text: str
         @type listener: function
         """
         self.set_label(title)
@@ -259,7 +259,7 @@ class Canvas(Gtk.EventBox):
     def set_drawable_tooltip(self, drawable, text):
         """
         @type drawable: drawable.Drawable
-        @type text: basestring
+        @type text: str
         """
         if text is None and drawable != self.tooltip_drawable:
             return

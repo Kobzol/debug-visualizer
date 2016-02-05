@@ -10,7 +10,7 @@ from threading import Event, Thread
 def create_pipe():
     """
     Creates a named FIFO pipe in the temp dir.
-    @rtype: basestring
+    @rtype: str
     """
     tmpdir = tempfile.gettempdir()
     temp_name = next(tempfile._get_candidate_names())

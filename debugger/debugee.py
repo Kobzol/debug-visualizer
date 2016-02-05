@@ -34,7 +34,7 @@ class Type(object):
 
     def __init__(self, name, type_category, basic_type_category, size):
         """
-        @type name: basestring
+        @type name: str
         @type type_category: enums.TypeCategory
         @type basic_type_category: enums.BasicTypeCategory
         @type size: int
@@ -92,11 +92,11 @@ class Variable(object):
 
     def __init__(self, address=None, name=None, value=None, type=None, path=None):
         """
-        @type address: basestring
-        @type name: basestring
-        @type value: basestring
+        @type address: str
+        @type name: str
+        @type value: str
         @type type: Type
-        @type path: basestring
+        @type path: str
         """
         self.address = address
         self.name = name
@@ -217,8 +217,8 @@ class Register(object):
     def __init__(self, name, value):
         """
         Represents a CPU register.
-        @type name: basestring
-        @type value: basestring
+        @type name: str
+        @type value: str
         """
         self.name = name
         self.value = value
