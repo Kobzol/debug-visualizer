@@ -108,6 +108,8 @@ class StateOutput(object):
 
                 if "exit-code" in data:
                     exit_code = int(data["exit-code"])
+                elif "normally" in data["reason"]:
+                    exit_code = 0
 
             return StateOutput(state, data["reason"], exit_code)
         else:
