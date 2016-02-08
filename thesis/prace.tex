@@ -11,9 +11,15 @@
 	sortlocale=cs_CZ,
   bibencoding=UTF8]{biblatex}
 \usepackage[bottom]{footmisc}
+\usepackage{xifthen}
 
 \renewcommand\multinamedelim{\addcomma\space}	%  redefinice oddělování jmén autorů dle ISO690:2011
 \renewcommand\finalnamedelim{\addspace\mainsstring{and}\space}
+
+\newcommand{\parspace}[1][]{
+	\ifthenelse{\isempty{#1}}{\vspace{5mm}}{\vspace{#1}}
+	\par
+}
 
 \addbibresource{references.bib}
 
@@ -65,6 +71,7 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 \AddAcronym{GNU}{GNU's Not Unix!}
 \AddAcronym{GUI}{Graphical user interface}
 \AddAcronym{IPC}{Inter-process communication}
+\AddAcronym{JSON}{JavaScript Object Notation}
 
 % Zadame cestu a jmeno souboru ci nekolika souboru s digitalizovanou podobou zadani prace
 % Pri sazbe se pak hledaji soubory Figures/Zadani1.jpg, Figures/Zadani2.jpg atd.
@@ -159,9 +166,7 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 		Pro ušetření místa obsahuje instrukce pro speciální konečný automat, který implementují ladící nástroje a pomocí něho poté získávají
 		informace o původním zdrojovém kódu.
 		
-		\vspace{5mm}
-		
-		\par Samotné mapování zdrojového kódu není pro ladící nástroj užitečné, pokud je výsledný program zoptimalizovaný překladačem. Po optimalizaci
+		\parspace Samotné mapování zdrojového kódu není pro ladící nástroj užitečné, pokud je výsledný program zoptimalizovaný překladačem. Po optimalizaci
 		totiž program nemusí obsahovat všechny původní proměnné, funkce a jeho průběh ani nemusí přesně odpovídat jeho zdrojovému kódu. Při použité málo agresivní
 		optimalizace někdy lze programy úspěšně ladit, ale pro zajištění co nejpřesnějšího ladění programů je obvykle nutné optimalizace úplně vypnout. Toho lze
 		v překladačích obvykle dosáhnout použitím přepínače \textbf{-O0}.
@@ -253,9 +258,7 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 		Nabízí tak modernější alternativu k programům GCC a GDB. Ty jsou sice stabilnější a prověřenější, ale jelikož existují už desítky let a musí udržovat
 		zpětnou kompatibilitu, tak je těžší je využít jako modul do jiného programu. Z tohoto důvodu rovněž pomaleji přecházejí k novým standardům.
 		
-		\vspace{5mm}
-		
-		\par Umí ladit programy napsané v jazycích C, C++, Objective-C a Swift na platformách OS X, Linux, Free BSD a Window. Podporuje tedy méně jazyků i platforem,
+		\parspace Umí ladit programy napsané v jazycích C, C++, Objective-C a Swift na platformách OS X, Linux, Free BSD a Window. Podporuje tedy méně jazyků i platforem,
 		než GDB, ale narozdíl od něho je podporován, a stal se také standardním ladícím nástrojem, i operačními systémy OS X a iOS. Nabízí většinu standardních
 		funkcí ladících nástrojů, jako je krokování kódu, vytváření breakpointů a čtení a zápis paměti procesu. Jelikož je stále ve vývoji, tak zatím neobsahuje 
 		některé pokročilejší funkce, které nabízí GDB, například zpětné provádění instrukcí.
@@ -327,23 +330,19 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 	Python jsem vybral, protože je vhodný k rychlému vývoji aplikací, existuje pro něj několik rozhraní pracujících s debuggery a umí snadno používat
 	kód napsaný v jazycích C a C++. Navíc je multiplatformní, což by usnadnilo případný port aplikace na jiný operační systém.
 	
-	\vspace{5mm}
-	
-	\par Pro vývoj grafického rozhraní programu jsem vybral knihovnu \textbf{GTK+ 3}\footnote{http://www.gtk.org}. Jedná se o volně dostupný
+	\parspace Pro vývoj grafického rozhraní programu jsem vybral knihovnu \textbf{GTK+ 3}\footnote{http://www.gtk.org}. Jedná se o volně dostupný
 	\footnote{Pod licencí LGPL 2.1}, multiplatformní grafický software umožňující tvorbu uživatelského rozhraní, který je používán mimo jiné i
 	některými manažery plochy pro Linux (např. v GNOME\footnote{https://www.gnome.org/technologies}). Kromě možnosti tvorby vlastních
 	GUI prvků obsahuje několik desítek běžně používaných prvků, které jsou předpřipravené k okamžitému použití a usnadňují tak rychlý vývoj aplikací.
 	
-	\vspace{5mm}
-	
-	\par Vizualizační nástroj jsem pojmenoval a dále jej v textu budu označovat jako \textit{Devi}.
+	\parspace Vizualizační nástroj jsem pojmenoval a dále jej v textu budu označovat jako \textit{Devi}.
 	Nástroj je tvořen dvěmi samostatnými komponentami, aplikací s grafickým rozhraním, která slouží k vizualizaci a k interakci s laděným procesem, a knihovny,
 	která poskytuje rozhraní pro komunikaci s libovolným debuggerem. Obrázek \ref{fig:DeviArchitecture} zachycuje pohled na architekturu aplikace z vysoké úrovně.
 	Uživatelské rozhraní komunikuje s knihovnou, která zprostředkovává komunikaci s debuggerem. Na obrázku jsou zobrazeny tři implementace této komunikační vrstvy,
 	které jsou popsány dále v textu. Debugger zajišťuje komunikaci a manipulaci s laděným procesem. Celá aplikace je tak rozdělena do několika
 	vrstev, které jsou na sobě nezávislé.
 	
-	\InsertFigure{Figures/bak_architektura}{\textwidth}{Architektura Devi}{fig:DeviArchitecture}
+	\InsertFigure{Figures/bak_architektura}{\textwidth}{Architektura programu \textit{Devi}}{fig:DeviArchitecture}
 		
 	\subsection{Knihovna pro komunikaci s debuggery}
 		Tato knihovna tvoří rozhraní pro komunikaci s libovolným ladícím nástrojem. Definuje abstraktní typy popisující laděný proces a není tak závislá na
@@ -361,9 +360,7 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 			\item[Register] představuje registr procesoru, obsahuje jeho název a hodnotu
 		\end{description}
 		
-		\vspace{5mm}
-		
-		\par Dále jsou v knihovně třídy, které tvoří obecné API pro přístup k debuggeru. Slouží jako rodičovské třídy pro jednotlivé implementace
+		\parspace Dále jsou v knihovně třídy, které tvoří obecné API pro přístup k debuggeru. Slouží jako rodičovské třídy pro jednotlivé implementace
 		komunikace s debuggerem. Jejich smyslem není implementovat společné chování, jelikož jednotlivé debuggery a implementace přístupu k nim
 		se od sebe můžou značně lišit, a tak poskytují pouze rozhraní. Následuje seznam tříd tohoto rozhraní.
 		
@@ -396,15 +393,33 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 		Nicméně stejně jako celé LLDB je toto API zatím ve vývoji a obsahuje drobné chyby, například nepřesné zobrazování stavu vláken. Kvůli těmto nedostatkům
 		jsem do této implementace nepřidával podporu ladění vícevláknových aplikací.
 		
-		\subsubsection{Protokol GDB/MI}
-		MI je komunikační rozhraní pro ovládání GDB pomocí textových příkazů. Nejedná se o klasické příkazy používané při manuálním ovládání GDB, ale o
-		speciální příkazy přizpůsobené pro jednoduché strojové zpracování. Obdobně jako Python API pro GDB, obsahuje rozhraní pro nejpoužívanější funkce GDB a
-		zbytek funkcí lze používat pomocí běžných textových příkazů. Použití MI je běžným a doporučeným \cite{gdb-mi-usage} způsobem pro programovou komunikaci
-		s GDB a tvorbu grafických rozhraní. Existují volně dostupné knihovny pro Python i C/C++, které umí komunikovat s GDB pomocí MI protokolu, nicméně za
+		\subsubsection{Protokol GDB MI}
+		MI je protokol pro ovládání GDB pomocí textových příkazů, které jsou narozdíl od klasických příkazů používaných při manuálním ovládání debuggeru
+		přizpůsobené pro jednoduché strojové zpracování. Obdobně jako Python API pro GDB poskytuje MI rozhraní pouze pro nejpoužívanější funkce.
+		Zbytek funkcí lze používat pomocí běžných textových příkazů. Použití MI je běžným a doporučeným \cite{gdb-mi-usage} způsobem pro programovou komunikaci
+		s GDB a tvorbu grafických rozhraní. Existují volně dostupné knihovny pro Python i C/C++, které umí komunikovat pomocí MI protokolu, nicméně za
 		účelem pochopení fungování tohoto protokolu a možnosti přizpůsobení komunikace jsem vytvořil vlastní komunikační modul, který je popsán dále v textu.
 		
 		\begin{description}
 			\item[Komunikace s debuggerem]
+			Aby GDB umělo komunikovat pomocí MI, tak se nejprve musí přepnout do MI módu, což lze pomocí parametru předaného při spuštění. V tomto módu
+			lze na jeho standardní vstup zaslat textové zprávy, které se vyhodnotí a vrátí výsledek. Formát zpráv je jasně daný speficikací
+			\footnote{https://sourceware.org/gdb/onlinedocs/gdb/GDB\_002fMI-Command-Syntax.html} a je přizpůsoben strojovému zpracování. Zprávy z debuggeru
+			vždy obsahují hlavičku, která určuje, o jaký typ zprávy jde, a tělo, které obsahuje případné další informace o vyvolané události nebo
+			provedeném příkazu. Struktura MI zpráv velmi podobná syntaxi zpráv ve formátu JSON\footnote{http://www.json.org}, který je v současné době standardním
+			formátem pro výměnu dat a existuje pro něj velké množství parserů.
+			Rozhodl jsem se tedy tyto zprávy nejprve předzpracovat a poté je zpracovat JSON parserem, který poskytuje
+			standardní knihovna Pythonu. % TODO: psát, že jsem si to ulehčil?
+			Po odeslání příkazu knihovna čeká, než jí přijde odpověď, která musí následovat po každém příkazu.
+			
+			\par Kromě této synchronní komunikace (zaslání příkazu - přijetí odpovědi) posílá GDB také zprávy o asynchronních událostech, jako je např.
+			vytvoření vlákna nebo zastavení procesu. Grafické rozhraní debuggeru musí na tyto zprávy reagovat ihned poté, co jsou debuggerem zaslány.
+			Kvůli toho se v komunikačním modulu vytváří samostatné vlákno, které v pravidelném časovém intervalu kontroluje výstup z debuggeru a pokud zjistí, že došlo
+			k asynchronní události, tak vyvolá vlastní událost, ke které se může přihlásit libovolný klient. Při tomto periodickém čtení může dojít k souběhu, pokud
+			by během čtení přišel od klienta knihovny požadavek na odeslání příkazu, který se také snaží číst výstup z GDB při čekání na svou odpověď.
+			% TODO: vysvětlit, co je souběh, mutex?
+			Z tohoto důvodu je čtení výstupu debuggeru zamknuto mutexem, který potencionální souběh vylučuje.
+			
 			\item[Komunikace s laděným procesem]
 			MI implicitně přesměrovává veškerý výstup z laděného procesu na svůj vlastní výstup. Toto chování není moc užitečné, jelikož se výstup a vstup laděného
 			procesu mísí s vstupem a výstupem samotného ovládání GDB. Pro vyřešení tohoto problému lze v GDB pomocí příkazu \textit{-inferior-tty-set}
@@ -414,19 +429,63 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 			Rozhodl jsem se tedy použít třetí řešení, které při komunikaci s laděným procesem naprosto obchází GDB.
 			% TODO: vložit obrázek s nákresem I/O komunikace
 			
-			\par Před zapnutím laděného procesu se v systémové složce pro dočasná data vytvoří tři speciální soubory, jeden pro vstup a dva pro výstup
-			(klasický a chybový).
-			Tyto soubory jsou vytvořeny pomocí systémového volání \textit{mkfifo}\footnote{http://linux.die.net/man/3/mkfifo}, které vytváří pojmenovanou FIFO pípu
-			% TODO: pípa?
+			\par Před zapnutím laděného procesu se v systémové složce pro dočasná data vytvoří čtyři speciální soubory, jeden pro vstup, dva pro výstup
+			(klasický a chybový) a jeden pro alokace, které jsou popsány dále v textu. Komunikace se soubory je znázorněna na obrázku \ref{fig:DebugeeIO}.
+			Tyto soubory jsou vytvořeny pomocí systémového volání \textit{mkfifo}\footnote{http://linux.die.net/man/3/mkfifo}, které vytváří pojmenovanou rouru
+			% TODO: roura?
 			reprezentovanou souborem. Takto vytvořené soubory lze poté otevřít pro čtení nebo zápis. Narozdíl od klasických souborů ale musí být tato pípa otevřená na
 			obou svých koncích zároveň. Pokud se tedy nějaký proces pokusí otevřít pípu pro čtení, bude zablokován, dokud se nějaký jiný proces nepokusí otevřít danou
 			pípu pro čtení. Obsah pípy není uložen na souborovém disku, ale je v paměti, lze tak pomocí ní komunikovat v reálném čase mezi procesy, což jsem využil
 			pro komunikace s laděným procesem. Na straně knihovny se vytvoří vlákno, které tyto soubory otevře a neustále z nich čte data. Umí také laděnému procesu
 			zaslat data na jeho standardní vstup. Při zapnutí laděného procesu v GDB je poté jeho standardní výstup i vstup přesměrován do těchto souborů pomocí
 			standardního přesměrování vstupu a výstupu ze shellu. % TODO: co je shell?
-			
-			
 			Po ukočení laděného procesu se poté tyto dočasné soubory smažou.
+			
+			\item[Detekce dynamických alokací]
+			\textit{Devi} sleduje dynamické alokace paměti na haldě laděného procesu, aby mohl zobrazovat stav adresního prostoru procesu a upozorňovat na některé
+			chyby způsobené špatnou prací s pamětí. Pro práci s dynamickou pamětí se v jazyce C používají funkce \textbf{malloc}, \textbf{calloc}, \textbf{realloc}
+			a \textbf{free}. V jazyce C++ se používají operátory \textbf{new} a \textbf{delete}, které ovšem také vnitřně volají již zmíněné C funkce. Aby šlo sledovat
+			alokace, je nutné zachytit všechna tato paměťová volání a zaznamenat si jejich parametry a návratové hodnoty. Zachycení volání těchto funkcí lze zajistit
+			různými způsoby, podmínkou však je, aby šlo pracovat přímo se spustitelným souborem a nebyla vyžadována úprava zdrojového kódu programu.
+			Nutnost úpravy zdrojového kódu by totiž byla nepraktická u větších programů, navíc by ani nešla provést pro externí knihovny, které jsou dostupné pouze v 
+			binární formě.
+			Otestoval jsem následující dva způsoby zachytávání alokací.
+			\begin{description}
+				\item[Zastavení procesu při alokaci] Na všechna alokační volání se umístí breakpoint a proces se tedy zastaví při jakékoliv práci s dynamickou
+				pamětí. Poté si lze přečíst údaje o alokaci, zaznamenat si je a obnovit běh procesu. Toto řešení fungovalo, ale zastavování procesu při každé alokaci
+				může laděný proces značně zpomalit. Je také třeba rozlišovat mezi vnitřními a uživatelskými breakpointy a reagovat na ně odlišně, což zbytečně
+				komplikuje implementaci komunikační knihovny. Tento způsob zachytávání by se rovněž musel implementovat pro každý debugger zvlášť.
+				Kvůli těchto důvodů jsem se rozhodl toto řešení nepoužít.
+				
+				\item[Obalení alokačních funkcí vlastními funkcemi] Alokační funkce v jazyce C jsou definovány v systémové knihovně, která poskytuje
+				implementaci standardních funkcí a systémových volání. Často používanou implementací této knihovny na Linuxových systémech je glibc
+				\footnote{https://www.gnu.org/software/libc/}. Při spouštění procesu na Linuxu se vyhledají dynamické knihovny, které proces vyžaduje,
+				a poté se namapují do jeho adresního prostoru. Použitím proměnné prostředí \textbf{LD\_PRELOAD} lze určit
+				seznam sdílených knihoven, které budou přednostně nahrány ke spouštěnému procesu\footnote{http://linux.die.net/man/8/ld.so}.
+				Jelikož se tyto knihovny nahrávají jako první, symboly obsažené v nich mají přednost před později nahranými symboly.
+				
+				\parspace Této skutečnosti jsem využil pro vytvoření sdílené knihovny, která obsahuje deklarace dříve zmíněných alokačních funkcí.
+				Při spuštění procesu je nahrána před systémovou knihovnou jazyka C a všechny dynamické alokace z laděného procesu poté volají funkce z mé knihovny.
+				V ní dochází k otevření souboru, pomocí kterého lze komunikovat s komunikačním rozhraním. % TODO: lepší název
+				Při alokaci či dealokaci se nejprve odešlou informace o jejím typu a případné další parametry, jako je velikost alokovaných dat
+				nebo adresa dealokované paměti. Poté je zavolána původní funkce ze systémové knihovny, která provede samotnou (de)alokaci.
+				Adresa původní funkce musí být zjištěna za běhu programu pomocí
+				funkce dlsym\footnote{http://linux.die.net/man/3/dlsym}. Prosté použití jejího názvu by totiž vyústilo v nekonečné rekurzivní volání, jelikož
+				by se opět zavolala funkce z přednačtené knihovny.
+				
+				\parspace Nevýhodou tohoto řešení je, že nebude fungovat, pokud bude laděný program používat staticky přilinkovanou systémovou knihovnu
+				\footnote{Linker \textit{ld} linkuje knihovny staticky při použití přepínače \textbf{-static}}.
+				Tato situace ale není obvyklá a v případě potřeby může tvůrce laděného programu pro účely ladění systémovou knihovnu linkovat dynamicky.
+				Otevření souboru pro komunikaci a získávání adresy původních funkcí dále musí být synchronizováno, aby nedošlo k souběhu u vícevláknových aplikací.
+				Toto řešení však nevyžaduje zastavení procesu při každé alokaci a poskytuje zachytávání alokačních funkcí nezávislé na použitém debuggeru, proto
+				jsem se jej rozhodl v \textit{Devi} použít.
+				
+				\remark{Pro alokaci a namapování paměti lze využít i systémového volání \textbf{mmap}. Jelikož ale není běžné ho používat v programech explicitně,
+			tak toto volání \textit{Devi} nesleduje.}
+			\end{description}
+			
+			\InsertFigure{Figures/bak_io_alloc}{\textwidth}{Komunikace s laděným procesem}{fig:DebugeeIO}
+			
 		\end{description}
 			
 	\subsection{Vizualizační část}
@@ -447,8 +506,7 @@ rozšíření vizualizace
 Jakub Beránek
 \end{flushright}
 
-%\printbibliography
-\printbibheading[title=Reference, heading=bibintoc]
+\printbibheading[title=Zdroje, heading=bibintoc]
 \printbibliography
 
 \appendix
