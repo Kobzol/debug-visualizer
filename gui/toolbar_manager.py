@@ -66,7 +66,6 @@ class ToolbarManager(object):
             self._change_state("run", False)
 
     def _change_state(self, item_name, sensitive=True):
-        Logger.debug("Changing toolbar state of {0} to {1}".format(item_name, "true" if sensitive else "false"))
         run_on_gui(self._change_state_ui, item_name, sensitive)
 
     def _change_grp_state(self, group, sensitive=True):

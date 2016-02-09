@@ -58,7 +58,7 @@ class HeapManager(debugger.HeapManager):
         @type alloc_path: str
         """
         try:
-            with open(alloc_path, "r", buffering=1) as alloc_file:
+            with open(alloc_path, "r", buffering=0) as alloc_file:
                 self.alloc_file = alloc_file
 
                 while not self.stop_flag.is_set():
@@ -124,6 +124,8 @@ class HeapManager(debugger.HeapManager):
         """
         @type message: str
         """
+        util.Logger.debug("HEAP: {}".format(message))
+
         msg_parts = message.split(" ")
         action = msg_parts[0]
         args = msg_parts[1:]
