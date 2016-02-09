@@ -436,8 +436,10 @@ class MemoryCanvas(Canvas):
 
     def _handle_process_state_change(self, state, event_data):
         if state == ProcessState.Stopped:
-            frame = self.debugger.thread_manager.get_current_frame()
-            self._rebuild(frame)
+            location = self.debugger.file_manager.get_current_location()
+            if location and len(location[0]) > 0 and location[1] > 0:
+                frame = self.debugger.thread_manager.get_current_frame()
+                self._rebuild(frame)
 
     def get_drawables(self):
         return self.memory_model.get_drawables()
