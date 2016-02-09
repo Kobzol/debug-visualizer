@@ -4,7 +4,9 @@ import subprocess
 
 
 def patch_lldb(conf):
-    exit_status = subprocess.call(["./util/lldb_patch.sh", conf.options.lldb])
+    exit_status = subprocess.call(["./util/lldb_patch.sh", conf.options.lldb],
+                                  stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE)
 
     if exit_status == 0:
         print("LLDB patched")
@@ -33,6 +35,7 @@ def configure(conf):
     conf.check_python_module("jsonpickle")
     conf.check_python_module("epydoc")
     conf.check_python_module("matplotlib")
+    conf.check_python_module("clang.cindex")
 
 
 def build(ctx):
