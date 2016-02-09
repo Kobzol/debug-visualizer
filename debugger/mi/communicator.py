@@ -189,11 +189,10 @@ class Communicator(object):
 
         self._skip_to_separator()
 
-        self.send("-gdb-set mi-async on")
-        self.send("set print elements 0")
-        self.send("set print frame-arguments none")
-        self.send("set print address on") # should be default
-        self.send("source {0}".format(gdb_pretty_print_file))
+        assert self.send("set print elements 0")
+        assert self.send("set print frame-arguments none")
+        assert self.send("set print address on") # should be default
+        assert self.send("source {0}".format(gdb_pretty_print_file))
 
         self.read_timer = RepeatTimer(0.1, self._timer_read_output)
         self.read_timer.start()

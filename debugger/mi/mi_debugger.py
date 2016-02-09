@@ -69,6 +69,7 @@ class MiDebugger(debugger.Debugger):
 
         if result.is_success():
             self.state.set(DebuggerState.BinaryLoaded)
+            self.communicator.send("-gdb-set mi-async on")
 
             return True
         else:
