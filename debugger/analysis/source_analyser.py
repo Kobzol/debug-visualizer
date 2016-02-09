@@ -1,7 +1,17 @@
 # -*- coding: utf-8 -*-
+
+import glob
 import traceback
 
-from clang.cindex import TranslationUnit, File, SourceLocation, Cursor
+
+clang_path = glob.glob("/usr/lib/*/*/libclang.so*")
+
+if len(clang_path) < 1:
+    raise BaseException("Clang was not found")
+
+from clang.cindex import TranslationUnit, File, SourceLocation, Cursor, Config
+
+Config.set_library_file(clang_path[0])
 
 
 class SourceAnalyzer(object):
