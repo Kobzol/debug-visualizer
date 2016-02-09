@@ -227,6 +227,9 @@ class Parser(object):
         return data
 
     def _prep_json(self, data):
+        if len(data) < 1:
+            return data
+
         # remove array labels
         data = self._remove_array_labels(data)
         data = self._modify_labels(data)
@@ -238,4 +241,7 @@ class Parser(object):
         return data
 
     def _parse_json(self, data):
-        return json.loads(data)
+        if len(data) < 1:
+            return data
+        else:
+            return json.loads(data)
