@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from gi.repository import Gtk
+from gi.repository import Gtk, GObject
 
-import datetime
+import time
 from matplotlib.backends.backend_gtk3agg import FigureCanvasGTK3Agg as FigureCanvas
 from matplotlib.figure import Figure
 
@@ -26,27 +26,46 @@ class HeapDetail(Gtk.ScrolledWindow):
         figure = Figure()
         self.axis = figure.add_subplot(111)
 
-        self.axis.set_xlabel('time [s]')
-        self.axis.set_ylabel('heap size [MiB]')
+        figure.subplots_adjust(bottom=0.3)
 
         self.canvas = FigureCanvas(figure)
-        self.canvas.set_size_request(-1, 100)
         self.add_with_viewport(self.canvas)
 
+        self.heap_size = 0
+        self.start_time = 0
+
     def redraw(self):
-        self.axis.plot(self.times, self.sizes)
+        self.axis.set_xlabel('time [s]')
+        self.axis.set_ylabel('heap size [MiB]')
+        self.axis.plot(self.times, self.sizes, "r")
         self.canvas.queue_draw()
 
     def _reset(self):
         self.sizes = []
         self.times = []
+        self.heap_size = 0
+        self.start_time = time.time()
+        self.axis.cla()
 
     def _handle_process_change(self, state):
         """
         @type state: enums.ProcessState
         """
-        if state == ProcessState.Exited:
+        if state == ProcessState.Launching:
             self._reset()
+            self.redraw()
+        elif state == ProcessState.Running:
+            self._schedule_refresh()
+
+    def _timer_tick(self):
+        self.sizes.append(self.heap_size)
+        self.times.append(time.time() - self.start_time)
+        self.redraw()
+        return self.debugger.process_state == ProcessState.Running
+
+    def _schedule_refresh(self):
+        GObject.timeout_add(1000,
+                            self._timer_tick)
 
     def _handle_heap_change(self, heap):
         """
@@ -56,6 +75,4 @@ class HeapDetail(Gtk.ScrolledWindow):
         for block in heap:
             size += block.size
 
-        self.sizes.append(size)
-        self.times.append(datetime.datetime.now())
-        self.redraw()
+        self.heap_size = size / 1024.0  # size in MiBs

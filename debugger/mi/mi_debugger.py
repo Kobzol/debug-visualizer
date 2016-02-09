@@ -84,6 +84,8 @@ class MiDebugger(debugger.Debugger):
 
         self.communicator.send("set environment DEVI_ALLOC_FILE_PATH={}".format(alloc_file))
         self.communicator.send("set environment LD_PRELOAD={}".format(shlib_path))
+
+        self.on_process_state_changed.notify(ProcessState.Launching, None)
         result = self.communicator.send("run 1>{0} 2>{1} <{2}".format(stdout, stderr, stdin))
 
         util.Logger.debug("Launching program: {0}".format(result))
