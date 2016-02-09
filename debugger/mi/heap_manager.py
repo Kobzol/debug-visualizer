@@ -5,37 +5,23 @@ import threading
 import select
 import traceback
 
+import debugger
 import util
+from debugee import HeapBlock
 
 
-class HeapBlock(object):
-    def __init__(self, address, size):
-        """
-        @type address: str
-        @type size: int
-        """
-        self.address = address
-        self.size = size
-
-    def __repr__(self):
-        return "[{}: {} bytes]".format(self.address, self.size)
-
-
-class HeapManager(object):
+class HeapManager(debugger.HeapManager):
     def __init__(self, debugger):
         """
         @type debugger: debugger.Debugger
         """
+        super(HeapManager, self).__init__(debugger)
         self.heap = []
         """@type heap: list of HeapBlock"""
         self.read_thread = None
-        self.debugger = debugger
         self.alloc_path = None
         self.file = None
         self.stop_flag = threading.Event()
-
-        self.on_heap_change = util.EventBroadcaster()
-        self.on_free_error = util.EventBroadcaster()
 
     def watch(self):
         """

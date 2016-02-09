@@ -18,6 +18,33 @@ class ProcessStoppedEventData(object):
         self.stop_reason = stop_reason
 
 
+class HeapManager(object):
+    def __init__(self, debugger):
+        """
+        @type debugger: debugger.Debugger
+        """
+        self.debugger = debugger
+
+        self.on_heap_change = util.EventBroadcaster()
+        self.on_free_error = util.EventBroadcaster()
+
+    def watch(self):
+        """
+        @rtype: str
+        """
+        raise NotImplementedError()
+
+    def stop(self):
+        raise NotImplementedError()
+
+    def find_block_by_address(self, addr):
+        """
+        @type addr: str
+        @rtype: HeapBlock | None
+        """
+        raise NotImplementedError()
+
+
 class IOManager(object):
     def __init__(self):
         self.stdin = None
@@ -240,6 +267,7 @@ class Debugger(object):
         self.file_manager = FileManager(self)
         self.thread_manager = ThreadManager(self)
         self.variable_manager = VariableManager(self)
+        self.heap_manager = HeapManager(self)
 
         self.on_process_state_changed = util.EventBroadcaster()
         self.on_debugger_state_changed = util.EventBroadcaster()

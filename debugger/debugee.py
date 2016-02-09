@@ -225,3 +225,16 @@ class Register(object):
 
     def __repr__(self):
         return "Register: {} = {}".format(self.name, self.value)
+
+
+class HeapBlock(object):
+    def __init__(self, address, size):
+        """
+        @type address: str
+        @type size: int
+        """
+        self.address = address
+        self.size = size
+
+    def __repr__(self):
+        return "[{}: {} bytes]".format(self.address, self.size)
