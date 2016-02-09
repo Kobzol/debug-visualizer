@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import glob
 import os
 import re
 import select
@@ -16,6 +17,12 @@ from util import RepeatTimer
 
 
 gdb_pretty_print_file = os.path.join(os.path.dirname(__file__), "gdb_pretty_print.py")
+pretty_print_dir = glob.glob("/usr/share/gcc-*/python")
+
+if len(pretty_print_dir) < 1:
+    raise BaseException("C++ pretty printers were not found")
+else:
+    pretty_print_dir = pretty_print_dir[0]
 
 
 class OutputParser(object):
@@ -181,11 +188,11 @@ class Communicator(object):
         self.process = subprocess.Popen(
             bufsize=0,
             args=["gdb",
-                    "-return-child-result",
-                    "-quiet",
-                    "-nx",  # ignore .gdbinit
-                    '-nw',  # inhibit window interface
-                    '-interpreter=mi2',  # use GDB/MI v2
+                  "-return-child-result",
+                  "-quiet",
+                  "-nx",  # ignore .gdbinit
+                  '-nw',  # inhibit window interface
+                  '-interpreter=mi2',  # use GDB/MI v2
                   ],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
@@ -194,10 +201,11 @@ class Communicator(object):
 
         self._skip_to_separator()
 
-        assert self.send("set print elements 0")
-        assert self.send("set print frame-arguments none")
-        assert self.send("set print address on") # should be default
-        assert self.send("source {0}".format(gdb_pretty_print_file))
+        self.send("set print elements 0")
+        self.send("set print frame-arguments none")
+        self.send("set print address on")  # should be default
+        self.send("python sys.path.append('{}')".format(pretty_print_dir))
+        self.send("source {0}".format(gdb_pretty_print_file))
 
         self.read_timer = RepeatTimer(0.1, self._timer_read_output)
         self.read_timer.start()
