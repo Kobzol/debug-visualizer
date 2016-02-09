@@ -103,15 +103,20 @@ class StateOutput(object):
             state = ProcessState.Stopped
             exit_code = None
 
-            if "exited" in data["reason"]:
+            reason = ""
+
+            if "reason" in data:
+                reason = data["reason"]
+
+            if "exited" in reason:
                 state = ProcessState.Exited
 
                 if "exit-code" in data:
                     exit_code = int(data["exit-code"])
-                elif "normally" in data["reason"]:
+                elif "normally" in reason:
                     exit_code = 0
 
-            return StateOutput(state, data["reason"], exit_code)
+            return StateOutput(state, reason, exit_code)
         else:
             raise Exception("No state found for data: {0}".format(data))
 
@@ -196,9 +201,6 @@ class Communicator(object):
 
         self.read_timer = RepeatTimer(0.1, self._timer_read_output)
         self.read_timer.start()
-
-        #fl = fcntl.fcntl(self.process.stdout, fcntl.F_GETFL)
-        #fcntl.fcntl(self.process.stdout, fcntl.F_SETFL, fl | os.O_NONBLOCK)
 
     def send(self, command):
         """
