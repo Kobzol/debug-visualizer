@@ -33,7 +33,9 @@ class HeapManager(debugger.HeapManager):
 
         self.alloc_path = util.create_pipe()
 
-        self.read_thread = threading.Thread(target=self._read_thread, args=(self.alloc_path,))
+        self.read_thread = threading.Thread(target=self._read_thread,
+                                            args=(self.alloc_path,))
+        self.read_thread.daemon = True
         self.read_thread.start()
 
         return self.alloc_path

@@ -33,9 +33,9 @@ class IOManager(debugger.IOManager):
 
         self.file_paths += (stdin, stdout, stderr)
 
-        self.file_threads.append(threading.Thread(target=self._open_file, args=["stdin", "w", stdin]))
-        self.file_threads.append(threading.Thread(target=self._open_file, args=["stdout", "r", stdout]))
-        self.file_threads.append(threading.Thread(target=self._open_file, args=["stderr", "r", stderr]))
+        self._create_thread(["stdin", "w", stdin])
+        self._create_thread(["stdout", "r", stdout])
+        self._create_thread(["stderr", "r", stderr])
 
         map(lambda thread: thread.start(), self.file_threads)
 
@@ -57,3 +57,8 @@ class IOManager(debugger.IOManager):
                 pass
 
         self.file_paths = []
+
+    def _create_thread(self, args):
+        thread = threading.Thread(target=self._open_file, args=args)
+        thread.daemon = True
+        self.file_threads.append(thread)
