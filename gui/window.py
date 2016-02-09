@@ -10,6 +10,7 @@ from config import Config
 from drawing.canvas import MemoryCanvas, CanvasToolbarWrapper
 from enums import ProcessState
 from gui_util import require_gui_thread, run_on_gui
+from heap_detail import HeapDetail
 from memory_view import MemoryView, RegisterList
 from source_edit import SourceManager
 from dialog import FileOpenDialog, MessageBox
@@ -133,6 +134,9 @@ class MainWindow(Gtk.Window):
 
         self.memory_view = MemoryView(app.debugger)
         self.tool_manager.add_tool("Memory view", TitleWindow("Memory view", self.memory_view))
+
+        self.heap_detail = HeapDetail(app.debugger)
+        self.tool_manager.add_tool("Heap detail", TitleWindow("Heap detail", self.heap_detail))
 
         self._add_to_row(self.tool_manager, 3)
 

@@ -1,5 +1,8 @@
-import re
+# -*- coding: utf-8 -*-
+
 from gi.repository import Gtk
+
+import re
 
 from enums import ProcessState
 from gui_util import require_gui_thread, run_on_gui
