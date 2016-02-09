@@ -4,7 +4,11 @@ import logging
 import inspect
 import os
 import tempfile
+
 from threading import Event, Thread
+
+
+root_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def create_pipe():
@@ -20,6 +24,14 @@ def create_pipe():
     os.mkfifo(fifo)
 
     return os.path.abspath(fifo)
+
+
+def get_root_path(path):
+    """
+    @type path: str
+    @rtype: str
+    """
+    return os.path.join(root_path, path)
 
 
 class Logger(object):

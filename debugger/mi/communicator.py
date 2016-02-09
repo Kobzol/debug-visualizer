@@ -9,12 +9,10 @@ import threading
 import traceback
 import signal
 
+import util
 from enum import Enum
 from enums import ProcessState
-from util import EventBroadcaster
 from mi.parser import Parser
-from util import RepeatTimer
-
 
 gdb_pretty_print_file = os.path.join(os.path.dirname(__file__), "gdb_pretty_print.py")
 pretty_print_dir = glob.glob("/usr/share/gcc-*/python")
@@ -174,7 +172,7 @@ class Communicator(object):
 
         self.read_timer = None
 
-        self.on_process_change = EventBroadcaster()
+        self.on_process_change = util.EventBroadcaster()
 
     def start_gdb(self):
         if self.process is not None:
@@ -187,7 +185,7 @@ class Communicator(object):
 
         self.process = subprocess.Popen(
             bufsize=0,
-            args=["gdb",
+            args=["{}".format(util.get_root_path("gdb/gdb/gdb")),
                   "-return-child-result",
                   "-quiet",
                   "-nx",  # ignore .gdbinit
@@ -207,7 +205,7 @@ class Communicator(object):
         self.send("python sys.path.append('{}')".format(pretty_print_dir))
         self.send("source {0}".format(gdb_pretty_print_file))
 
-        self.read_timer = RepeatTimer(0.1, self._timer_read_output)
+        self.read_timer = util.RepeatTimer(0.1, self._timer_read_output)
         self.read_timer.start()
 
     def send(self, command):
