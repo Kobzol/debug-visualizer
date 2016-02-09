@@ -32,6 +32,7 @@ def configure(conf):
     conf.check_python_module("gi.repository.Gtk")
     conf.check_python_module("jsonpickle")
     conf.check_python_module("epydoc")
+    conf.check_python_module("matplotlib")
 
 
 def build(ctx):
