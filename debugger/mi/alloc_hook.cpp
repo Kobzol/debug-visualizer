@@ -80,7 +80,7 @@ void* malloc(size_t size)
     if (alloc_file && alloc_file != ALLOC_FILE_TMP_VALUE)
     {
         void* addr = malloc_orig(size);
-        fprintf(alloc_file, "malloc %p %d\n", addr, (unsigned long int) size);
+        fprintf(alloc_file, "malloc %p %zu\n", addr, size);
         fflush(alloc_file);
 
         return addr;
@@ -103,8 +103,7 @@ void* calloc(size_t num, size_t size)
     if (alloc_file && alloc_file != ALLOC_FILE_TMP_VALUE)
     {
         void* addr = calloc_orig(num, size);
-        fprintf(alloc_file, "calloc %p %d\n", addr,
-                            (unsigned long int) num * size);
+        fprintf(alloc_file, "calloc %p %zu\n", addr, num * size);
         fflush(alloc_file);
 
         return addr;
@@ -127,8 +126,7 @@ void* realloc(void* addr, size_t size)
     if (alloc_file && alloc_file != ALLOC_FILE_TMP_VALUE)
     {
         void* addr_new = realloc_orig(addr, size);
-        fprintf(alloc_file, "realloc %p %p %d\n", addr, addr_new,
-                            (unsigned long int) size);
+        fprintf(alloc_file, "realloc %p %p %zu\n", addr, addr_new, size);
         fflush(alloc_file);
 
         return addr_new;
