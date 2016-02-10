@@ -1,5 +1,4 @@
 \documentclass[bc,male,python,dept460]{diploma}						% jednostranny dokument
-%\documentclass[bc,male,python,dept460,twoside]{diploma}		% oboustranny dokument
 
 \usepackage[english, czech]{babel}
 \usepackage[T1]{fontenc}
@@ -12,6 +11,7 @@
   bibencoding=UTF8]{biblatex}
 \usepackage[bottom]{footmisc}
 \usepackage{xifthen}
+\usepackage{float}
 
 \renewcommand\multinamedelim{\addcomma\space}	%  redefinice oddělování jmén autorů dle ISO690:2011
 \renewcommand\finalnamedelim{\addspace\mainsstring{and}\space}
@@ -106,22 +106,37 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 \cleardoublepage	% odstrankujeme, u jednostranneho dokumentu o jednu stranku, u oboustrenneho o dve
 
 % Zacneme uvodem
-\section{Úvod}
-	Ladění je nezbytná součást vývoje programů, která dovoluje programátorům detailně sledovat a ovládat laděný proces, aby v něm mohli odhalit
-	chyby a lépe pochopit jeho průběh. K tomuto slouží ladící programy, které vytváří asociaci mezi zdrojovým kódem a binárním spustitelným
-	souborem a poskytují tak tvůrci kódu možnost ladit kód na vysoké úrovni abstrakce, tj. na úrovni samotného zdrojového kódu. Cílem této práce
-	je vývoj grafického rozhraní, které bude nezávislé na použitém ladícím programu a bude umožňovat vizualizaci laděného programu pro lepší
-	pochopení jeho vnitřního stavu.
+\begin{section}{Úvod}
+	Jazyky C a C++ jsou velmi komplexní a dovolují programátorům pracovat s hardwarem počítače na značně nízké úrovni. Kvůli mnohým vlastnostem,
+	jako je absence automatické správy paměti nebo možnost provádět potencionálně nebezpečné operace s paměťovými ukazateli, jsou velmi náchylné ke vzniku
+	těžko odhalitelných chyb. Používání ladícího nástroje, který dokáže detailně zkoumat paměť běžícího procesu a krokovat ho, je tedy v těchto jazycích nutností,
+	bez které by byl vývoj C a C++ aplikací výrazně pomalejší.
+
+	\parspace Ladění tedy je nezbytná součást vývoje programů, která dovoluje programátorům detailně sledovat a ovládat laděný proces, aby v něm mohli odhalit
+	chyby a lépe pochopit jeho průběh. Ladící nástroje vytváří asociaci mezi zdrojovým kódem a binárním spustitelným
+	souborem a poskytují tak tvůrci kódu možnost ladit kód na vysoké úrovni abstrakce, tj. na úrovni samotného zdrojového kódu.
+	Existující nástroje, jako je GDB nebo LLDB, mají velké množství užitečných funkcí, ale samy o sobě poskytují svému uživateli pouze ladění
+	pomocí terminálu. To je pro velké programy velmi pomalé a nepřehledné řešení. Nad těmito nástroji proto vznikla různá grafické rozšíření,
+	ať už samostatná nebo integrovaná v komplexních vývojových prostředích. Tato uživatelská rozhraní umožňují mnohem pohodlnější a jednodušší ladění programů.
+	Díky tomu může být ladění přirozenou součástí vývoje programů, a ne pouze obtížnou činností nutnou při hledání skrytých chyb.
 	
-	\par První kapitola popisuje obecné principy ladění, které jsou společné pro všechny ladící programy. Druhá kapitola pojednává o existujících
-	ladících programech a jejich grafických rozhraních. Třetí kapitola se věnuje návrhu a vývoji rozhraní pro přístup k ladícím programům a grafického
-	rozhraní pro vizualizaci ladění programů.
+	\parspace I když grafické uživatelské rozhraní ladění značně usnadňuje, tak reprezentace paměti se v něm většinou omezuje na pouhý textový výpis názvů proměnných
+	a jejich hodnot. To postačuje pro hledání chyb v programu, ale nedovoluje to plně zobrazit vztahy mezi objekty a jejich umístění v paměti.
+	Zobrazení grafické reprezentace objektů v paměti může být také užitečné pro pochopení a sledování průběhu určitých (např. třídících) algoritmů.
+	Cílem této práce je vývoj grafického rozhraní, které bude umožňovat vizualizaci laděného programu pro lepší pochopení jeho vnitřního stavu a bude také nezávislé
+	na použitém ladícím programu.	
+
+	\parspace Kapitola \ref{sec:DebuggingPrinciples} popisuje obecné principy ladění, které jsou společné pro všechny ladící programy. Vysvětluje také terminologii
+	potřebnou pro pochopení dalšího textu. Po ní následuje kapitola \ref{sec:ExistingDebuggers}, pojednávající o existujících
+	ladících programech a jejich grafických rozhraních. Kapitola \ref{sec:DeviImplementation} se poté věnuje návrhu a vývoji vizualizační aplikace a
+	komunikačního rozhraní pro přístup k ladícím nástrojům.
 	
-	\par Tato práce je zaměřená na programy pro operační systémy založené na Linuxovém jádře. Pojmem Linuxový systém se v této práci myslí
+	\parspace Tato práce je zaměřená na programy pro operační systémy založené na Linuxovém jádře. Pojmem Linuxový systém se v této práci myslí
 	libovolná distribuce Linuxu. Pro označení programů, které umožňují ladění jiných programů, je v této práci používán termín debugger,
 	jelikož se jedná o často používaný programátorský termín a v češtině pro něj neexistuje zavedená alternativa.
-	
-\section{Principy ladění programů}
+\end{section}
+\begin{section}{Principy ladění programů}
+\label{sec:DebuggingPrinciples}
 	Tato kapitola popisuje obecné principy fungování ladících nástrojů, způsob mapování binárních instrukcí programu zpět do jeho zdrojového kódu,
 	krokování běžícího procesu a běžné konstrukce používané při ladění. Konkrétně je popis zaměřen na programy napsané v jazycích C a C++
 	v prostředí Linuxových systémů používající procesory z rodiny Intel x86. %TODO: důvod?%
@@ -200,8 +215,9 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 				systémového volání anebo přijetí signálu. Většina těchto událostí je ze své podstaty asynchronní, nelze u nich tedy dopředu určit, kdy budou zavolány
 				a použití breakpointu tedy není možné.
 		\end{description}
-		
-\section {Existující ladící nástroje}
+\end{section}
+\begin{section}{Existující ladící nástroje}
+\label{sec:ExistingDebuggers}
 	Ladících nástrojů pro jazyky C a C++ existuje velké množství, v této kapitole jsou popsány dva z nejpoužívanějších nástrojů, GDB a LLDB, které byly dále
 	použity při implementaci vizualizačního nástroje. Jsou zde taky popsány jejich vybrané grafické nádstavby.
 
@@ -258,10 +274,10 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 		Nabízí tak modernější alternativu k programům GCC a GDB. Ty jsou sice stabilnější a prověřenější, ale jelikož existují už desítky let a musí udržovat
 		zpětnou kompatibilitu, tak je těžší je využít jako modul do jiného programu. Z tohoto důvodu rovněž pomaleji přecházejí k novým standardům.
 		
-		\parspace Umí ladit programy napsané v jazycích C, C++, Objective-C a Swift na platformách OS X, Linux, Free BSD a Window. Podporuje tedy méně jazyků i platforem,
-		než GDB, ale narozdíl od něho je podporován, a stal se také standardním ladícím nástrojem, i operačními systémy OS X a iOS. Nabízí většinu standardních
-		funkcí ladících nástrojů, jako je krokování kódu, vytváření breakpointů a čtení a zápis paměti procesu. Jelikož je stále ve vývoji, tak zatím neobsahuje 
-		některé pokročilejší funkce, které nabízí GDB, například zpětné provádění instrukcí.
+		\parspace Umí ladit programy napsané v jazycích C, C++, Objective-C a Swift na platformách OS X, Linux, Free BSD a Window. Podporuje tedy méně jazyků
+		i platforem, než GDB, ale narozdíl od něho je podporován, a stal se také standardním ladícím nástrojem, i operačními systémy OS X a iOS.
+		Nabízí většinu standardních funkcí ladících nástrojů, jako je krokování kódu, vytváření breakpointů a čtení a zápis paměti procesu.
+		Jelikož je stále ve vývoji, tak zatím neobsahuje některé pokročilejší funkce, které nabízí GDB, například zpětné provádění instrukcí.
 
 	\subsection{Grafická rozhraní}
 		Grafických rozhraní pro debuggery GDB a LLDB existuje několik desítek. Některé z nich jsou samostatné programy podporující pouze ladění, další jsou
@@ -287,24 +303,20 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 				ve zdrojovém kódu jejich současnou hodnotu, což velmi urychluje pochopení stavu výpočtu.
 		\end{description}
 
-\section{Implementace vizualizačního nástroje}
-	Jazyky C a C++ jsou velmi komplexní a dovolují programátorům pracovat s hardwarem počítače na značně nízké úrovni. Kvůli mnohým vlastnostem,
-	jako je absence automatické správy paměti nebo možnost provádět potencionálně nebezpečné operace s paměťovými ukazateli, jsou velmi náchylné ke vzniku
-	těžko odhalitelných chyb. Používání debuggeru, který dokáže detailně zkoumat paměť běžícího procesu a krokovat ho, je tedy v těchto jazycích nutností,
-	bez které by byl vývoj C a C++ aplikací výrazně pomalejší.
-	Existující debuggery, jako je GDB nebo LLDB, mají velké množství užitečných funkcí, ale samy o sobě poskytují svému uživateli pouze ladění
-	pomocí terminálu. To je pro velké programy velmi pomalé a nepřehledné řešení. Nad těmito nástroji proto vznikla různá grafické rozšíření,
-	ať už samostatná nebo integrovaná v komplexních vývojových prostředích. Tato uživatelská rozhraní umožňují mnohem pohodlnější a jednodušší ladění programů.
-	Díky tomu může být ladění přirozenou součástí vývoje programů, a ne pouze obtížnou činností nutnou při hledání skrytých chyb.
-	I když grafické uživatelské rozhraní ladění značně usnadňuje, tak reprezentace paměti se v něm většinou omezuje na pouhý textový výpis názvů proměnných
-	a jejich hodnot. To postačuje pro hledání chyb v programu, ale nedovoluje to plně zobrazit vztahy mezi objekty a jejich umístění v paměti.
-	Zobrazení grafické reprezentace objektů v paměti může být také užitečné pro pochopení a sledování průběhu určitých (např. třídících) algoritmů.
-
-	\subsection{Specifikace požadavků}
-	Cílem této práce bylo navrhnout a naimplementovat program, který bude ladění programu vizualizovat ve formě grafu objektů v paměti, a otestovat,
+\end{section}
+\begin{section}{Implementace vizualizačního nástroje}
+\label{sec:DeviImplementation}
+  Cílem této práce bylo navrhnout a naimplementovat program, který bude ladění programu vizualizovat ve formě grafu objektů v paměti, a otestovat,
 	jestli tato grafická reprezentace usnadňuje ladění programů a pochopení průběhu jednoduchých algoritmů.
-	Program by také měl poskytovat přístup k běžným funkcím debuggerů.
-	Následuje seznam základních funkcí, které by měl svým uživatelům nabízet.
+	Tato kapitola pojednává o návrhu a implementaci tohoto nástroje, spolu s implementací knihovny pro komunikaci s debuggery.
+	Vizualizační nástroj jsem pojmenoval a dále jej v textu budu označovat jako \textit{Devi}.
+	
+	\subsection{Specifikace požadavků}
+	Program by měl existovat jako klasická GUI aplikace s okny. Jeho hlavní funkcí by mělo být vizualizovat stav laděného procesu zobrazováním části jeho
+	adresního prostoru. Zobrazovat by měl hlavně zásobník, který představuje současný stav a pozici procesu a z hlediska ladění se jedná o první místo,
+	kde lze začít hledat chyby.
+	Aby se dal program použít pro ladění reálně používaných aplikací, měl by poskytovat přístup ke všem běžným
+	funkcím debuggerů. Měl by také být nezávislý na použitém debuggeru. Následuje seznam základních funkcí, které by měl program svým uživatelům nabízet.
 	
 	\begin{itemize}
 		\item Asynchronní komunikace s debuggerem
@@ -321,8 +333,6 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 		\item Vizualizace objektů v paměti ve formě grafu
 	\end{itemize}
 	
-	S touto sadou funkcí by měl být tento program plně použitelný pro ladění reálně používaných aplikací.
-	
 	\subsection{Architektura}
 	\par Pro implementaci programu jsem zvolil programovací jazyk \textbf{Python}\footnote{http://www.python.org} ve verzi 2.7. Novější verze 3.x nebyla použita
 	z důvodu zachování kompatibility s již existujícími API pro debuggery, které v době tvorby této práce Python 3 ještě zcela nepodporovaly. Pro případnou
@@ -335,9 +345,9 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 	některými manažery plochy pro Linux (např. v GNOME\footnote{https://www.gnome.org/technologies}). Kromě možnosti tvorby vlastních
 	GUI prvků obsahuje několik desítek běžně používaných prvků, které jsou předpřipravené k okamžitému použití a usnadňují tak rychlý vývoj aplikací.
 	
-	\parspace Vizualizační nástroj jsem pojmenoval a dále jej v textu budu označovat jako \textit{Devi}.
-	Nástroj je tvořen dvěmi samostatnými komponentami, aplikací s grafickým rozhraním, která slouží k vizualizaci a k interakci s laděným procesem, a knihovny,
-	která poskytuje rozhraní pro komunikaci s libovolným debuggerem. Obrázek \ref{fig:DeviArchitecture} zachycuje pohled na architekturu aplikace z vysoké úrovně.
+	\parspace Nástroj je tvořen dvěmi samostatnými komponentami, aplikací s grafickým rozhraním, která slouží k vizualizaci a k interakci s laděným procesem,
+	a knihovny, která poskytuje rozhraní pro komunikaci s libovolným debuggerem. Obrázek \ref{fig:DeviArchitecture} zachycuje pohled na architekturu aplikace
+	z vysoké úrovně.
 	Uživatelské rozhraní komunikuje s knihovnou, která zprostředkovává komunikaci s debuggerem. Na obrázku jsou zobrazeny tři implementace této komunikační vrstvy,
 	které jsou popsány dále v textu. Debugger zajišťuje komunikaci a manipulaci s laděným procesem. Celá aplikace je tak rozdělena do několika
 	vrstev, které jsou na sobě nezávislé.
@@ -358,6 +368,7 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 			\item[ThreadInfo] uchovává seznam všech vláken v procesu a také současně zvolené vlákno
 			\item[Breakpoint] představuje breakpoint, obsahuje jeho identifikátor a zdrojový soubor a řádek, na kterém je umístěn
 			\item[Register] představuje registr procesoru, obsahuje jeho název a hodnotu
+			\item[HeaBlock] představuje blok paměti naalokované na haldě, obsahuje adresu a velikost v bytech
 		\end{description}
 		
 		\parspace Dále jsou v knihovně třídy, které tvoří obecné API pro přístup k debuggeru. Slouží jako rodičovské třídy pro jednotlivé implementace
@@ -367,7 +378,7 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 		\begin{description}
 			\item[Debugger] představuje abstrakci ladícího nástroje, který umožňuje načtení binárního souboru programu, jeho spuštění, zastavení
 			a krokování. Dále také uchovává stav laděného procesu a obsahuje všechny ostatní komponenty rozhraní vyjmenované níže.
-			\item[VariableManager] - se stará o čtení registrů a paměti procesu a o získávání a změnu jeho proměnných
+			\item[VariableManager] se stará o čtení registrů a paměti procesu a o získávání a změnu jeho proměnných
 			\item[ThreadManager] se stará o získávání a volbu vláken a zásobníkových rámců
 			\item[FileManager] se stará o získávání současné pozice a hlavního souboru laděného procesu. Poskytuje také převod zdrojového kódu
 			na strojový kód.
@@ -443,35 +454,44 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 			
 			\item[Detekce dynamických alokací]
 			\textit{Devi} sleduje dynamické alokace paměti na haldě laděného procesu, aby mohl zobrazovat stav adresního prostoru procesu a upozorňovat na některé
-			chyby způsobené špatnou prací s pamětí. Pro práci s dynamickou pamětí se v jazyce C používají funkce \textbf{malloc}, \textbf{calloc}, \textbf{realloc}
-			a \textbf{free}. V jazyce C++ se používají operátory \textbf{new} a \textbf{delete}, které ovšem také vnitřně volají již zmíněné C funkce. Aby šlo sledovat
-			alokace, je nutné zachytit všechna tato paměťová volání a zaznamenat si jejich parametry a návratové hodnoty. Zachycení volání těchto funkcí lze zajistit
-			různými způsoby, podmínkou však je, aby šlo pracovat přímo se spustitelným souborem a nebyla vyžadována úprava zdrojového kódu programu.
-			Nutnost úpravy zdrojového kódu by totiž byla nepraktická u větších programů, navíc by ani nešla provést pro externí knihovny, které jsou dostupné pouze v 
-			binární formě.
-			Otestoval jsem následující dva způsoby zachytávání alokací.
+			chyby způsobené špatnou prací s pamětí. Systémová knihovna jazyka C obsahuje implementaci alokátoru, který se stará o alokaci a dealokaci paměťových
+			bloků na haldě. Pro tuto práci s dynamickou pamětí se v jazyce C používají funkce \textbf{malloc}, \textbf{calloc}, \textbf{realloc}
+			a \textbf{free}. V jazyce C++ se používají operátory \textbf{new} a \textbf{delete}, které ovšem také vnitřně volají již zmíněné C funkce, takže není
+			nutné je explicitně zaznamenávat. Aby šlo sledovat alokace, je nutné zachytit volání všech funkcí pracujících s dynamickou pamětí a zaznamenat si
+			jejich parametry a návratové hodnoty. Zachycení volání těchto funkcí lze zajistit různými způsoby. Já jsem si určil jako podmínkou to, aby šlo pracovat
+			přímo se spustitelným souborem a nebyla vyžadována úprava zdrojového kódu programu.
+			Nutnost úpravy zdrojového kódu by totiž byla nepraktická u větších programů, navíc by ani nešla provést pro externí knihovny, které jsou dostupné pouze
+			jako binární distribuce.
+			S ohledem na tyto požadavky jsem navrhl a otestoval následující způsoby sledování alokací.
 			\begin{description}
-				\item[Zastavení procesu při alokaci] Na všechna alokační volání se umístí breakpoint a proces se tedy zastaví při jakékoliv práci s dynamickou
-				pamětí. Poté si lze přečíst údaje o alokaci, zaznamenat si je a obnovit běh procesu. Toto řešení fungovalo, ale zastavování procesu při každé alokaci
-				může laděný proces značně zpomalit. Je také třeba rozlišovat mezi vnitřními a uživatelskými breakpointy a reagovat na ně odlišně, což zbytečně
-				komplikuje implementaci komunikační knihovny. Tento způsob zachytávání by se rovněž musel implementovat pro každý debugger zvlášť.
-				Kvůli těchto důvodů jsem se rozhodl toto řešení nepoužít.
+				\item[Zastavení procesu při alokaci] Pokud se na všechna volání alokačních funkcí umístí breakpoint, tak proces se zastaví při jakékoliv práci s
+				dynamickou pamětí. Poté si z něj lze přečíst údaje o alokaci, zaznamenat si je a obnovit běh procesu. Toto řešení se ukázalo jako funkční,
+				ale zastavování procesu při každé alokaci laděný proces zpomalovalo. Dále vytváření skrytých breakpointů a jejich odlišení od breakpointů vytvořených
+				uživatelem zkomplikovalo implementaci komunikační knihovny. Navíc by se tento způsob zachytávání musel
+				implementovat pro každý debugger zvlášť. Kvůli těmto důvodům jsem se rozhodl toto řešení nepoužít.
 				
 				\item[Obalení alokačních funkcí vlastními funkcemi] Alokační funkce v jazyce C jsou definovány v systémové knihovně, která poskytuje
 				implementaci standardních funkcí a systémových volání. Často používanou implementací této knihovny na Linuxových systémech je glibc
-				\footnote{https://www.gnu.org/software/libc/}. Při spouštění procesu na Linuxu se vyhledají dynamické knihovny, které proces vyžaduje,
+				\footnote{https://www.gnu.org/software/libc/}. Při spuštění procesu na Linuxu se vyhledají dynamické knihovny, které daný proces vyžaduje,
 				a poté se namapují do jeho adresního prostoru. Použitím proměnné prostředí \textbf{LD\_PRELOAD} lze určit
 				seznam sdílených knihoven, které budou přednostně nahrány ke spouštěnému procesu\footnote{http://linux.die.net/man/8/ld.so}.
-				Jelikož se tyto knihovny nahrávají jako první, symboly obsažené v nich mají přednost před později nahranými symboly.
+				Jelikož se tyto knihovny nahrávají jako první, symboly obsažené v nich mají přednost před později nahranými symboly. Pokud se tedy pro proces
+				nahrají dvě sdílené knihovny, které obě obsahují vlastní implementaci funkce se stejnou hlavičkou, tak při zavolání této funkce se použije
+				implementace z knihovny, která byla nahrána dříve.
 				
 				\parspace Této skutečnosti jsem využil pro vytvoření sdílené knihovny, která obsahuje deklarace dříve zmíněných alokačních funkcí.
 				Při spuštění procesu je nahrána před systémovou knihovnou jazyka C a všechny dynamické alokace z laděného procesu poté volají funkce z mé knihovny.
-				V ní dochází k otevření souboru, pomocí kterého lze komunikovat s komunikačním rozhraním. % TODO: lepší název
+				V ní dochází k otevření pojmenované roury, která slouží ke komunikaci s komunikačním rozhraním. % TODO: lepší název
 				Při alokaci či dealokaci se nejprve odešlou informace o jejím typu a případné další parametry, jako je velikost alokovaných dat
 				nebo adresa dealokované paměti. Poté je zavolána původní funkce ze systémové knihovny, která provede samotnou (de)alokaci.
 				Adresa původní funkce musí být zjištěna za běhu programu pomocí
-				funkce dlsym\footnote{http://linux.die.net/man/3/dlsym}. Prosté použití jejího názvu by totiž vyústilo v nekonečné rekurzivní volání, jelikož
-				by se opět zavolala funkce z přednačtené knihovny.
+				funkce \textbf{dlsym}\footnote{http://linux.die.net/man/3/dlsym}. Prosté použití jejího názvu by totiž vyústilo v nekonečné rekurzivní volání, jelikož
+				by se opět zavolala funkce z přednačtené knihovny. Funkce \textbf{dlsym} nicméně sama může alokovat malé množství dynamické paměti,
+				její naivní použití by tedy vyústilo v nekonečnou rekurzi a přetečení zásobníku.
+				Aby k tomuto nedošlo, tak se ve sdílené knihovně vytváří statické pole s 1024 vynulovanými
+				byty, které je použito pro přidělení paměti vyžádané před nebo během načítání adresy alokačních funkcí. Pokud později dojde k dealokaci této
+				paměti pomocí funkce \textbf{free}, tak je tato dealokace ignorována a není předána dále do systémové knihovny, protože ta nemá o této statické paměti
+				žádné informace.
 				
 				\parspace Nevýhodou tohoto řešení je, že nebude fungovat, pokud bude laděný program používat staticky přilinkovanou systémovou knihovnu
 				\footnote{Linker \textit{ld} linkuje knihovny staticky při použití přepínače \textbf{-static}}.
@@ -480,26 +500,25 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 				Toto řešení však nevyžaduje zastavení procesu při každé alokaci a poskytuje zachytávání alokačních funkcí nezávislé na použitém debuggeru, proto
 				jsem se jej rozhodl v \textit{Devi} použít.
 				
-				\remark{Pro alokaci a namapování paměti lze využít i systémového volání \textbf{mmap}. Jelikož ale není běžné ho používat v programech explicitně,
-			tak toto volání \textit{Devi} nesleduje.}
+				\remark{Pro alokaci a namapování paměti lze využít i další funkce, např. \textbf{mmap} nebo \textbf{memalign}.
+				Jejich explicitní použití v programech ale není běžné, takže je \textit{Devi} nesleduje.}
 			\end{description}
 			
 			\InsertFigure{Figures/bak_io_alloc}{\textwidth}{Komunikace s laděným procesem}{fig:DebugeeIO}
 			
 		\end{description}
 			
-	\subsection{Vizualizační část}
+	\subsection{Vizualizační program}
 	
-	\subsection{Ovládání laděného procesu}
-	\subsection{Vizualizace paměti procesu}
 
-\section{Závěr}
+\end{section}
+\begin{section}{Závěr}
 \label{sec:Conclusion}
 \subsection{Další vývoj}
 IDE - kompilace, projekty, doplňování kódu
 backendy pro více ladících nástrojů
 rozšíření vizualizace
-
+\end{section}
 
 \bigskip
 \begin{flushright}
@@ -510,13 +529,13 @@ Jakub Beránek
 \printbibliography
 
 \appendix
-\section{Grafická rozhraní debuggerů}
+\begin{section}{Grafická rozhraní debuggerů}
 \label{appendix:gui}
 \InsertFigure{Figures/appendix_gui_gdb_tui}{\textwidth}{Textové rozhraní GDB (TUI)}{fig:AppendixGuiGdbTui}
 \InsertFigure{Figures/appendix_gui_ddd}{\textwidth}{Rozhraní programu DDD}{fig:AppendixGuiDDD}
 \InsertFigure{Figures/appendix_gui_clion}{\textwidth}{Rozhraní programu CLion (zdroj: https://www.jetbrains.com/clion)}{fig:AppendixGuiClion}
 %\InsertFigure{Figures/appendix_gui_gede}{\textwidth}{Rozhraní programu Gede (http://gede.acidron.com/)}{fig:AppendixGuiGede}
-
+\end{section}
 
 \clearpage
 

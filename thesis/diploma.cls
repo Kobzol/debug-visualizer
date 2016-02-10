@@ -414,7 +414,7 @@
   }
 \newcommand{\InsertFigure}[4]
 {
-  \begin{figure}
+  \begin{figure}[H]
     \centering
     \includegraphics[width=#2]{#1}
     \caption{#3}
