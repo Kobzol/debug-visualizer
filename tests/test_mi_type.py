@@ -27,7 +27,7 @@ def test_types(debugger):
     check_type(debugger, "varUnionA", "unionA", TypeCategory.Union)
     check_type(debugger, "varEnumA", "enumA", TypeCategory.Enumeration)
     check_type(debugger, "varEnumB", "enumB", TypeCategory.Enumeration)
-    check_type(debugger, "varVector", "std::vector<int>", TypeCategory.Vector)
+    check_type(debugger, "varVector", "std::vector<int, std::allocator<int> >", TypeCategory.Vector)
     check_type(debugger, "varString", "std::string", TypeCategory.String)
     check_type(debugger, "varArray", "int [10]", TypeCategory.Array)
     check_type(debugger, "varPointer", "int *", TypeCategory.Pointer)

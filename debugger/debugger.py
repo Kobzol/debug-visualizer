@@ -307,10 +307,10 @@ class Debugger(object):
     def exec_step_out(self):
         raise NotImplementedError()
 
-    def kill(self, kill_process=False):
+    def quit_program(self, return_code=1):
         raise NotImplementedError()
 
-    def stop_program(self, return_code=1):
+    def terminate(self):
         raise NotImplementedError()
 
     def wait_for_stop(self):
@@ -318,6 +318,3 @@ class Debugger(object):
             time.sleep(0.1)
 
         return self.process_state
-
-    def quit(self):
-        pass

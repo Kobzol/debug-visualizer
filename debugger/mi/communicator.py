@@ -14,6 +14,7 @@ from enum import Enum
 from enums import ProcessState
 from mi.parser import Parser
 
+
 gdb_pretty_print_file = os.path.join(os.path.dirname(__file__), "gdb_pretty_print.py")
 pretty_print_dir = glob.glob("/usr/share/gcc-*/python")
 
@@ -185,7 +186,7 @@ class Communicator(object):
 
         self.process = subprocess.Popen(
             bufsize=0,
-            args=["{}".format(util.get_root_path("gdb/gdb/gdb")),
+            args=["{}".format(util.get_root_path("build/gdb-build/gdb")),
                   "-return-child-result",
                   "-quiet",
                   "-nx",  # ignore .gdbinit
@@ -312,6 +313,8 @@ class Communicator(object):
 
         if not input:
             return None
+
+        #util.Logger.debug("COMM: {}".format(input.strip()))
 
         return input.strip()
 

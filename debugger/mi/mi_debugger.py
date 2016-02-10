@@ -3,8 +3,6 @@
 import os
 import threading
 
-import time
-
 import debugger
 import util
 from enums import ProcessState, DebuggerState
@@ -15,6 +13,11 @@ from mi.heap_manager import HeapManager
 from mi.io_manager import IOManager
 from mi.thread_manager import ThreadManager
 from mi.variable_manager import VariableManager
+
+
+shlib_path = util.get_root_path("build/debugger/liballochook.so")
+if not os.path.isfile(shlib_path):
+    raise BaseException("liballochook.so is not compiled in build/debugger")
 
 
 class MiDebugger(debugger.Debugger):
@@ -31,7 +34,7 @@ class MiDebugger(debugger.Debugger):
         self.variable_manager = VariableManager(self)
         self.heap_manager = HeapManager(self)
 
-        self.exit_lock = threading.Lock()
+        self.exit_lock = threading.RLock()
 
     def _handle_process_state(self, output):
         """
@@ -41,7 +44,8 @@ class MiDebugger(debugger.Debugger):
         self.process_state = output.state
 
         if output.state == ProcessState.Exited:
-            self.stop_program(output.exit_code)
+            self._cleanup_program()
+            self._on_program_ended(output.exit_code)
         elif output.state == ProcessState.Stopped:
             self.on_process_state_changed.notify(output.state,
                  debugger.ProcessStoppedEventData(output.reason)
@@ -81,8 +85,6 @@ class MiDebugger(debugger.Debugger):
         stdin, stdout, stderr = self.io_manager.handle_io()
         alloc_file = self.heap_manager.watch()
 
-        shlib_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../build/debugger/mi/liballochook.so")
-
         self.communicator.send("set environment DEVI_ALLOC_FILE_PATH={}".format(alloc_file))
         self.communicator.send("set environment LD_PRELOAD={}".format(shlib_path))
 
@@ -117,20 +119,26 @@ class MiDebugger(debugger.Debugger):
         self.require_state(DebuggerState.Running)
         self.communicator.send("-exec-finish")
 
-    def kill(self, kill_process=False):
+    def quit_program(self, return_code=1):
+        if not self.state.is_set(DebuggerState.Running):
+            return
+
+        self.communicator.quit_program()
+        self._cleanup_program()
+        self._on_program_ended(return_code)
+
+    def terminate(self):
+        self.quit_program()
+        self.communicator.kill()
+
+    def _cleanup_program(self):
         self.exit_lock.acquire()
 
         try:
             if not self.state.is_set(DebuggerState.Running):
                 return
 
-            if kill_process:
-                self.communicator.kill()
-            else:
-                while self.process_state != ProcessState.Exited:
-                    time.sleep(0.1)
-
-            self.process_state = ProcessState.Exited
+            util.Logger.debug("Cleaning debugged process")
             self.state.unset(DebuggerState.Running)
 
             self.io_manager.stop_io()
@@ -138,21 +146,6 @@ class MiDebugger(debugger.Debugger):
         finally:
             self.exit_lock.release()
 
-    def stop_program(self, return_code=1):
-        self.exit_lock.acquire()
-
-        try:
-            if not self.state.is_set(DebuggerState.Running):
-                return
-
-            self.communicator.quit_program()
-
-            self.process_state = ProcessState.Exited
-            self.on_process_state_changed.notify(ProcessState.Exited, debugger.ProcessExitedEventData(return_code))
-            util.Logger.debug("Debugger process ended")
-            self.state.unset(DebuggerState.Running)
-
-            self.io_manager.stop_io()
-            self.heap_manager.stop()
-        finally:
-            self.exit_lock.release()
+    def _on_program_ended(self, return_code):
+        self.process_state = ProcessState.Exited
+        self.on_process_state_changed.notify(ProcessState.Exited, debugger.ProcessExitedEventData(return_code))

@@ -84,7 +84,7 @@ class ToolbarManager(object):
         self.debugger.exec_continue()
 
     def stop(self):
-        self.debugger.stop_program()
+        self.debugger.quit_program()
 
     def pause(self):
         self.debugger.exec_pause()

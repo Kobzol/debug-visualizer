@@ -3,6 +3,9 @@
 from gi.repository import Gtk, GObject
 
 import time
+
+import matplotlib
+matplotlib.use('gtk3agg')
 from matplotlib.backends.backend_gtk3agg import FigureCanvasGTK3Agg as FigureCanvas
 from matplotlib.figure import Figure
 

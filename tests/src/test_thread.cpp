@@ -2,11 +2,18 @@
 #include <iostream>
 #include <unistd.h>
 
+volatile int a = 0;
+
 void* test(void* param)
 {
     while (true)
     {
-        int a = 5;
+        a++;
+
+        if (a == 5)
+        {
+            a--;
+        }
     }
 }
 
@@ -19,7 +26,12 @@ int main()
 
     while (true)
     {
-        int b = 5;
+        a++;
+
+        if (a == 5)
+        {
+            a--;
+        }
     }
 
     pthread_join(thread, NULL);

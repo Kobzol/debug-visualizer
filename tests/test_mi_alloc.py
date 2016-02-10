@@ -1,5 +1,5 @@
 import copy
-import sys
+import time
 
 FRAME_FILE = "src/test_alloc.cpp"
 FRAME_LINE = 8
@@ -20,6 +20,8 @@ def test_alloc(debugger):
 
     prepare_frame_program(debugger)
 
+    time.sleep(1)
+
     assert len(heap[0]) == 1
-    assert heap[1][1].size == 1024
-    assert len(heap[2]) == 1
+    assert heap[0][0].size == 1024
+    assert len(heap[1]) == 0

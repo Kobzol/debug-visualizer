@@ -45,7 +45,9 @@ def test_step_out(debugger):
     debugger.exec_step_out()
     debugger.wait_for_stop()
 
-    assert debugger.file_manager.get_current_location() == make_location(11)
+    location = debugger.file_manager.get_current_location()
+    assert location[0] == make_location(11)[0]
+    assert location[1] in (11, 12)
 
 
 def test_continue(debugger):
@@ -71,5 +73,5 @@ def test_stop(debugger):
     prepare_execution_program(debugger)
 
     time.sleep(0.5)
-    debugger.stop_program()
+    debugger.quit_program()
     debugger.wait_for_stop()

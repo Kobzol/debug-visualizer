@@ -121,25 +121,25 @@ class VariableManager(debugger.VariableManager):
                 basic_type_category = basic_type_map[type]
                 type_category = TypeCategory.Builtin
             else:
-                if type.startswith("struct"):
+                if type_name.startswith("struct"):
                     type_category = TypeCategory.Struct
-                elif type.startswith("class"):
+                elif type_name.startswith("class"):
                     type_category = TypeCategory.Class
-                elif type.startswith("union"):
+                elif type_name.startswith("union"):
                     type_category = TypeCategory.Union
-                elif type.startswith("enum"):
+                elif type_name.startswith("enum"):
                     type_category = TypeCategory.Enumeration
-                elif type.endswith("*"):
+                elif type_name.endswith("*"):
                     type_category = TypeCategory.Pointer
-                elif type.endswith("&"):
+                elif type_name.endswith("&"):
                     type_category = TypeCategory.Reference
-                elif type.endswith("]"):
+                elif type_name.endswith("]"):
                     type_category = TypeCategory.Array
-                elif type.endswith(")"):
+                elif type_name.endswith(")"):
                     type_category = TypeCategory.Function
-                elif type.startswith("std::vector"):
+                elif type_name.startswith("std::vector"):
                     type_category = TypeCategory.Vector
-                elif type.startswith("std::string"):
+                elif type_name.startswith("std::string"):
                     type_category = TypeCategory.String
 
             size = None
