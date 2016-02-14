@@ -7,6 +7,9 @@ import traceback
 clang_path = glob.glob("/usr/lib/*/*/libclang.so*")
 
 if len(clang_path) < 1:
+    clang_path = glob.glob("/usr/lib/libclang.so")
+
+if len(clang_path) < 1:
     raise BaseException("Clang was not found")
 
 from clang.cindex import TranslationUnit, File, SourceLocation, Cursor, Config

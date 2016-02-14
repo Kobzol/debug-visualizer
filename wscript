@@ -111,8 +111,9 @@ def build(ctx):
 
 
 def download(ctx):
-    apt_args = ["g++", "texinfo", "python-dev", "python-pip", "python-matplotlib",
-                "python-enum34" "python-jsonpickle", "python-epydoc", "python-pytest", "python-clang-3.6"]
+    apt_args = ["g++", "texinfo", "python-dev", "python-pip",
+                "python-matplotlib", "python-enum34", "python-jsonpickle",
+                "python-epydoc", "python-pytest", "python-clang-3.6"]
     subprocess.check_call(["sudo", "apt-get", "install"] + apt_args)
 
 
