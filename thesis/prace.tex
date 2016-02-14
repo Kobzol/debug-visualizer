@@ -52,7 +52,7 @@ A ještě jeden důležitý odstavec. A ještě jeden důležitý odstavec.
 A ještě jeden důležitý odstavec. A ještě jeden důležitý odstavec.
 Konec textu dohodnutého omezení přístupu k Vaší práci.}
 
-\Thanks{Rád bych na tomto místě poděkoval všem, kteří mi s prací pomohli, protože bez nich by tato práce nevznikla.}
+\Thanks{Chtěl bych poděkovat svému vedoucímu, Ing. Marku Běhálkovi, Ph.D., za pomoc a připomínky k tvorbě této práce.}
 
 \CzechAbstract{Tato bakalářská práce se zabývá vizualizací ladění programů napsaných v jazyce C a C++. První část pojednává o
 obecných principech ladění programů. %Jsou zde popsány konstrukce, které se při ladění používají, způsob, jakým ladící nástroje
@@ -266,7 +266,7 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 		GDB nemá vlastní grafické rozhraní, je ovládán z příkazové řádky. Kromě toho ale podporuje také spouštění skriptů v Pythonu pomocí API,
 		které bylo použito pro implementaci vizualizačního nástroje a je popsáno dále v textu.
 	\subsection{LLDB}
-		Ladící nástroj LLDB\footnote{http://llvm.org} je založen na sadě knihoven, které využívají infrastruktury LLVM a překladače Clang.
+		Ladící nástroj LLDB\footnote{http://lldb.llvm.org} je založen na sadě knihoven, které využívají infrastruktury LLVM a překladače Clang.
 		LLVM je univerzální překladače, který dokáže překládat velké množství jazyků do své vnitřní, jazykově nezávislé reprezentace, kterou umí
 		optimalizovat a vygenerovat z ní dále spustitelný soubor pro libovolnou kompatibilní platformu. Obsahuje také kompletní implementaci standardní
 		knihovny jazyka C++, která plně podporuje jeho nejnovější standard, C++11. Clang je nádstavbou LLVM, která analyzuje a překládá programy v jazyce
@@ -508,16 +508,35 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 			
 		\end{description}
 			
-	\subsection{Vizualizační program}
+	\subsection{Vizualizace ladění}
+	Pro samotnou vizualizaci ladění procesu jsem vytvořil GUI aplikaci, která 
 	
 
 \end{section}
 \begin{section}{Závěr}
 \label{sec:Conclusion}
-\subsection{Další vývoj}
-IDE - kompilace, projekty, doplňování kódu
-backendy pro více ladících nástrojů
-rozšíření vizualizace
+Po otestování \textit{Devi} na reálných zdrojových kódech a programech jsem došel k závěru, že vizualizace paměti procesu může poskytnout obstojnou
+alternativu k prosté textové reprezentaci. Lze si díky ní lépe představit rozmístění paměti v adresním prostoru procesu a rychleji pochopit vztahy mezi objekty.
+Nicméně objem paměti používané programy je v dnešní době obrovský a zobrazit jej naráz není možné. Grafická forma paměti také zabírá mnohem více místa než textový
+popis a z toho důvodu nemusí stačit k zobrazení všech proměnných a částí paměti, které programátora ladícího daný proces zajímají. Pro největší flexibilitu
+při ladění je tedy vhodné zkombinovat oba dva způsoby reprezentace paměti procesu.
+
+\parspace Tato forma vizualizace paměti by dle mého názoru dala využít pro výuku programování. Jazyky C a C++ pracují bezprostředně s pamětí procesu,
+bez několika vrstev abstrakcí, jako tomu bývá např. u skriptovacích jazyků nebo vyšších jazyků, jako je Java či C\#.
+Pro pochopení sémantiky jejich jazykových konstrukcí, uspořádání struktur a polí v paměti apod. je nutné mít dobrou představu o paměťovém modelu,
+který používají. A to nejen pro správné pochopení fungování programu, který je jejich kódem vygenerován, ale také z důvodu absence automatické správy paměti.
+Programátoři, které v těchto jazycích začínají programovat, ovšem často nemají žádnou představu, jak je paměť v procesu uspořádána.
+Kvůli toho často chování jejich programů považují za neintuitivní, protože si neuvědomují souvislosti existující za běhu procesu, které ze
+samotného zdrojového kódu nejdou vyčíst. Zobrazení stavu paměti v intuitivní podobě, která zachycuje umístění proměnných, vznik zásobníkových rámců při volání
+funkcí, dealokaci proměnných na konci bloku apod. může ve spolupráci s krokováním procesu usnadnit pochopení toho, jak programy vlastně fungují "na pozadí".
+
+\parspace \textit{Devi} by mohl být v budoucnu rozšířen o další užitečné funkce. Pokud by se do něj přidala jednoduchá správa souborů a možnost kompilace
+zdrojového kódu, mohl by sloužit jako jednoduché vývojové prostředí pro výuku programování v jazycích C a C++.
+Díky tomu, že obsahuje komunikační knihovnu s abstraktním API pro debuggery je jednoduché přidat k němu podporu pro další debuggery. Určitě by bylo
+zajímavé rozšířit tuto vrstvu o komunikaci s jinými debuggery, než je GDB, a srovnat jejich funkcionalitu a stabilitu.
+Vizualizaci objektů by šlo také dále prohlubovat, např. vytvářením odlišných pohledů nad stejnými daty, přidáním diagramů zobrazujících rozsáhlá data nebo
+přidáním podpory pro všechny paměťové kontejny standardní knihovny jazyka C++. Pro alternativu k grafické reprezentaci by také šlo přidat klasické textové
+zobrazení proměnných ve stromové struktuře.
 \end{section}
 
 \bigskip
