@@ -252,5 +252,7 @@ class EventBroadcaster(object):
         """
         self.subscribe(broadcaster.notify)
 
+    def __call__(self, *args, **kwargs):
+        self.notify(*args, **kwargs)
 
 Logger.init_logger(logging.DEBUG)
