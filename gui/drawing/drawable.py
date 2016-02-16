@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import abc
 import cairo
 
 from gi.repository import Gtk
@@ -10,6 +9,7 @@ from enum import Enum
 from drawing.geometry import Margin, RectangleBBox, Padding
 from drawing.size import Size
 from drawing.vector import Vector
+from drawing.widgets import ValueEntry
 from enums import TypeCategory
 from gui_util import require_gui_thread
 from util import EventBroadcaster
@@ -318,21 +318,28 @@ class Drawable(object):
         """
         self.canvas = canvas
 
-        self.position = self._parse_property(properties, "position", Vector(0, 0), Vector.vectorize)
-        """@type position: drawing.vector.Vector"""
-        self._margin = self._parse_property(properties, "margin", Margin.all(0))
-        """@type margin: drawing.geometry.Margin"""
-        self._padding = self._parse_property(properties, "padding", Padding.all(0))
-        """@type padding: drawing.geometry.Padding"""
-        self._request_size = self._parse_property(properties, "size", Size(-1, -1), Size.make_size)
-        """@type request_size: drawing.size.Size"""
-        self._min_size = self._parse_property(properties, "min_size", Size(0, 0), Size.make_size)
-        """@type min_size: drawing.size.Size"""
-        self._max_size = self._parse_property(properties, "max_size", Size(999, 999), Size.make_size)
-        """@type max_size: drawing.size.Size"""
-        self.bg_color = self._parse_property(properties, "bg_color", Drawable.get_default_bg_color(), Color.make_color)
+        self._position = self._parse_property(properties, "position",
+                                              Vector(0, 0), Vector.vectorize)
+        """@type _position: drawing.vector.Vector"""
+        self._margin = self._parse_property(properties, "margin",
+                                            Margin.all(0))
+        """@type _margin: drawing.geometry.Margin"""
+        self._padding = self._parse_property(properties, "padding",
+                                             Padding.all(0))
+        """@type _padding: drawing.geometry.Padding"""
+        self._request_size = self._parse_property(properties, "size",
+                                                  Size(-1, -1), Size.make_size)
+        """@type _request_size: drawing.size.Size"""
+        self._min_size = self._parse_property(properties, "min_size",
+                                              Size(0, 0), Size.make_size)
+        """@type _min_size: drawing.size.Size"""
+        self._max_size = self._parse_property(properties, "max_size",
+                                              Size(999, 999), Size.make_size)
+        """@type _max_size: drawing.size.Size"""
+        self.bg_color = self._parse_property(properties, "bg_color",
+                                             Drawable.get_default_bg_color(),
+                                             Color.make_color)
         """@type bg_color: drawing.drawable.Color"""
-
         self.name = self._parse_property(properties, "name", "")
         """@type name: str"""
 
@@ -437,6 +444,30 @@ class Drawable(object):
         self._max_size = value
         self.invalidate()
 
+    @property
+    def position(self):
+        """
+        @rtype: drawing.vector.Vector
+        """
+        return self._position
+
+    @position.setter
+    def position(self, value):
+        """
+        @type value: drawing.vector.Vector
+        """
+        self._position = value.copy()
+        self.place_children()
+
+    def toggle(self):
+        self.visible = not self.visible
+
+    def hide(self):
+        self.visible = False
+
+    def show(self):
+        self.visible = True
+
     def get_content_size(self):
         raise NotImplementedError()
 
@@ -459,10 +490,6 @@ class Drawable(object):
         child.parent = self
         self.click_handler.propagate_handler(child.click_handler)
         self.invalidate()
-
-    def set_position(self, position):
-        self.position = position.copy()
-        self.place_children()
 
     def handle_mouse_event(self, mouse_data):
         """
@@ -588,7 +615,7 @@ class LinearLayout(Drawable):
 
         for child in self.children:
             child_position = position + Vector(child.margin.left, child.margin.top)  # add margin
-            child.set_position(child_position)
+            child.position = child_position
             rect = child.get_rect()
 
             if self.direction == LinearLayoutDirection.Horizontal:
@@ -613,13 +640,14 @@ class ToggleDrawable(Drawable):
         self.drawables = list(drawables)
         self.current_drawable = 0
 
-    def set_position(self, position):
+    @Drawable.position.setter
+    def position(self, value):
         """
-        @type position: drawing.vector.Vector
+        @type value: drawing.vector.Vector
         """
-        super(ToggleDrawable, self).set_position(position)
+        Drawable.position.fset(self, value)
         for drawable in self.drawables:
-            drawable.set_position(position)
+            drawable.position = value
 
     def get_active_drawable(self):
         return self.drawables[self.current_drawable]
@@ -776,7 +804,14 @@ class VariableDrawable(Label, VariableContainer):
         @type variable: debugee.Variable
         """
         self.variable = variable
-        super(VariableDrawable, self).__init__(canvas, self.get_variable_value, size=Size(-1, 20), **properties)
+        super(VariableDrawable, self).__init__(canvas, self.get_variable_value,
+                                               size=Size(-1, 20), **properties)
+
+        value_entry = ValueEntry("Edit value of {}"
+                                 .format(self.variable.name), "")
+        value_entry.on_value_entered.subscribe(self._handle_value_change)
+        self.value_entry = WidgetDrawable(self.canvas, value_entry)
+        self.value_entry.hide()
 
     def get_variable_value(self):
         return self.variable.value
@@ -791,10 +826,9 @@ class VariableDrawable(Label, VariableContainer):
         """
         @type mouse_data: mouse.MouseData
         """
-        title = "Edit value of {}".format(self.variable.name)
-        value = self.get_variable_value()
-        self.canvas.fixed_wrapper.toggle_widget_to(self.canvas.fixed_wrapper.text_entry, mouse_data.position.copy(),
-                                                   title, value, self._handle_value_change)
+        self.value_entry.widget.set_value(self.get_variable_value())
+        self.value_entry.position = mouse_data.position
+        self.value_entry.toggle()
 
 
 class CompositeLabel(LinearLayout):
@@ -961,6 +995,7 @@ class PointerDrawable(VariableDrawable):
         self.label = label
         super(PointerDrawable, self).draw()
 
+
 class VectorValueDrawable(Label, VariableContainer):
     def __init__(self, canvas, variable):
         """
@@ -998,3 +1033,33 @@ class VectorDrawable(LinearLayout, VariableContainer):
         @rtype: int
         """
         return self.max_elements
+
+
+class WidgetDrawable(Drawable):
+    def __init__(self, canvas, widget, **properties):
+        """
+        @type canvas: canvas.Canvas
+        @type widget: Gtk.Widget
+        """
+        super(WidgetDrawable, self).__init__(canvas, **properties)
+        self.widget = widget
+        self.canvas.fixed_wrapper.put(self.widget, 0, 0)
+
+    @Drawable.visible.setter
+    def visible(self, value):
+        """
+        @type value: bool
+        """
+        self.widget.props.visible = value
+        Drawable.visible.fset(self, value)
+
+    @Drawable.position.setter
+    def position(self, value):
+        """
+        @type value: drawing.vector.Vector
+        """
+        Drawable.position.fset(self, value)
+        self.canvas.fixed_wrapper.move(self.widget, value.x, value.y)
+
+    def get_content_size(self):
+        return self.widget.get_preferred_size()
