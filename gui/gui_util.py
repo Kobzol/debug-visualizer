@@ -2,8 +2,11 @@ import threading
 from gi.repository import GObject
 
 
-def run_on_gui(function, *args):
-    GObject.idle_add(lambda *x: function(*args))
+def run_on_gui(function, *args, **kwargs):
+    """
+    @type function: callable
+    """
+    GObject.idle_add(lambda *x: function(*args, **kwargs))
 
 
 def assert_is_gui_thread():
@@ -15,10 +18,36 @@ def assert_is_gui_thread():
 
 
 def require_gui_thread(func):
+    """
+    @type func: callable
+    @rtype: callable
+    """
     def check(*args, **kwargs):
         assert_is_gui_thread()
         return func(*args, **kwargs)
     return check
+
+
+def truncate(data, length, end=None):
+    """
+    Truncates the data string to the given length (inclusive).
+    If end is given, the end is appended to the truncated input.
+    The final length will be <= len, so end will not go over len.
+    @type data: str
+    @type length: int
+    @type end: str
+    @rtype: str
+    """
+    if end:
+        end_len = len(end)
+        trunc_length = length - end_len
+        if trunc_length < 1:
+            return end
+        else:
+            return data[:trunc_length] + end
+
+    else:
+        return data[:length]
 
 
 class Cooldown(object):

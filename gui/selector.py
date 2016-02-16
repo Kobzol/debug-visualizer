@@ -5,7 +5,7 @@ import abc
 from gi.repository import Gtk
 
 from enums import ProcessState
-from gui_util import run_on_gui, require_gui_thread
+from gui_util import run_on_gui, require_gui_thread, truncate
 
 
 class FrameListRow(Gtk.ListBoxRow):
@@ -36,12 +36,14 @@ class Selector(Gtk.ListBox):
         super(Selector, self).__init__()
 
         self.debugger = debugger
-        self.debugger.on_process_state_changed.subscribe(self._handle_process_change)
+        self.debugger.on_process_state_changed.subscribe(
+            self._handle_process_change)
         self.debugger.on_thread_changed.subscribe(self._handle_thread_change)
         self.debugger.on_frame_changed.subscribe(self._handle_frame_change)
 
         self.set_selection_mode(Gtk.SelectionMode.BROWSE)
-        self.connect("row-selected", lambda listbox, row: self._handle_row_selected(row))
+        self.connect("row-selected", lambda listbox, row:
+        self._handle_row_selected(row))
 
         self.auto_select = False
 
@@ -91,7 +93,7 @@ class FrameSelector(Selector):
         row = FrameListRow(frame)
 
         frame_desc = str(frame)
-        frame_desc_trunc = (frame_desc[:50] + "...") if len(frame_desc) > 53 else frame_desc
+        frame_desc_trunc = truncate(frame_desc, 53, "...")
 
         label = Gtk.Label(frame_desc_trunc)
         label.set_tooltip_text(frame_desc)
@@ -150,7 +152,7 @@ class ThreadSelector(Selector):
         row = ThreadListRow(thread)
 
         thread_desc = str(thread)
-        thread_desc_trunc = (thread_desc[:50] + "...") if len(thread_desc) > 53 else thread_desc
+        thread_desc_trunc = truncate(thread_desc, 53, "...")
 
         label = Gtk.Label(thread_desc_trunc)
         label.set_tooltip_text(thread_desc)
