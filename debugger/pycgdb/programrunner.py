@@ -1,9 +1,11 @@
-import traceback
-import Queue
+# -*- coding: utf-8 -*-
+
 import os
-import threading
-import signal
 import ptrace
+import Queue
+import signal
+import threading
+import traceback
 
 from enums import ProcessState
 from util import EventBroadcaster
@@ -98,7 +100,9 @@ class ProgramRunner(object):
         if os.WIFSTOPPED(status):
             self._on_stop(status)
         elif os.WIFEXITED(status):
-            self.on_signal.notify(ProcessState.Exited, os.WTERMSIG(status), os.WEXITSTATUS(status))
+            self.on_signal.notify(ProcessState.Exited,
+                                  os.WTERMSIG(status),
+                                  os.WEXITSTATUS(status))
             raise ProcessExitException()
 
     def _handle_command(self, pid, status, command):
@@ -117,8 +121,10 @@ class ProgramRunner(object):
         pid = self.child_pid
         regs = ptrace.ptrace_getregs(pid)
         orig_address = regs.eip - 1
-        if self.debugger.breakpoint_manager.has_breakpoint_for_address(orig_address):
-            self.debugger.breakpoint_manager.restore_instruction(pid, orig_address)
+        if self.debugger.breakpoint_manager.has_breakpoint_for_address(
+                orig_address):
+            self.debugger.breakpoint_manager.restore_instruction(pid,
+                                                                 orig_address)
             regs.eip -= 1
             assert ptrace.ptrace_setregs(pid, regs)
             self._do_step_single(pid)

@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+
+
 def build(ctx):
     ctx.shlib(
         source="alloc_hook.cpp",

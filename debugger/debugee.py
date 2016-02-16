@@ -10,7 +10,8 @@ class Type(object):
     """
     typename_replacements = {
         ":__1": "",
-        "std::basic_string<char, std::char_traits<char>, std::allocator<char> >": "std::string"
+        "std::basic_string<char, std::char_traits<char>,"
+        "std::allocator<char> >": "std::string"
     }
 
     @staticmethod
@@ -30,7 +31,9 @@ class Type(object):
         if type_name.startswith("std::vector"):
             type_category = TypeCategory.Vector
 
-        return Type(type_name, type_category, BasicTypeCategory(lldb_type.GetBasicType()))
+        return Type(type_name, type_category,
+                    BasicTypeCategory(lldb_type.GetBasicType()),
+                    lldb_type.size)
 
     def __init__(self, name, type_category, basic_type_category, size):
         """
@@ -46,10 +49,12 @@ class Type(object):
 
     def is_composite(self):
         """
-        Return true if this type is a composite type, containing child elements (struct, class, vector, array)
+        Return true if this type is a composite type, containing child
+        elements (struct, class, vector, array)
         @rtype: bool
         """
-        return self.type_category in (TypeCategory.Struct, TypeCategory.Class, TypeCategory.Vector, TypeCategory.Array)
+        return self.type_category in (TypeCategory.Struct, TypeCategory.Class,
+                                      TypeCategory.Vector, TypeCategory.Array)
 
     def is_valid(self):
         """
@@ -90,7 +95,8 @@ class Variable(object):
 
         return var
 
-    def __init__(self, address=None, name=None, value=None, type=None, path=None):
+    def __init__(self, address=None, name=None, value=None, type=None,
+                 path=None):
         """
         @type address: str
         @type name: str
@@ -126,7 +132,11 @@ class Variable(object):
         self.on_value_changed.notify(self)
 
     def __repr__(self):
-        return "Variable: {0} ({1}) = {2}".format(self.type, self.path if self.path else self.name, self.value)
+        return "Variable: {0} ({1}) = {2}".format(self.type,
+                                                  self.path
+                                                  if self.path
+                                                  else self.name,
+                                                  self.value)
 
 
 class PointerVariable(Variable):
@@ -156,12 +166,14 @@ class Frame(object):
         self.variables = []
 
     def __repr__(self):
-        return "Frame #{0} ({1} at {2}:{3}".format(self.level, self.func, self.file, self.line)
+        return "Frame #{0} ({1} at {2}:{3}".format(self.level, self.func,
+                                                   self.file, self.line)
 
 
 class ThreadInfo(object):
     """
-    Represents thread state (list of threads and the selected thread) of the debugged process.
+    Represents thread state (list of threads and the selected thread) of the
+    debugged process.
     """
     def __init__(self, selected_thread, threads):
         """
@@ -172,7 +184,8 @@ class ThreadInfo(object):
         self.threads = threads
 
     def __repr__(self):
-        return "Thread info: active: {0}, threads: {1}".format(str(self.selected_thread), str(self.threads))
+        return "Thread info: active: {0}, threads: {1}".format(
+            str(self.selected_thread), str(self.threads))
 
 
 class InferiorThread(object):

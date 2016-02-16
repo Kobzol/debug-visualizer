@@ -37,7 +37,8 @@ class RectangleBBox(object):
         self.height = self.size.height
 
     def moved(self, offset):
-        return RectangleBBox(self.position.add(Vector.vectorize(offset)), self.size)
+        return RectangleBBox(self.position.add(Vector.vectorize(offset)),
+                             self.size)
 
     def scaled(self, scale):
         return RectangleBBox(self.position, self.size + Size.make_size(scale))
@@ -68,10 +69,12 @@ class RectangleBBox(object):
 
             return RectangleBBox(position, size)
         else:
-            raise AttributeError("RectangleBBox can be only added with margin or padding, added with {}".format(other))
+            raise AttributeError("RectangleBBox can be only added with margin"
+                                 "or padding, added with {}".format(other))
 
     def __repr__(self):
-        return "Rectangle[Position: {}, Size: {}]".format(self.position, self.size)
+        return "Rectangle[Position: {}, Size: {}]".format(self.position,
+                                                          self.size)
 
 
 class Margin(object):
@@ -103,7 +106,8 @@ class Margin(object):
         return Size(self.right + self.left, self.bottom + self.top)
 
     def __repr__(self):
-        return "Margin[Top: {}, Right: {}, Bottom: {}, Left: {}]".format(self.top, self.right, self.bottom, self.left)
+        return "Margin[Top: {}, Right: {}, Bottom: {}, Left: {}]".format(
+            self.top, self.right, self.bottom, self.left)
 
 
 class Padding(Margin):

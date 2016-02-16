@@ -42,8 +42,8 @@ class Selector(Gtk.ListBox):
         self.debugger.on_frame_changed.subscribe(self._handle_frame_change)
 
         self.set_selection_mode(Gtk.SelectionMode.BROWSE)
-        self.connect("row-selected", lambda listbox, row:
-        self._handle_row_selected(row))
+        self.connect("row-selected",
+                     lambda listbox, row: self._handle_row_selected(row))
 
         self.auto_select = False
 

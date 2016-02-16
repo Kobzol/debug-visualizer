@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 
-import threading
-import select
-import traceback
-import sys
-import time
 from gi.repository import Gtk
 from gi.repository import Gdk
 from gi.repository import Pango
-from gi.repository import GObject
+
+import select
+import threading
+import time
+import traceback
 
 from enums import ProcessState
 from gui_util import require_gui_thread, run_on_gui
@@ -45,7 +44,8 @@ class Console(Gtk.ScrolledWindow):
     @require_gui_thread
     def get_cursor_iter(self):
         cursor_rectangle = self.textview.get_cursor_locations(None)[0]
-        return self.textview.get_iter_at_location(cursor_rectangle.x, cursor_rectangle.y)
+        return self.textview.get_iter_at_location(cursor_rectangle.x,
+                                                  cursor_rectangle.y)
 
     @require_gui_thread
     def get_current_line(self):
@@ -76,19 +76,28 @@ class IOConsole(Console):
 
         self.textview.set_editable(True)
 
-        self.tag_stdout = self.get_buffer().create_tag("stdout", foreground="black", editable=False)
-        self.tag_stderr = self.get_buffer().create_tag("stderr", foreground="red", editable=False)
-        self.tag_stdin = self.get_buffer().create_tag("stdin", foreground="blue", editable=True)
-        self.tag_handled = self.get_buffer().create_tag("handled", editable=False)
+        self.tag_stdout = self.get_buffer().create_tag("stdout",
+                                                       foreground="black",
+                                                       editable=False)
+        self.tag_stderr = self.get_buffer().create_tag("stderr",
+                                                       foreground="red",
+                                                       editable=False)
+        self.tag_stdin = self.get_buffer().create_tag("stdin",
+                                                      oreground="blue",
+                                                      editable=True)
+        self.tag_handled = self.get_buffer().create_tag("handled",
+                                                        editable=False)
 
         self.watch_thread = None
         self.stop_thread = threading.Event()
 
-        self.textview.connect_after("key-release-event", lambda widget, key: self._handle_key(key))
+        self.textview.connect_after("key-release-event",
+                                    lambda widget, key: self._handle_key(key))
 
         self.debugger = None
         self.last_handled_char = Gtk.TextMark.new("last-checked-text", True)
-        self.get_buffer().add_mark(self.last_handled_char, self.get_buffer().get_start_iter())
+        self.get_buffer().add_mark(self.last_handled_char,
+                                   self.get_buffer().get_start_iter())
 
         self.textview.set_editable(False)
 
@@ -186,7 +195,8 @@ class IOConsole(Console):
     def _watch_output(self, debugger):
         self._stop_watch_thread()
 
-        self.watch_thread = threading.Thread(target=self._watch_file_thread, args=[debugger])
+        self.watch_thread = threading.Thread(target=self._watch_file_thread,
+                                             args=[debugger])
         self.watch_thread.start()
 
     @require_gui_thread
@@ -199,18 +209,23 @@ class IOConsole(Console):
     def watch(self, debugger):
         self.debugger = debugger
 
-        debugger.on_process_state_changed.subscribe(self._handle_process_state_change)
+        debugger.on_process_state_changed.subscribe(
+            self._handle_process_state_change)
 
         self._watch_output(debugger)
 
     @require_gui_thread
     def write(self, text, tag_name="stdout"):
         buffer = self.get_buffer()
-        buffer.insert_with_tags_by_name(buffer.get_end_iter(), text, tag_name, "handled")
+        buffer.insert_with_tags_by_name(buffer.get_end_iter(),
+                                        text,
+                                        tag_name,
+                                        "handled")
 
     def stop_watch(self):
         self._stop_watch_thread()
-        self.debugger.on_process_state_changed.unsubscribe(self._handle_process_state_change)
+        self.debugger.on_process_state_changed.unsubscribe(
+            self._handle_process_state_change)
 
     @require_gui_thread
     def filter_toggle_io(self, type):

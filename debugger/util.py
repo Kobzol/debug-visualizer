@@ -224,7 +224,8 @@ class EventBroadcaster(object):
 
     def subscribe(self, listener):
         """
-        Subscribes an event listener, who will receive events from the broadcaster.
+        Subscribes an event listener, who will receive events from the
+        broadcaster.
         @type listener: function
         """
         self.listeners.append(listener)
@@ -247,7 +248,8 @@ class EventBroadcaster(object):
         """
         Redirects this broadcaster to the given broadcaster.
 
-        All events fired by this broadcaster will be also delivered to the given broadcaster.
+        All events fired by this broadcaster will be also delivered to the
+        given broadcaster.
         @type broadcaster: EventBroadcaster
         """
         self.subscribe(broadcaster.notify)

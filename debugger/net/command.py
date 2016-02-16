@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from enum import Enum
+
+import enum
 import json
-import uuid
-import struct
 import jsonpickle
+import struct
+import uuid
 
 
-class CommandType(Enum):
+class CommandType(enum.Enum):
     Loopback = 1
     Execute = 2
     Result = 3
@@ -22,20 +23,22 @@ class EnumEncoder(json.JSONEncoder):
             return getattr(globals()[name], member)
         else:
             return d
-    
+
     @staticmethod
     def byteify(input):
         if isinstance(input, dict):
-            return { EnumEncoder.byteify(key) : EnumEncoder.byteify(value) for key, value in input.iteritems()}
+            return {EnumEncoder.byteify(key): EnumEncoder.byteify(value)
+                    for key, value
+                    in input.iteritems()}
         elif isinstance(input, list):
-            return [ EnumEncoder.byteify(element) for element in input]
+            return [EnumEncoder.byteify(element) for element in input]
         elif isinstance(input, unicode):
             return input.encode('utf-8')
         else:
             return input
-    
+
     def default(self, obj):
-        if isinstance(obj, Enum):
+        if isinstance(obj, enum.Enum):
             return {"__enum__": str(obj)}
         return json.JSONEncoder.default(self, obj)
 
@@ -49,7 +52,7 @@ class Command(object):
             raise IOError()
 
         data = client.recv(length).decode(encoding="utf_8")
-        payload = jsonpickle.decode(data)#EnumEncoder.byteify(json.loads(data, object_hook=EnumEncoder.parse_enum))
+        payload = jsonpickle.decode(data)
 
         return Command(payload["type"], payload["data"], payload["id"])
 
@@ -64,28 +67,31 @@ class Command(object):
         self.type = type
         self.data = data
         self.id = id if id else Command.generate_id()
-    
+
     def send(self, socket):
         serialized_data = self.get_serialized_data()
         length = len(serialized_data)
         socket.sendall(struct.pack("<I", length))
         socket.sendall(serialized_data)
-        
+
     def get_serialized_data(self):
         payload = {
-            "data" : self.data,
-            "type" : self.type,
-            "id" : self.id
+            "data": self.data,
+            "type": self.type,
+            "id": self.id
         }
-        return jsonpickle.encode(payload).encode(encoding="utf_8")#json.dumps(payload, cls=EnumEncoder).encode(encoding="utf_8")
-    
+        return jsonpickle.encode(payload).encode(encoding="utf_8")
+
     def send_result(self, socket, result):
-        result = Command(CommandType.Result, {"result" : result, "query_id" : self.id})
+        result = Command(CommandType.Result, {"result": result,
+                                              "query_id": self.id})
         result.send(socket)
-    
+
     def send_result_error(self, socket, error):
-        result = Command(CommandType.Result, {"error" : error, "query_id" : self.id})
+        result = Command(CommandType.Result, {"error": error,
+                                              "query_id": self.id})
         result.send(socket)
-    
+
     def __repr__(self, *args, **kwargs):
-        return str(CommandType(self.type)) + ", " + str(self.id) + ", " + str(self.data)
+        return "{}, {}, {}".format(str(CommandType(self.type)), self.id,
+                                   self.data)

@@ -8,8 +8,8 @@ from mi.parser import Parser
 from debugee import Type, Variable, Register, PointerVariable
 
 basic_type_map = {
-    "bool" : BasicTypeCategory.Bool,
-    "char" : BasicTypeCategory.Char,
+    "bool": BasicTypeCategory.Bool,
+    "char": BasicTypeCategory.Char,
     "signed char": BasicTypeCategory.SignedChar,
     "unsigned char": BasicTypeCategory.UnsignedChar,
     "char16_t": BasicTypeCategory.Char16,
@@ -93,7 +93,8 @@ basic_type_map = {
 
 class VariableManager(debugger.VariableManager):
     """
-    Handles retrieval and updating of variables and raw memory of the debugged process.
+    Handles retrieval and updating of variables and raw memory of the
+    debugged process.
     """
     def __init__(self, debugger):
         """
@@ -108,12 +109,15 @@ class VariableManager(debugger.VariableManager):
         @type expression: str
         @rtype: debugee.Type
         """
-        output = self.debugger.communicator.send("ptype {0}".format(expression))
-        short_output = self.debugger.communicator.send("whatis {0}".format(expression))
+        output = self.debugger.communicator.send("ptype {0}".
+                                                 format(expression))
+        short_output = self.debugger.communicator.send("whatis {0}".
+                                                       format(expression))
 
         if output and short_output:
             type = self.parser.parse_variable_type(output.cli_data[0])
-            type_name = self.parser.parse_variable_type(short_output.cli_data[0])
+            type_name = self.parser.parse_variable_type(
+                short_output.cli_data[0])
             basic_type_category = BasicTypeCategory.Invalid
             type_category = TypeCategory.Any
 
@@ -143,9 +147,11 @@ class VariableManager(debugger.VariableManager):
                     type_category = TypeCategory.String
 
             size = None
-            size_output = self.debugger.communicator.send("p sizeof({0})".format(type_name))
+            size_output = self.debugger.communicator.send("p sizeof({0})".
+                                                          format(type_name))
             if size_output:
-                size = int(self.parser.parse_print_expression(size_output.cli_data[0]))
+                size = int(self.parser.parse_print_expression(size_output.
+                                                              cli_data[0]))
 
             return Type(type_name, type_category, basic_type_category, size)
         else:
@@ -164,7 +170,8 @@ class VariableManager(debugger.VariableManager):
             data = self.parser.parse_print_expression(output.cli_data)
             address = None
 
-            address_output = self.debugger.communicator.send("p &{0}".format(expression))
+            address_output = self.debugger.communicator.send(
+                "p &{0}".format(expression))
             if address_output:
                 address = self._parse_address(address_output.cli_data)
 
@@ -180,44 +187,55 @@ class VariableManager(debugger.VariableManager):
             elif type.type_category == TypeCategory.Pointer:
                 value = data[data.rfind(" ") + 1:].lower()
                 target_type = self.get_type("*{0}".format(expression))
-                variable = PointerVariable(target_type, address, name, value, type, expression)
+                variable = PointerVariable(target_type, address, name, value,
+                                           type, expression)
 
             elif type.type_category == TypeCategory.Reference:
                 value = data[data.find("@") + 1:data.find(":")]
-                address = self.debugger.communicator.send("p &(&{0})".format(expression))
+                address = self.debugger.communicator.send("p &(&{0})".
+                                                          format(expression))
                 if address:
                     address = self._parse_address(address.cli_data)
                 else:
                     address = "0x0"
 
                 target_type = self.get_type("*{0}".format(expression))
-                variable = PointerVariable(target_type, address, name, value, type, expression)
+                variable = PointerVariable(target_type, address, name, value,
+                                           type, expression)
 
             elif type.type_category == TypeCategory.Function:
-                variable = Variable(address, name, value, type, expression) # TODO
+                variable = Variable(address, name, value, type, expression)
+                # TODO
 
             elif type.type_category == TypeCategory.String:
                 value = data.strip("\"")
                 variable = Variable(address, name, value, type, expression)
 
-            elif type.type_category in (TypeCategory.Class, TypeCategory.Struct):
+            elif type.type_category in (TypeCategory.Class,
+                                        TypeCategory.Struct):
                 result = self.debugger.communicator.send(
-                    "python print([field.name for field in gdb.lookup_type(\"{0}\").fields()])".format(type.name)
+                    "python print([field.name for field in"
+                    "gdb.lookup_type(\"{0}\").fields()])".format(type.name)
                 )
 
                 if result:
-                    members = self.parser.parse_struct_member_names(result.cli_data[0])
+                    members = self.parser.parse_struct_member_names(
+                        result.cli_data[0])
                     for member in members:
-                        children.append(self.get_variable("{0}.{1}".format(expression, member)))
+                        children.append(self.get_variable("{0}.{1}".format(
+                            expression, member)))
                 variable = Variable(address, name, value, type, expression)
 
-            elif type.type_category == TypeCategory.Vector: # TODO
-                length = self.debugger.communicator.send("call {0}.size()".format(expression))
+            elif type.type_category == TypeCategory.Vector:  # TODO
+                length = self.debugger.communicator.send("call {0}.size()".
+                                                         format(expression))
 
                 if length:
-                    length = int(self.parser.parse_print_expression(length.cli_data))
+                    length = int(self.parser.parse_print_expression(
+                        length.cli_data))
                     for i in xrange(length):
-                        expr = "*({0}._M_impl._M_start + {1})".format(expression, i)
+                        expr = "*({0}._M_impl._M_start + {1})".format(
+                            expression, i)
                         children.append(self.get_variable(expr))
                 variable = Variable(address, name, value, type, expression)
 
@@ -246,7 +264,8 @@ class VariableManager(debugger.VariableManager):
         if variable.type.type_category == TypeCategory.String:
             format = "call static_cast<std::string*>({0})->assign(\"{1}\")"
 
-        result = self.debugger.communicator.send(format.format(variable.address, variable.value))
+        result = self.debugger.communicator.send(format.format(
+            variable.address, variable.value))
 
         return result.is_success()
 
@@ -272,25 +291,32 @@ class VariableManager(debugger.VariableManager):
 
     def get_registers(self):
         """
-        Returns the register values as a list of tuples with name and value of the given register.
+        Returns the register values as a list of tuples with name and value of
+        the given register.
         @rtype: list of register.Register
         """
-        register_names = self.debugger.communicator.send("-data-list-register-names")
+        register_names = self.debugger.communicator.send(
+            "-data-list-register-names")
         if not register_names:
             return []
 
-        register_names = self.parser.parse(register_names.data)["register-names"]
+        register_names = self.parser.parse(
+            register_names.data)["register-names"]
 
-        register_values = self.debugger.communicator.send("-data-list-register-values --skip-unavailable x")
+        register_values = self.debugger.communicator.send(
+            "-data-list-register-values --skip-unavailable x")
         if not register_values:
             return []
 
         registers = []
-        register_values = self.parser.parse(register_values.data)["register-values"]
+        register_values = self.parser.parse(
+            register_values.data)["register-values"]
         for reg in register_values:
             number = int(reg["number"])
-            if number < len(register_names) and len(register_names[number]) > 0:
-                registers.append(Register(str(register_names[number]), str(reg["value"])))
+            if (number < len(register_names) and
+                    len(register_names[number]) > 0):
+                registers.append(Register(str(register_names[number]),
+                                          str(reg["value"])))
 
         return registers
 

@@ -58,7 +58,8 @@ class HeapManager(debugger.HeapManager):
         @type alloc_path: str
         """
         try:
-            with os.fdopen(os.open(alloc_path, os.O_NONBLOCK | os.O_RDONLY), "r", 1) as alloc_file:
+            with os.fdopen(os.open(alloc_path, os.O_NONBLOCK | os.O_RDONLY),
+                           "r", 1) as alloc_file:
                 self.alloc_file = alloc_file
 
                 while not self.stop_flag.is_set():

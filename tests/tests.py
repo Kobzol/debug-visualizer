@@ -5,19 +5,20 @@ import sys
 import os
 import time
 
-from enums import ProcessState, DebuggerState
+from enums import ProcessState
 
 sys.path.append("../debugger")
 
-from net.server import Server
-from net.client import Client
-from net.helper import NetHelper
-from lldbc.lldb_debugger import LldbDebugger
-from enums import DebuggerState
+from net.server import Server  # noqa
+from net.client import Client  # noqa
+from net.helper import NetHelper  # noqa
+from lldbc.lldb_debugger import LldbDebugger  # noqa
+from enums import DebuggerState  # noqa
 
 
 class AsyncSequence(object):
-    def __init__(self, state_seq=None, loc_seq=None, com_seq=None, start_ignore=0):
+    def __init__(self, state_seq=None, loc_seq=None, com_seq=None,
+                 start_ignore=0):
         if state_seq is None:
             state_seq = []
 
@@ -76,8 +77,10 @@ class BasicTest(unittest.TestCase):
     def test_binary_load(self):
         self.debugger.load_binary("src/test_breakpoint_basic")
 
-        self.assertEqual(self.debugger.file_manager.get_main_source_file(), os.path.abspath("src/test_breakpoint_basic.cpp"))
-        self.assertTrue(self.debugger.get_state().is_set(DebuggerState.BinaryLoaded))
+        self.assertEqual(self.debugger.file_manager.get_main_source_file(),
+                         os.path.abspath("src/test_breakpoint_basic.cpp"))
+        self.assertTrue(self.debugger.get_state().is_set(
+            DebuggerState.BinaryLoaded))
 
     def test_breakpoint_basic(self):
         src_file = "test_breakpoint_basic.cpp"
@@ -88,13 +91,15 @@ class BasicTest(unittest.TestCase):
 
         self.debugger.breakpoint_manager.add_breakpoint(src_file, line_number)
 
-        states = [ProcessState.Stopped, ProcessState.Running, ProcessState.Exited]
+        states = [ProcessState.Stopped, ProcessState.Running,
+                  ProcessState.Exited]
         locations = [(src_abs_path, line_number)]
         commands = [lambda: self.debugger.exec_continue()]
 
         async_seq = AsyncSequence(states, locations, commands, 3)
 
-        self.debugger.on_process_state_changed.subscribe(lambda state, event_data: self._async_bp_step(state, async_seq))
+        self.debugger.on_process_state_changed.subscribe(
+            lambda state, event_data: self._async_bp_step(state, async_seq))
         self.debugger.launch()
 
         self.debugger.stop(False)
@@ -108,13 +113,18 @@ class BasicTest(unittest.TestCase):
 
         self.debugger.breakpoint_manager.add_breakpoint(src_file, line_number)
 
-        states = [ProcessState.Stopped, ProcessState.Running, ProcessState.Stopped, ProcessState.Running, ProcessState.Exited]
-        locations = [(src_abs_path, line_number), None, (src_abs_path, line_number + 2)]
-        commands = [lambda: self.debugger.exec_step_over(), None, lambda: self.debugger.exec_continue()]
+        states = [ProcessState.Stopped, ProcessState.Running,
+                  ProcessState.Stopped, ProcessState.Running,
+                  ProcessState.Exited]
+        locations = [(src_abs_path, line_number), None, (src_abs_path,
+                                                         line_number + 2)]
+        commands = [lambda: self.debugger.exec_step_over(), None,
+                    lambda: self.debugger.exec_continue()]
 
         async_seq = AsyncSequence(states, locations, commands, 3)
 
-        self.debugger.on_process_state_changed.subscribe(lambda state, event_data: self._async_bp_step(state, async_seq))
+        self.debugger.on_process_state_changed.subscribe(
+            lambda state, event_data: self._async_bp_step(state, async_seq))
         self.debugger.launch()
 
         self.debugger.stop(False)
@@ -127,7 +137,8 @@ class BasicTest(unittest.TestCase):
         if async_seq.has_state():
             self.assertEqual(state, async_seq.get_state())
         if async_seq.has_location():
-            self.assertEqual(self.debugger.file_manager.get_current_location(), async_seq.get_location())
+            self.assertEqual(self.debugger.file_manager.get_current_location(),
+                             async_seq.get_location())
         if async_seq.has_command():
             async_seq.get_command()()
 
@@ -161,10 +172,6 @@ class ServerTest(unittest.TestCase):
         self.assertFalse(self.server.is_client_connected())
         self.assertFalse(self.server.is_running())
         self.assertFalse(self.client.is_connected())
-
-    """def test_communication(self):
-        state = self.client.cmd_get_debugger_state()#.is_set(DebuggerState.Started))
-        a = 5"""
 
 if __name__ == '__main__':
     unittest.main()

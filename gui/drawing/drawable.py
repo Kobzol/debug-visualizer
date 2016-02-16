@@ -2,8 +2,6 @@
 
 import cairo
 
-from gi.repository import Gtk
-
 from enum import Enum
 
 from drawing.geometry import Margin, RectangleBBox, Padding
@@ -87,9 +85,15 @@ class DrawingUtils(object):
         @type canvas: canvas.Canvas
         @type font_style: FontStyle
         """
-        canvas.cr.select_font_face(font_style.font_family if font_style.font_family else "sans-serif",
-                            cairo.FONT_SLANT_ITALIC if font_style.italic else cairo.FONT_SLANT_NORMAL,
-                            cairo.FONT_WEIGHT_BOLD if font_style.bold else cairo.FONT_WEIGHT_NORMAL)
+        canvas.cr.select_font_face(font_style.font_family
+                                   if font_style.font_family
+                                   else "sans-serif",
+                                   cairo.FONT_SLANT_ITALIC
+                                   if font_style.italic
+                                   else cairo.FONT_SLANT_NORMAL,
+                                   cairo.FONT_WEIGHT_BOLD
+                                   if font_style.bold
+                                   else cairo.FONT_WEIGHT_NORMAL)
 
     @staticmethod
     def get_text_size(canvas, text, font_style=None):
@@ -119,12 +123,17 @@ class DrawingUtils(object):
         @type canvas: canvas.Canvas
         @type color: Color
         """
-        canvas.cr.set_source_rgba(color.red, color.green, color.blue, color.alpha)
+        canvas.cr.set_source_rgba(color.red,
+                                  color.green,
+                                  color.blue,
+                                  color.alpha)
 
     @staticmethod
-    def draw_text(canvas, text, position, y_center=False, x_center=False, font_style=None):
+    def draw_text(canvas, text, position, y_center=False, x_center=False,
+                  font_style=None):
         """
-        Draws text on a given position. When no centering is set, it will be drawn from top-left corner.
+        Draws text on a given position. When no centering is set, it will be
+        drawn from top-left corner.
         @type canvas: canvas.Canvas
         @type text: str
         @type position: Vector
@@ -205,8 +214,12 @@ class DrawingUtils(object):
         wing_right = wing.copy().rotate(45)
         wing_left = wing.copy().rotate(-45)
 
-        DrawingUtils.draw_line(canvas, point_to, wing_right.add(point_to).to_point(), color, width)
-        DrawingUtils.draw_line(canvas, point_to, wing_left.add(point_to).to_point(), color, width)
+        DrawingUtils.draw_line(canvas, point_to,
+                               wing_right.add(point_to).to_point(), color,
+                               width)
+        DrawingUtils.draw_line(canvas, point_to,
+                               wing_left.add(point_to).to_point(), color,
+                               width)
 
     @staticmethod
     def draw_arrow_path(canvas, path, color=Color(), width=1):
@@ -225,14 +238,17 @@ class DrawingUtils(object):
             point_to = point
 
             if index == len(path) - 1:  # draw arrow
-                DrawingUtils.draw_arrow(canvas, point_from, point_to, color, width)
+                DrawingUtils.draw_arrow(canvas, point_from, point_to, color,
+                                        width)
             else:  # draw connecting line
-                DrawingUtils.draw_line(canvas, point_from, point_to, color, width)
+                DrawingUtils.draw_line(canvas, point_from, point_to, color,
+                                       width)
 
             point_from = point_to
 
     @staticmethod
-    def draw_rectangle(canvas, position, size, color=Color(), width=1, center=False, stroke=True):
+    def draw_rectangle(canvas, position, size, color=Color(), width=1,
+                       center=False, stroke=True):
         cr = canvas.cr
         cr.save()
 
@@ -265,10 +281,12 @@ class DrawingUtils(object):
         @type center: boolean
         """
         img = cairo.ImageSurface.create_from_png(img_path)
-        DrawingUtils.draw_image_from_surface(canvas, position, img, size, center)
+        DrawingUtils.draw_image_from_surface(canvas, position, img, size,
+                                             center)
 
     @staticmethod
-    def draw_image_from_surface(canvas, position, img, size=None, center=False):
+    def draw_image_from_surface(canvas, position, img, size=None,
+                                center=False):
         """
         Draws an image given by a cairo.ImageSurface object.
         @type canvas: canvas.Canvas
@@ -291,7 +309,8 @@ class DrawingUtils(object):
         cr.save()
 
         if center:
-            cr.translate(position.x - size.width / 2.0, position.y - size.height / 2.0)
+            cr.translate(position.x - size.width / 2.0,
+                         position.y - size.height / 2.0)
         else:
             cr.translate(position.x, position.y)
 
@@ -474,8 +493,13 @@ class Drawable(object):
     def get_computed_size(self):
         content_size = self.get_content_size()
 
-        width = self.request_size.width if self.request_size.width >= 0 else content_size.width
-        height = self.request_size.height if self.request_size.height >= 0 else content_size.height
+        width = self.request_size.width
+        if width < 0:
+            width = content_size.width
+
+        height = self.request_size.height
+        if height < 0:
+            height = content_size.height
 
         width = max((width, self.min_size.width))
         height = max((height, self.min_size.height))
@@ -546,7 +570,8 @@ class Drawable(object):
         if not self.visible:
             return RectangleBBox(self.position)
 
-        return RectangleBBox(self.position, self.get_computed_size() + self.padding.to_size())
+        return RectangleBBox(self.position,
+                             self.get_computed_size() + self.padding.to_size())
 
     def get_center(self):
         """
@@ -568,8 +593,8 @@ class Drawable(object):
 
     def invalidate(self):
         """
-        Invalidates this drawable, placing it's children and sending it's parent a message that it has changd.
-        @return:
+        Invalidates this drawable, placing it's children and sending it's
+        parent a message that it has changd.
         """
         if self.parent:
             self.parent.on_child_changed(self)
@@ -600,7 +625,8 @@ class LinearLayoutDirection(Enum):
 
 
 class LinearLayout(Drawable):
-    def __init__(self, canvas, direction=LinearLayoutDirection.Vertical, **properties):
+    def __init__(self, canvas, direction=LinearLayoutDirection.Vertical,
+                 **properties):
         """
         @type canvas: canvas.Canvas
         @type direction: LinearLayoutDirection
@@ -614,17 +640,22 @@ class LinearLayout(Drawable):
         position.y += self.padding.top
 
         for child in self.children:
-            child_position = position + Vector(child.margin.left, child.margin.top)  # add margin
+            child_position = position + Vector(child.margin.left,
+                                               child.margin.top)  # add margin
             child.position = child_position
             rect = child.get_rect()
 
             if self.direction == LinearLayoutDirection.Horizontal:
-                position.x += child.margin.left + rect.width + child.margin.right
+                position.x += child.margin.left + rect.width +\
+                              child.margin.right
             elif self.direction == LinearLayoutDirection.Vertical:
-                position.y += child.margin.top + rect.height + child.margin.bottom
+                position.y += child.margin.top + rect.height +\
+                              child.margin.bottom
 
     def get_content_size(self):
-        rectangle = RectangleBBox.contain([child.get_rect() + child.margin for child in self.children if child.visible])
+        rectangle = RectangleBBox.contain([child.get_rect() + child.margin
+                                           for child in self.children
+                                           if child.visible])
         return (rectangle + self.padding).size
 
 
@@ -659,7 +690,8 @@ class ToggleDrawable(Drawable):
         """
         @type mouse_data: drawing.mouse.MouseData
         """
-        self.current_drawable = (self.current_drawable + 1) % len(self.drawables)
+        self.current_drawable = (self.current_drawable + 1) % len(
+            self.drawables)
 
     def draw(self):
         self.get_active_drawable().draw()
@@ -707,7 +739,8 @@ class Label(Drawable):
                 next_skip = True
 
             label_test = label[:i] + "..."
-            if DrawingUtils.get_text_size(self.canvas, label_test, self.font_style).width > width:
+            if DrawingUtils.get_text_size(self.canvas, label_test,
+                                          self.font_style).width > width:
                 if i == 0:
                     return ""
                 else:
@@ -716,7 +749,8 @@ class Label(Drawable):
         return label
 
     def get_content_size(self):
-        return DrawingUtils.get_text_size(self.canvas, self.get_label(), font_style=self.font_style)
+        return DrawingUtils.get_text_size(self.canvas, self.get_label(),
+                                          font_style=self.font_style)
 
     def get_rect(self):
         if not self.visible:
@@ -735,13 +769,19 @@ class Label(Drawable):
 
         # box
         DrawingUtils.draw_rectangle(self.canvas, self.position, rect.size,
-                                    center=False, color=self.bg_color, stroke=False)
+                                    center=False,
+                                    color=self.bg_color,
+                                    stroke=False)
 
-        text_x = self.position.x + rect.width / 2.0  # self.position.x + self.padding.left
-        text_y = self.position.y + rect.height / 2.0  # self.position.y + self.padding.top
+        text_x = self.position.x + rect.width / 2.0
+        text_y = self.position.y + rect.height / 2.0
 
         # value
-        DrawingUtils.draw_text(self.canvas, self.get_ellipsized_label(), Vector(text_x, text_y), y_center=True, x_center=True, font_style=self.font_style)
+        DrawingUtils.draw_text(self.canvas, self.get_ellipsized_label(),
+                               Vector(text_x, text_y),
+                               y_center=True,
+                               x_center=True,
+                               font_style=self.font_style)
 
 
 class LabelWrapper(LinearLayout):
@@ -751,7 +791,8 @@ class LabelWrapper(LinearLayout):
         @type label: Label
         @type inner_drawable: Drawable
         """
-        super(LabelWrapper, self).__init__(canvas, LinearLayoutDirection.Horizontal)
+        super(LabelWrapper, self).__init__(canvas,
+                                           LinearLayoutDirection.Horizontal)
         self.label = label
         self.inner_drawable = inner_drawable
 
@@ -789,7 +830,9 @@ class Image(Drawable):
     def draw(self):
         x = self.position.x + self.padding.left
         y = self.position.y + self.padding.top
-        DrawingUtils.draw_image_from_surface(self.canvas, Vector(x, y), self.get_image(), self.get_computed_size())
+        DrawingUtils.draw_image_from_surface(self.canvas, Vector(x, y),
+                                             self.get_image(),
+                                             self.get_computed_size())
 
 
 class VariableContainer(object):
@@ -820,7 +863,8 @@ class VariableDrawable(Label, VariableContainer):
         self.variable.value = value
 
     def get_tooltip(self):
-        return "Value: {}\nAddress: {}".format(self.variable.value, self.variable.address)
+        return "Value: {}\nAddress: {}".format(self.variable.value,
+                                               self.variable.address)
 
     def handle_mouse_click(self, mouse_data):
         """
@@ -837,13 +881,18 @@ class CompositeLabel(LinearLayout):
         @type canvas: canvas.Canvas
         @type composite: variable.Variable | debugee.Frame
         """
-        super(CompositeLabel, self).__init__(canvas, LinearLayoutDirection.Vertical, **properties)
+        super(CompositeLabel, self).__init__(canvas,
+                                             LinearLayoutDirection.Vertical,
+                                             **properties)
         self.composite = composite
 
         label = self.get_composite_label()
         if label:
-            self.label = Label(canvas, self.get_composite_label, FontStyle(italic=True), size=Size(-1, 25),
-                               padding=Padding.all(5), margin=Margin(0, 0, 5, 0))
+            self.label = Label(canvas, self.get_composite_label,
+                               FontStyle(italic=True),
+                               size=Size(-1, 25),
+                               padding=Padding.all(5),
+                               margin=Margin(0, 0, 5, 0))
             self.add_child(self.label)
 
         for var in self.get_composite_children():
@@ -861,12 +910,15 @@ class CompositeLabel(LinearLayout):
             drawable = Label(self.canvas, "Invalid")
 
         wrapper = LabelWrapper(self.canvas,
-                            Label(self.canvas, "{} {}".format(variable.type.name, variable.name),
-                                  min_size=Size(20, 20),
-                                  max_size=Size(40, 20),
-                                  padding=Padding.all(5),
-                                  margin=Margin(0, 1, 0, 0)),
-                            drawable)
+                               Label(self.canvas,
+                                     "{} {}".format(
+                                         variable.type.name,
+                                         variable.name),
+                                     min_size=Size(20, 20),
+                                     max_size=Size(40, 20),
+                                     padding=Padding.all(5),
+                                     margin=Margin(0, 1, 0, 0)),
+                               drawable)
         wrapper.margin.bottom = 4
         return wrapper
 
@@ -892,8 +944,10 @@ class StackFrameDrawable(CompositeLabel, VariableContainer):
         """
         @type mouse_data: drawing.mouse.MouseData
         """
-        if self.canvas.debugger.thread_manager.get_current_frame().level != self.composite.level:
-            self.canvas.debugger.thread_manager.change_frame(self.composite.level)
+        frame = self.canvas.debugger.thread_manager.get_current_frame()
+        if frame.level != self.composite.level:
+            self.canvas.debugger.thread_manager.change_frame(
+                self.composite.level)
 
     def create_composite_value(self, variable):
         drawable = CompositeLabel.create_composite_value(self, variable)
@@ -957,9 +1011,11 @@ class PointerDrawable(VariableDrawable):
 
     def draw(self):
         if self.dragging:
-            self.canvas.draw_scheduler.register_action(self.canvas.draw_scheduler.last_level,
+            self.canvas.draw_scheduler.register_action(
+                self.canvas.draw_scheduler.last_level,
                 lambda: DrawingUtils.draw_arrow(
-                    self.canvas, self.get_center(), self.canvas.get_mouse_data().position, Color(1)
+                    self.canvas, self.get_center(),
+                    self.canvas.get_mouse_data().position, Color(1)
                 ))
             return
 
@@ -975,7 +1031,8 @@ class PointerDrawable(VariableDrawable):
             self._draw_label("Invalid")
 
     def _draw_arrow(self):
-        drawable = self.canvas.memory_model.get_drawable_by_pointer(self.variable)
+        drawable = self.canvas.memory_model.get_drawable_by_pointer(
+            self.variable)
         if drawable:
             start = self.get_center()
             target_rect = drawable.get_rect()
@@ -985,8 +1042,9 @@ class PointerDrawable(VariableDrawable):
                     Vector(start.x, target.y),
                     target]
 
-            self.canvas.draw_scheduler.register_action(self.canvas.draw_scheduler.last_level,
-               lambda: DrawingUtils.draw_arrow_path(self.canvas, path))
+            self.canvas.draw_scheduler.register_action(
+                self.canvas.draw_scheduler.last_level,
+                lambda: DrawingUtils.draw_arrow_path(self.canvas, path))
 
     def _draw_label(self, label):
         """
@@ -1006,7 +1064,8 @@ class VectorValueDrawable(Label, VariableContainer):
         self.variable = variable
 
     def get_name(self):
-        if self.variable.type.type_category in (TypeCategory.Builtin, TypeCategory.String):
+        if self.variable.type.type_category in (TypeCategory.Builtin,
+                                                TypeCategory.String):
             return str(self.variable.value)
         else:
             return "C"
@@ -1018,12 +1077,14 @@ class VectorDrawable(LinearLayout, VariableContainer):
         @type canvas: drawing.canvas.Canvas
         @type vector: debugee.Variable
         """
-        super(VectorDrawable, self).__init__(canvas, LinearLayoutDirection.Horizontal)
+        super(VectorDrawable, self).__init__(canvas,
+                                             LinearLayoutDirection.Horizontal)
         self.variable = vector
         self.max_elements = 3
 
         for i in xrange(0, min((self.max_elements, len(vector.children)))):
-            self.add_child(VectorValueDrawable(self.canvas, vector.children[i]))
+            self.add_child(VectorValueDrawable(self.canvas,
+                                               vector.children[i]))
 
         if len(vector.children) > self.max_elements:
             self.add_child(Label(self.canvas, "..."))

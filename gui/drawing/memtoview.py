@@ -34,14 +34,16 @@ class MemToViewTransformer(object):
         @type var: debugee.Variable
         @rtype: drawable.PointerDrawable
         """
-        return drawable.PointerDrawable(self.canvas, var, padding=Padding.all(5))
+        return drawable.PointerDrawable(self.canvas, var,
+                                        padding=Padding.all(5))
 
     def create_basic(self, var):
         """
         @type var: debugee.Variable
         @rtype: drawable.VariableDrawable
         """
-        return drawable.VariableDrawable(self.canvas, var, padding=Padding.all(5))
+        return drawable.VariableDrawable(self.canvas, var,
+                                         padding=Padding.all(5))
 
     def create_vector(self, var):
         """

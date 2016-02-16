@@ -25,7 +25,8 @@ class MiDebugger(debugger.Debugger):
         super(MiDebugger, self).__init__()
 
         self.communicator = Communicator()
-        self.communicator.on_process_change.subscribe(self._handle_process_state)
+        self.communicator.on_process_change.subscribe(
+            self._handle_process_state)
 
         self.io_manager = IOManager()
         self.breakpoint_manager = BreakpointManager(self)
@@ -47,8 +48,9 @@ class MiDebugger(debugger.Debugger):
             self._cleanup_program()
             self._on_program_ended(output.exit_code)
         elif output.state == ProcessState.Stopped:
-            self.on_process_state_changed.notify(output.state,
-                 debugger.ProcessStoppedEventData(output.reason)
+            self.on_process_state_changed.notify(
+                output.state,
+                debugger.ProcessStoppedEventData(output.reason)
             )
         else:
             self.on_process_state_changed.notify(output.state, None)
@@ -67,9 +69,11 @@ class MiDebugger(debugger.Debugger):
         binary_path = os.path.abspath(binary_path)
 
         self.communicator.start_gdb()
-        result = self.communicator.send("-file-exec-and-symbols {0}".format(binary_path))
+        result = self.communicator.send(
+            "-file-exec-and-symbols {0}".format(binary_path))
 
-        util.Logger.debug("Loading program binary {0} succeeded: {1}".format(binary_path, result.is_success()))
+        util.Logger.debug("Loading program binary {0} succeeded: {1}".format(
+            binary_path, result.is_success()))
 
         if result.is_success():
             self.state.set(DebuggerState.BinaryLoaded)
@@ -85,11 +89,15 @@ class MiDebugger(debugger.Debugger):
         stdin, stdout, stderr = self.io_manager.handle_io()
         alloc_file = self.heap_manager.watch()
 
-        self.communicator.send("set environment DEVI_ALLOC_FILE_PATH={}".format(alloc_file))
-        self.communicator.send("set environment LD_PRELOAD={}".format(shlib_path))
+        self.communicator.send("set environment DEVI_ALLOC_FILE_PATH={}"
+                               .format(alloc_file))
+        self.communicator.send("set environment LD_PRELOAD={}"
+                               .format(shlib_path))
 
         self.on_process_state_changed.notify(ProcessState.Launching, None)
-        result = self.communicator.send("run 1>{0} 2>{1} <{2}".format(stdout, stderr, stdin))
+        result = self.communicator.send("run 1>{0} 2>{1} <{2}".format(stdout,
+                                                                      stderr,
+                                                                      stdin))
 
         util.Logger.debug("Launching program: {0}".format(result))
 
@@ -148,4 +156,6 @@ class MiDebugger(debugger.Debugger):
 
     def _on_program_ended(self, return_code):
         self.process_state = ProcessState.Exited
-        self.on_process_state_changed.notify(ProcessState.Exited, debugger.ProcessExitedEventData(return_code))
+        self.on_process_state_changed.notify(ProcessState.Exited,
+                                             debugger.ProcessExitedEventData(
+                                                 return_code))

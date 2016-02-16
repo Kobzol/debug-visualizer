@@ -1,5 +1,6 @@
-import os
+# -*- coding: utf-8 -*-
 
+import os
 import time
 
 EXECUTION_FILE = "src/test_execution.cpp"

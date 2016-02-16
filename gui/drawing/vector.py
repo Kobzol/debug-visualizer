@@ -37,7 +37,7 @@ class Vector(object):
     def dot(self, vector):
         vector = Vector.vectorize(vector)
 
-        return self.x * vector.x +  self.y * vector.y
+        return self.x * vector.x + self.y * vector.y
 
     def length(self):
         return math.sqrt(self.x * self.x + self.y * self.y)

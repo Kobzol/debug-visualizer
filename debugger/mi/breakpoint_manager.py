@@ -14,7 +14,8 @@ class BreakpointManager(debugger.BreakpointManager):
 
     def add_breakpoint(self, location, line):
         """
-        Adds a breakpoint, if there is not a breakpoint with the same location and line already.
+        Adds a breakpoint, if there is not a breakpoint with the same location
+        and line already.
         @type location: str
         @type line: int
         @rtype: boolean
@@ -27,10 +28,12 @@ class BreakpointManager(debugger.BreakpointManager):
         if line is not None:
             location += ":" + str(line)
 
-        success = self.debugger.communicator.send("-break-insert {0}".format(location)).is_success()
+        success = self.debugger.communicator.send(
+            "-break-insert {0}".format(location)).is_success()
 
         if success:
-            self.on_breakpoint_changed.notify(self.find_breakpoint(location, line))
+            self.on_breakpoint_changed.notify(self.find_breakpoint(location,
+                                                                   line))
 
         return success
 
@@ -83,7 +86,8 @@ class BreakpointManager(debugger.BreakpointManager):
         bp = self.find_breakpoint(location, line)
 
         if bp:
-            success = self.debugger.communicator.send("-break-delete {0}".format(bp.number)).is_success()
+            success = self.debugger.communicator.send(
+                "-break-delete {0}".format(bp.number)).is_success()
 
             if success:
                 self.on_breakpoint_changed.notify(bp)

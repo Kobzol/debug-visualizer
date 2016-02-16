@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import os
 
 
@@ -17,7 +19,8 @@ class ProgramInfo(object):
             if line_program:
                 for line_entry in line_program.get_entries():
                     if line_entry.state:
-                        self._parse_line_state(line_program.header.file_entry, line_entry.state)
+                        self._parse_line_state(line_program.header.file_entry,
+                                               line_entry.state)
 
             for die in cu.iter_DIEs():
                 self._parse_die(die)
@@ -53,10 +56,10 @@ class ProgramInfo(object):
         line = line_state.line
         address = line_state.address
 
-        if not file in self.files:
+        if file not in self.files:
             self.files[file] = {}
 
-        if not line in self.files[file]:
+        if line not in self.files[file]:
             self.files[file][line] = []
 
         self.files[file][line].append(address)

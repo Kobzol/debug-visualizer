@@ -12,9 +12,9 @@ if len(clang_path) < 1:
 if len(clang_path) < 1:
     raise BaseException("Clang was not found")
 
-from clang.cindex import TranslationUnit, File, SourceLocation, Cursor, Config
+import clang.cindex as cindex  # noqa
 
-Config.set_library_file(clang_path[0])
+cindex.Config.set_library_file(clang_path[0])
 
 
 class SourceAnalyzer(object):
@@ -26,18 +26,21 @@ class SourceAnalyzer(object):
             self.set_file(file_path)
 
     def _create_tu_from_file(self, file_path):
-        return TranslationUnit.from_source(file_path, [])
+        return cindex.TranslationUnit.from_source(file_path, [])
 
     def _get_location(self, offset, column=None):
         if column:
-            return SourceLocation.from_position(self.tu, self.file, offset, column)
+            return cindex.SourceLocation.from_position(self.tu, self.file,
+                                                       offset,
+                                                       column)
         else:
-            return SourceLocation.from_offset(self.tu, self.file, offset)
+            return cindex.SourceLocation.from_offset(self.tu, self.file,
+                                                     offset)
 
     def set_file(self, file_path):
         try:
             self.tu = self._create_tu_from_file(file_path)
-            self.file = File.from_name(self.tu, file_path)
+            self.file = cindex.File.from_name(self.tu, file_path)
         except:
             traceback.print_exc()
 
@@ -46,6 +49,6 @@ class SourceAnalyzer(object):
             return None
 
         location = self._get_location(offset, column)
-        cursor = Cursor.from_location(self.tu, location)
+        cursor = cindex.Cursor.from_location(self.tu, location)
 
         return cursor.spelling

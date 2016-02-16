@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import os
 
 from debugee import Breakpoint
@@ -17,17 +19,20 @@ class BreakpointManager(object):
 
         assert self.debugger.program_info.has_location(file, line)
 
-        for bp in self.breakpoints:  # assumes different (file, line) maps to different addresses
+        for bp in self.breakpoints:  # assumes different (file, line) maps to
+            # different addresses
             if bp.location == file and bp.line == line:
                 return
 
-        self.breakpoints.append(Breakpoint(BreakpointManager.BREAKPOINT_ID, file, line))
+        self.breakpoints.append(Breakpoint(BreakpointManager.BREAKPOINT_ID,
+                                           file, line))
         BreakpointManager.BREAKPOINT_ID += 1
 
     def set_breakpoints(self, pid):
         for bp in self.breakpoints:
             if bp.number not in self.original_instructions:
-                addr = self.debugger.program_info.get_address(bp.location, bp.line)
+                addr = self.debugger.program_info.get_address(bp.location,
+                                                              bp.line)
                 inst = ptrace.ptrace_get_instruction(pid, addr)
                 self.original_instructions[bp.number] = inst
                 inst = (inst & 0xFFFFFF00) | 0xCC
@@ -46,7 +51,8 @@ class BreakpointManager(object):
 
     def _get_breakpoint_for_address(self, address):
         for bp in self.breakpoints:
-            if self.debugger.program_info.get_address(bp.location, bp.line) == address:
+            if self.debugger.program_info.get_address(
+                    bp.location, bp.line) == address:
                 return bp
 
         return None

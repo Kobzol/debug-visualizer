@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
 
-import sys
-
 import paths
-
-sys.path.append(paths.DIR_DEBUGGER)
-
-
+import sys
 from config import Config
 from app import VisualiserApp
+
+sys.path.append(paths.DIR_DEBUGGER)
 
 
 if __name__ == '__main__':

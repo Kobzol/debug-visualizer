@@ -39,10 +39,12 @@ class ThreadManager(debugger.ThreadManager):
         @type thread_id: int
         @rtype: bool
         """
-        result = self.debugger.communicator.send("-thread-select {0}".format(thread_id)).is_success()
+        result = self.debugger.communicator.send(
+            "-thread-select {0}".format(thread_id)).is_success()
 
         if result:
-            self.debugger.on_thread_changed.notify(self.get_thread_info().selected_thread)
+            self.debugger.on_thread_changed.notify(
+                self.get_thread_info().selected_thread)
             self.debugger.on_frame_changed.notify(self.get_current_frame())
 
             Logger.debug("Changed to thread with id {0}".format(thread_id))
@@ -60,11 +62,13 @@ class ThreadManager(debugger.ThreadManager):
         if output:
             frame = self.parser.parse_stack_frame(output.data)
             variables_info = self.parser.parse_frame_variables(
-                self.debugger.communicator.send("-stack-list-variables --skip-unavailable 0").data
+                self.debugger.communicator.send(
+                    "-stack-list-variables --skip-unavailable 0").data
             )
 
             for variable in variables_info:
-                variable = self.debugger.variable_manager.get_variable(variable["name"])
+                variable = self.debugger.variable_manager.get_variable(
+                    variable["name"])
                 if variable:
                     frame.variables.append(variable)
 
@@ -115,13 +119,15 @@ class ThreadManager(debugger.ThreadManager):
         if frame_index >= len(self.get_frames()):
             return False
 
-        result = self.debugger.communicator.send("-stack-select-frame {0}".format(frame_index)).is_success()
+        result = self.debugger.communicator.send(
+            "-stack-select-frame {0}".format(frame_index)).is_success()
 
         if result:
             if notify:
                 self.debugger.on_frame_changed.notify(self.get_current_frame())
 
-                Logger.debug("Changed to frame with id {0}".format(frame_index))
+                Logger.debug("Changed to frame with id {0}".format(
+                    frame_index))
 
             return True
         else:

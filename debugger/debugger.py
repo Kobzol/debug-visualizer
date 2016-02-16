@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
-import os
-import tempfile
 
 import time
-
 import util
+
 from enums import DebuggerState, ProcessState
 
 
@@ -68,7 +66,8 @@ class BreakpointManager(object):
 
     def add_breakpoint(self, location, line):
         """
-        Adds a breakpoint, if there is not a breakpoint with the same location and line already.
+        Adds a breakpoint, if there is not a breakpoint with the same
+        location and line already.
         @type location: str
         @type line: int
         @rtype: boolean
@@ -126,7 +125,8 @@ class FileManager(object):
 
     def get_line_address(self, filename, line):
         """
-        Returns the starting address and ending address in hexadecimal format of code at the specified line in the given file.
+        Returns the starting address and ending address in hexadecimal
+        format of code at the specified line in the given file.
         Returns None if no code is at the given location.
         @type filename: str
         @type line: int
@@ -146,7 +146,8 @@ class FileManager(object):
 
     def disassemble_raw(self, filename, line):
         """
-        Disassembles the given line in a raw form (returns a string with the line and all assembly instructions for it).
+        Disassembles the given line in a raw form (returns a string with the
+        line and all assembly instructions for it).
         @type filename: str
         @type line: int
         @rtype: str | None
@@ -209,7 +210,8 @@ class ThreadManager(object):
 
 class VariableManager(object):
     """
-    Handles retrieval and updating of variables and raw memory of the debugged process.
+    Handles retrieval and updating of variables and raw memory of the
+    debugged process.
     """
     def __init__(self, debugger):
         """
@@ -251,7 +253,8 @@ class VariableManager(object):
 
     def get_registers(self):
         """
-        Returns the register values as a list of tuples with name and value of the given register.
+        Returns the register values as a list of tuples with name and
+        value of the given register.
         @rtype: list of register.Register
         """
         raise NotImplementedError()
@@ -302,7 +305,7 @@ class Debugger(object):
         raise NotImplementedError()
 
     def exec_step_in(self):
-       raise NotImplementedError()
+        raise NotImplementedError()
 
     def exec_step_out(self):
         raise NotImplementedError()
@@ -314,7 +317,8 @@ class Debugger(object):
         raise NotImplementedError()
 
     def wait_for_stop(self):
-        while self.process_state not in (ProcessState.Stopped, ProcessState.Exited):
+        while self.process_state not in (ProcessState.Stopped,
+                                         ProcessState.Exited):
             time.sleep(0.1)
 
         return self.process_state

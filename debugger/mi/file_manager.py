@@ -71,13 +71,15 @@ class FileManager(debugger.FileManager):
         line = frame.line
         location = frame.file
 
-        Logger.debug("Getting current location: ({0}, {1})".format(location, line))
+        Logger.debug("Getting current location: ({0}, {1})".format(
+            location, line))
 
         return (location, line)
 
     def get_line_address(self, filename, line):
         """
-        Returns the starting address and ending address in hexadecimal format of code at the specified line in the given file.
+        Returns the starting address and ending address in hexadecimal format
+        of code at the specified line in the given file.
         Returns None if no code is at the given location.
         @type filename: str
         @type line: int
@@ -91,7 +93,8 @@ class FileManager(debugger.FileManager):
             if "address" not in data or "contains no code" in data:
                 return None
 
-            start_address = self._get_single_capture("starts at address ([^ ]*)", data)
+            start_address = self._get_single_capture(
+                "starts at address ([^ ]*)", data)
             end_address = self._get_single_capture("ends at ([^ ]*)", data)
 
             if start_address and end_address:
@@ -109,7 +112,8 @@ class FileManager(debugger.FileManager):
         @type line: int
         @rtype: str | None
         """
-        command = "-data-disassemble -f {0} -l {1} -n 10 -- 1".format(filename, line)
+        command = "-data-disassemble -f {0} -l {1} -n 10 -- 1".format(filename,
+                                                                      line)
         result = self.debugger.communicator.send(command)
         if result:
             disassembled = self.parser.parse_disassembly(result.data)
@@ -122,7 +126,8 @@ class FileManager(debugger.FileManager):
 
     def disassemble_raw(self, filename, line):
         """
-        Disassembles the given line in a raw form (returns a string with the line and all assembly instructions for it).
+        Disassembles the given line in a raw form (returns a string with the
+        line and all assembly instructions for it).
         @type filename: str
         @type line: int
         @rtype: str | None
@@ -135,6 +140,8 @@ class FileManager(debugger.FileManager):
         command = "disas /m {0}, {1}".format(address[0], address[1])
         result = self.debugger.communicator.send(command)
         if result:
-            return "\n".join([line.replace("\\t", "\t") for line in result.cli_data[1:-1]])
+            return "\n".join([row.replace("\\t", "\t")
+                              for row
+                              in result.cli_data[1:-1]])
         else:
             return None

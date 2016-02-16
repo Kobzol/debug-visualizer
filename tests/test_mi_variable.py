@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import ctypes
 
 from enums import ProcessState
@@ -7,7 +9,8 @@ int_size = ctypes.sizeof(ctypes.c_voidp)
 
 def prepare_debugger(debugger, on_state_change=None):
     assert debugger.load_binary("src/test_variable")
-    assert debugger.breakpoint_manager.add_breakpoint("src/test_variable.cpp", 36)
+    assert debugger.breakpoint_manager.add_breakpoint("src/test_variable.cpp",
+                                                      36)
     assert debugger.launch()
     debugger.wait_for_stop()
 
@@ -57,7 +60,8 @@ def test_update_variable(debugger):
         vec = debugger.variable_manager.get_variable("vec")
         vec.children[0].value = "10"
 
-        assert debugger.variable_manager.get_variable("vec").children[0].value == "10"
+        vec = debugger.variable_manager.get_variable("vec")
+        assert vec.children[0].value == "10"
 
     prepare_debugger(debugger, test_update_variable_cb)
 
@@ -66,7 +70,9 @@ def test_get_memory(debugger):
     def test_get_memory_cb():
         var = debugger.variable_manager.get_variable("a")
 
-        assert [5, 0, 0, 0] == debugger.variable_manager.get_memory(var.address, var.type.size)
-        assert len(debugger.variable_manager.get_memory(var.address, 128)) == 128
+        assert [5, 0, 0, 0] == debugger.variable_manager.get_memory(
+            var.address, var.type.size)
+        assert len(debugger.variable_manager.get_memory(
+            var.address, 128)) == 128
 
     prepare_debugger(debugger, test_get_memory_cb)

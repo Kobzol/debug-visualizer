@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
-
 import util
-
-logging.basicConfig(level=logging.INFO)
 
 import lldb
 import threading
@@ -19,6 +16,8 @@ from lldbc.lldb_memory_manager import LldbMemoryManager
 from lldbc.lldb_thread_manager import LldbThreadManager
 from enums import ProcessState, StopReason, DebuggerState
 from lldbc.lldb_variable_editor import LldbVariableEditor
+
+logging.basicConfig(level=logging.INFO)
 
 
 class LldbDebugger(debugger.Debugger):
@@ -49,7 +48,8 @@ class LldbDebugger(debugger.Debugger):
         while not self.event_thread_stop_flag.is_set():
             if listener.WaitForEvent(1, event):
                 if lldb.SBProcess.EventIsProcessEvent(event):
-                    state = ProcessState(lldb.SBProcess.GetStateFromEvent(event))
+                    state = ProcessState(
+                        lldb.SBProcess.GetStateFromEvent(event))
 
                     if self.fire_events:
                         self._handle_process_state(state)
@@ -67,7 +67,10 @@ class LldbDebugger(debugger.Debugger):
             thread = self.thread_manager.get_current_thread()
             stop_reason = StopReason(thread.stop_reason)
 
-            self.on_process_state_changed.notify(state, debugger.ProcessStoppedEventData(stop_reason))
+            self.on_process_state_changed.notify(
+                state,
+                debugger.ProcessStoppedEventData(stop_reason)
+            )
 
             return
 
@@ -89,12 +92,12 @@ class LldbDebugger(debugger.Debugger):
         if self.target is not None:
             self.state.set(DebuggerState.BinaryLoaded)
 
-            #self.memory_manager.create_memory_bps()
+            # self.memory_manager.create_memory_bps()
 
             return True
         else:
             return False
-    
+
     def launch(self, arguments=None, env_vars=None, working_directory=None):
         self.require_state(DebuggerState.BinaryLoaded)
 
@@ -108,7 +111,8 @@ class LldbDebugger(debugger.Debugger):
             env_vars = [env_vars]
 
         if working_directory is None:
-            working_directory = os.path.dirname(self.target.GetExecutable().fullpath)
+            working_directory = os.path.dirname(
+                self.target.GetExecutable().fullpath)
 
         stdin, stdout, stderr = self.io_manager.handle_io()
 
@@ -118,14 +122,16 @@ class LldbDebugger(debugger.Debugger):
 
         error = lldb.SBError()
         self.process = self.target.Launch(self.debugger.GetListener(),
-                                          arguments, # argv
-                                          env_vars, # envp
-                                          stdin, # stdin
-                                          stdout, # stdout
-                                          stderr, # stderr
-                                          working_directory, # working directory
-                                          lldb.eLaunchFlagNone, # launch flags
-                                          False, # stop at entry
+                                          arguments,  # argv
+                                          env_vars,  # envp
+                                          stdin,  # stdin
+                                          stdout,  # stdout
+                                          stderr,  # stderr
+                                          working_directory,
+                                          # working directory
+                                          lldb.eLaunchFlagNone,
+                                          # launch flags
+                                          False,  # stop at entry
                                           error)
 
         self.state.set(DebuggerState.Running)
@@ -171,7 +177,10 @@ class LldbDebugger(debugger.Debugger):
 
                 return_code = self.process.GetExitStatus()
 
-                self.on_process_state_changed.notify(ProcessState.Exited, debugger.ProcessExitedEventData(return_code))
+                self.on_process_state_changed.notify(
+                    ProcessState.Exited,
+                    debugger.ProcessExitedEventData(return_code)
+                )
                 self.process = None
 
             self.state.unset(DebuggerState.Running)
@@ -194,7 +203,10 @@ class LldbDebugger(debugger.Debugger):
             self.process.Kill()
 
             self.process_state = ProcessState.Exited
-            self.on_process_state_changed.notify(ProcessState.Exited, debugger.ProcessExitedEventData(return_code))
+            self.on_process_state_changed.notify(
+                ProcessState.Exited,
+                debugger.ProcessExitedEventData(return_code)
+            )
             util.Logger.debug("Debugger process ended")
             self.state.unset(DebuggerState.Running)
 

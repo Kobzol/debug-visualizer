@@ -26,7 +26,8 @@ class MemoryBlock(object):
 
     def free(self):
         if self.state == MemoryBlockState.Freed:
-            raise MemoryException("Memory block deallocated twice ({0} - {1} bytes)".format(self.address, self.size))
+            raise MemoryException("Memory block deallocated twice ({0} - {1}"
+                                  "bytes)".format(self.address, self.size))
 
         self.state = MemoryBlockState.Freed
 
@@ -49,11 +50,13 @@ class LldbMemoryManager(object):
         return None
 
     def _handle_free(self, bp):
-        address = self.debugger.thread_manager.get_current_frame().args[0].value
+        address = self.debugger.thread_manager.get_current_frame().args[0].\
+            value
         block = self._find_block_by_address(address)
-        
+
         if block is None:
-            raise MemoryException("Non-existent memory block deallocated ({0})".format(address))
+            raise MemoryException("Non-existent memory block deallocated"
+                                  "({0})".format(address))
         else:
             block.free()
 
@@ -76,9 +79,11 @@ class LldbMemoryManager(object):
             block = self._find_block_by_address(address)
 
             if block is not None:
-                raise MemoryException("Memory block allocated twice ({0} - {1} bytes, originally {2} bytes)".format(
-                    address, bytes, block.bytes
-                ))
+                raise MemoryException(
+                    "Memory block allocated twice ({0} - {1} bytes,"
+                    "originally {2} bytes)".format(
+                        address, bytes, block.bytes
+                    ))
             else:
                 self.memory_blocks.append(MemoryBlock(address, bytes))
         finally:
@@ -86,8 +91,12 @@ class LldbMemoryManager(object):
             self.debugger.debugger.SetAsync(True)
 
     def create_memory_bps(self):
-        self.breakpoints.append((self.debugger.breakpoint_manager.add_breakpoint("free"), self._handle_free))
-        self.breakpoints.append((self.debugger.breakpoint_manager.add_breakpoint("malloc"), self._handle_malloc))
+        self.breakpoints.append((
+            self.debugger.breakpoint_manager.add_breakpoint("free"),
+            self._handle_free))
+        self.breakpoints.append((
+            self.debugger.breakpoint_manager.add_breakpoint("malloc"),
+            self._handle_malloc))
 
     def is_memory_bp(self, bp):
         for x in self.breakpoints:

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import os
 
 from conftest import TEST_SRC_DIR

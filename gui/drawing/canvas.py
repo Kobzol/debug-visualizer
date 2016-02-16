@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import cairo
 from gi.repository import Gtk
 from gi.repository import Gdk
 
@@ -68,12 +67,22 @@ class Canvas(Gtk.EventBox):
 
         self.add_events(Gdk.EventMask.POINTER_MOTION_MASK)
         self.connect("draw", lambda canvas, cr: self._handle_draw(cr))
-        self.connect("button-press-event", lambda widget, button_event: self._handle_press(button_event, True))
-        self.connect("button-release-event", lambda widget, button_event: self._handle_press(button_event, False))
-        self.connect("motion-notify-event", lambda widget, move_event: self._handle_mouse_move(move_event))
-        self.connect("scroll-event", lambda widget, scroll_event: self._handle_mouse_scroll(scroll_event))
+        self.connect("button-press-event",
+                     lambda widget, button_event:
+                     self._handle_press(button_event, True))
+        self.connect("button-release-event",
+                     lambda widget, button_event:
+                     self._handle_press(button_event, False))
+        self.connect("motion-notify-event",
+                     lambda widget, move_event:
+                     self._handle_mouse_move(move_event))
+        self.connect("scroll-event",
+                     lambda widget, scroll_event:
+                     self._handle_mouse_scroll(scroll_event))
 
-        self.mouse_data = MouseData(MouseButtonState.Up, MouseButtonState.Up, Vector(0, 0))
+        self.mouse_data = MouseData(MouseButtonState.Up,
+                                    MouseButtonState.Up,
+                                    Vector(0, 0))
         self.translation_handler = TranslationHandler(self)
 
         self.zoom = 1.0
@@ -99,7 +108,10 @@ class Canvas(Gtk.EventBox):
         @type button_event: Gdk.EventButton
         @type mouse_down: bool
         """
-        mouse_state = MouseButtonState.Down if mouse_down else MouseButtonState.Up
+        mouse_state = MouseButtonState.Up
+        if mouse_down:
+            mouse_state = MouseButtonState.Down
+
         if button_event.button == 1:  # left button
             self.mouse_data.lb_state = mouse_state
         elif button_event.button == 3:  # right button
@@ -164,7 +176,9 @@ class Canvas(Gtk.EventBox):
         @rtype: drawing.mouse.MouseData
         """
         position = self.mouse_data.position - self.translation
-        return MouseData(self.mouse_data.lb_state, self.mouse_data.rb_state, position * (1.0 / self.zoom))
+        return MouseData(self.mouse_data.lb_state,
+                         self.mouse_data.rb_state,
+                         position * (1.0 / self.zoom))
 
     def get_drawables(self):
         """
@@ -284,10 +298,11 @@ class MemoryModel(object):
         if pointer.value in self.addr_to_drawable_map:
             return self.addr_to_drawable_map[pointer.value]
         else:
-            heap_var = self.canvas.debugger.variable_manager.get_variable("{{{}}}({})".format(
-                pointer.target_type.name,
-                pointer.value
-            ))
+            heap_var = self.canvas.debugger.variable_manager.get_variable(
+                "{{{}}}({})".format(
+                    pointer.target_type.name,
+                    pointer.value
+                ))
 
             if heap_var:
                 drawable = self.canvas.memtoview.transform_var(heap_var)
@@ -322,18 +337,24 @@ class MemoryModel(object):
         """
         @type selected_frame: debugee.Frame
         """
-        self.wrapper = LinearLayout(self.canvas, LinearLayoutDirection.Horizontal, name="wrapper")
+        self.wrapper = LinearLayout(self.canvas,
+                                    LinearLayoutDirection.Horizontal,
+                                    name="wrapper")
 
-        self.stack_wrapper = LinearLayout(self.canvas, LinearLayoutDirection.Vertical)
+        self.stack_wrapper = LinearLayout(self.canvas,
+                                          LinearLayoutDirection.Vertical)
         self.wrapper.add_child(self.stack_wrapper)
 
-        self.heap_wrapper = LinearLayout(self.canvas, LinearLayoutDirection.Vertical)
+        self.heap_wrapper = LinearLayout(self.canvas,
+                                         LinearLayoutDirection.Vertical)
         self.heap_wrapper.margin.left = 80
         self.wrapper.add_child(self.heap_wrapper)
 
         if selected_frame:
-            for i, fr in enumerate(self.canvas.debugger.thread_manager.get_frames_with_variables()):
-                fr_wrapper = ModelView(fr, self.canvas.memtoview.transform_frame(fr))
+            v = self.canvas.debugger.thread_manager.get_frames_with_variables()
+            for i, fr in enumerate(v):
+                fr_wrapper = ModelView(fr, self.canvas.memtoview
+                                       .transform_frame(fr))
                 self.add_frame(fr_wrapper)
                 fr_wrapper.view.margin.bottom = 20
                 self.stack_wrapper.add_child(fr_wrapper.view)
@@ -350,7 +371,8 @@ class MemoryCanvas(Canvas):
         super(MemoryCanvas, self).__init__()
 
         self.debugger = debugger
-        self.debugger.on_process_state_changed.subscribe(self._handle_process_state_change)
+        self.debugger.on_process_state_changed.subscribe(
+            self._handle_process_state_change)
         self.debugger.on_frame_changed.subscribe(self._handle_frame_change)
 
         self.memtoview = MemToViewTransformer(self)
@@ -398,7 +420,7 @@ class CanvasToolbarWrapper(Gtk.VBox):
         @type toolbar: Gtk.Toolbar
         """
         super(CanvasToolbarWrapper, self).__init__()
-        
+
         self.canvas = canvas
         self.toolbar = toolbar
 

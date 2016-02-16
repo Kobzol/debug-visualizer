@@ -15,7 +15,9 @@ class Parser(object):
         return self._instantiate_breakpoint(self.parse(data)["bkpt"])
 
     def parse_breakpoints(self, data):
-        return [self._instantiate_breakpoint(bp) for bp in self.parse(data)["BreakpointTable"]["body"]]
+        return [self._instantiate_breakpoint(bp)
+                for bp
+                in self.parse(data)["BreakpointTable"]["body"]]
 
     def parse_thread_info(self, data):
         """
@@ -65,7 +67,7 @@ class Parser(object):
         for line in lines_dis:
             line_data = line["line_asm_insn"]
             line_obj = {
-                "line" : int(line["line"]),
+                "line": int(line["line"]),
                 "instructions": []
             }
             for inst in line_data:
@@ -107,7 +109,9 @@ class Parser(object):
         return self._parse_json(self._prep_json(data))
 
     def _instantiate_thread(self, thread):
-        return InferiorThread(int(thread["id"]), thread["name"], self._instantiate_thread_state(thread["state"]), self._instantiate_frame(thread["frame"]))
+        return InferiorThread(int(thread["id"]), thread["name"],
+                              self._instantiate_thread_state(thread["state"]),
+                              self._instantiate_frame(thread["frame"]))
 
     def _instantiate_frame(self, frame):
         """
@@ -166,7 +170,10 @@ class Parser(object):
 
                 if len(in_array) > 0 and in_array[-1] == 1:
                     j = i
-                    while j < len(data) and (data[j].isalpha() or data[j] == "_" or data[j] == "="):
+                    while (j < len(data) and
+                           (data[j].isalpha() or
+                            data[j] == "_" or
+                            data[j] == "=")):
                         j += 1
 
                     if j > i:
@@ -184,7 +191,8 @@ class Parser(object):
 
     def _modify_labels(self, data):
         """
-        Changes keys in the form ([a-zA-Z-_])+\s*= to "\1": (replaces = with :, removes whitespace and adds quotes).
+        Changes keys in the form ([a-zA-Z-_])+\s*= to "\1":
+        (replaces = with :, removes whitespace and adds quotes).
         @type data: str
         @rtype: str
         """
@@ -214,7 +222,9 @@ class Parser(object):
 
             if in_ident and char == "=":
                 old_length = len(data)
-                data = data[:start_ident] + re.sub("^((?:[a-zA-Z-_])+)\s*=", r'"\1":', data[start_ident:])
+                data = data[:start_ident] + re.sub("^((?:[a-zA-Z-_])+)\s*=",
+                                                   r'"\1":',
+                                                   data[start_ident:])
                 diff = old_length - len(data)
                 i -= diff
 

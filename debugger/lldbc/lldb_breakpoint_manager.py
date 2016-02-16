@@ -12,7 +12,8 @@ class LldbBreakpointManager(debugger.BreakpointManager):
         super(LldbBreakpointManager, self).__init__(debugger)
 
     def get_breakpoints(self):
-        bps = [ self.debugger.target.GetBreakpointAtIndex(i) for i in xrange(self.debugger.target.GetNumBreakpoints())]
+        bps = [self.debugger.target.GetBreakpointAtIndex(i)
+               for i in xrange(self.debugger.target.GetNumBreakpoints())]
         breakpoints = []
         for bp in bps:
             if bp.num_locations > 0:

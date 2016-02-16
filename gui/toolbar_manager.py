@@ -1,11 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from gi.repository import GObject
-
-from enums import DebuggerState
 from enums import ProcessState, DebuggerState
 from gui_util import require_gui_thread, run_on_gui
-from util import Logger
 
 
 class ToolbarManager(object):
@@ -25,15 +21,18 @@ class ToolbarManager(object):
         self.toolbar_builder = toolbar_builder
         self.toolbar = toolbar_builder.get_object("toolbar")
         self.debugger = debugger
-        self.debugger.on_process_state_changed.subscribe(self._handle_process_state_change)
-        self.debugger.on_debugger_state_changed.subscribe(self._handle_debugger_state_change)
+        self.debugger.on_process_state_changed.subscribe(
+            self._handle_process_state_change)
+        self.debugger.on_debugger_state_changed.subscribe(
+            self._handle_debugger_state_change)
 
         self.grp_halt_control = ["stop", "pause"]
         self.grp_step = ["continue", "step_over", "step_in", "step_out"]
 
     @require_gui_thread
     def _get_items(self):
-        return [self.toolbar.get_nth_item(i) for i in xrange(0, self.toolbar.get_n_items())]
+        return [self.toolbar.get_nth_item(i)
+                for i in xrange(0, self.toolbar.get_n_items())]
 
     def _state_exited(self):
         self._change_grp_state(self.grp_halt_control, False)
@@ -60,7 +59,8 @@ class ToolbarManager(object):
             self._state_running()
 
     def _handle_debugger_state_change(self, state, old_value):
-        if state.is_set(DebuggerState.BinaryLoaded) and not state.is_set(DebuggerState.Running):
+        if (state.is_set(DebuggerState.BinaryLoaded) and
+                not state.is_set(DebuggerState.Running)):
             self._change_state("run", True)
         else:
             self._change_state("run", False)

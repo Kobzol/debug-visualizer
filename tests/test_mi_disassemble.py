@@ -1,5 +1,8 @@
+# -*- coding: utf-8 -*-
+
 """
-This test is made towards a specific version of GDB and operating system (i686), so it may not work elsewhere.
+This test is made towards a specific version of GDB and operating system
+(i686), so it may not work elsewhere.
 """
 
 SRC_FILE = "src/test_disassemble.cpp"
@@ -38,7 +41,9 @@ def test_address_no_code(debugger):
 def test_address_with_code(debugger):
     prepare_program(debugger, 3)
 
-    assert debugger.file_manager.get_line_address(SRC_FILE, 3) == ("0x8048471", "0x8048478")
+    assert debugger.file_manager.get_line_address(SRC_FILE, 3) == (
+        "0x8048471", "0x8048478"
+    )
 
 
 def test_disassemble(debugger):

@@ -20,13 +20,13 @@ class StdVectorPrinter:
     "Print a std::vector"
 
     class _iterator(Iterator):
-        def __init__ (self, start, finish, bitvec):
+        def __init__(self, start, finish, bitvec):
             self.bitvec = bitvec
             if bitvec:
-                self.item   = start['_M_p']
-                self.so     = start['_M_offset']
+                self.item = start['_M_p']
+                self.so = start['_M_offset']
                 self.finish = finish['_M_p']
-                self.fo     = finish['_M_offset']
+                self.fo = finish['_M_offset']
                 itype = self.item.dereference().type
                 self.isize = 8 * itype.sizeof
             else:
@@ -86,4 +86,5 @@ def str_lookup_function(val):
 def register_printers(objfile):
     objfile.pretty_printers.append(str_lookup_function)
 
-gdb.events.new_objfile.connect(lambda event: register_printers(event.new_objfile))
+gdb.events.new_objfile.connect(
+    lambda event: register_printers(event.new_objfile))

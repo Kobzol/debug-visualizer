@@ -15,7 +15,8 @@ from enums import ProcessState
 from mi.parser import Parser
 
 
-gdb_pretty_print_file = os.path.join(os.path.dirname(__file__), "gdb_pretty_print.py")
+gdb_pretty_print_file = os.path.join(os.path.dirname(__file__),
+                                     "gdb_pretty_print.py")
 pretty_print_dir = glob.glob("/usr/share/gcc-*/python")
 
 if len(pretty_print_dir) < 1:
@@ -84,7 +85,9 @@ class CommandResult(object):
         return self.result_type == ResultType.Success
 
     def __repr__(self):
-        return "[CMD_RESULT: {0} ({1}): {2}]".format(self.result_type, self.token, self.data)
+        return "[CMD_RESULT: {0} ({1}): {2}]".format(self.result_type,
+                                                     self.token,
+                                                     self.data)
 
     def __nonzero__(self):
         return self.is_success()
@@ -230,7 +233,8 @@ class Communicator(object):
 
             while True:
                 output = self._parse_output(self._readline(True))
-                if output.type == OutputType.CommandResult and output.data.token == token:
+                if (output.type == OutputType.CommandResult and
+                        output.data.token == token):
                     response = output.data
                 elif cli and output.type == OutputType.CliResponse:
                     cli_data.append(output.data[2:-1].rstrip("\\n").strip())
@@ -314,8 +318,6 @@ class Communicator(object):
         if not input:
             return None
 
-        #util.Logger.debug("COMM: {}".format(input.strip()))
-
         return input.strip()
 
     def _skip_to_separator(self):
@@ -330,8 +332,10 @@ class Communicator(object):
 
         if response == Communicator.GROUP_SEPARATOR:
             return OutputMessage(OutputType.Separator)
-        elif response[0].isdigit() or response[0] == Communicator.RESPONSE_START:
-            return OutputMessage(OutputType.CommandResult, CommandResult.parse(response))
+        elif (response[0].isdigit() or
+                response[0] == Communicator.RESPONSE_START):
+            return OutputMessage(OutputType.CommandResult,
+                                 CommandResult.parse(response))
         elif response[0] == Communicator.EXEC_ASYNC_START:
             return OutputMessage(OutputType.AsyncExec, response)
         elif response[0] == Communicator.NOTIFY_ASYNC_START:

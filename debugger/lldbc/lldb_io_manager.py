@@ -40,13 +40,23 @@ class LldbIOManager(object):
         if len(self.file_threads) > 0:
             return
 
-        stdin, stdout, stderr = [LldbIOManager.create_pipe() for _ in xrange(3)]
+        stdin, stdout, stderr = [LldbIOManager.create_pipe()
+                                 for _ in xrange(3)]
 
         self.file_paths += (stdin, stdout, stderr)
 
-        self.file_threads.append(threading.Thread(target=self._open_file, args=["stdin", "w", stdin]))
-        self.file_threads.append(threading.Thread(target=self._open_file, args=["stdout", "r", stdout]))
-        self.file_threads.append(threading.Thread(target=self._open_file, args=["stderr", "r", stderr]))
+        self.file_threads.append(threading.Thread(target=self._open_file,
+                                                  args=["stdin",
+                                                        "w",
+                                                        stdin]))
+        self.file_threads.append(threading.Thread(target=self._open_file,
+                                                  args=["stdout",
+                                                        "r",
+                                                        stdout]))
+        self.file_threads.append(threading.Thread(target=self._open_file,
+                                                  args=["stderr",
+                                                        "r",
+                                                        stderr]))
 
         map(lambda thread: thread.start(), self.file_threads)
 

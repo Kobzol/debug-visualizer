@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import os
 
 FRAME_FILE = "src/test_frame.cpp"

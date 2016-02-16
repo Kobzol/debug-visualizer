@@ -22,7 +22,8 @@ class BreakpointChangeType(Enum):
 
 
 class BreakpointRenderer(GtkSource.GutterRendererPixbuf):
-    def __init__(self, source_window, breakpoint_img_path, execution_img_path, **properties):
+    def __init__(self, source_window, breakpoint_img_path,
+                 execution_img_path, **properties):
         super(BreakpointRenderer, self).__init__(**properties)
         self.source_window = source_window
         self.bp_pixbuf = GdkPixbuf.Pixbuf.new_from_file(breakpoint_img_path)
@@ -36,11 +37,15 @@ class BreakpointRenderer(GtkSource.GutterRendererPixbuf):
 
         if line in self.source_window.get_breakpoint_lines():
             self.set_pixbuf(self.bp_pixbuf)
-            GtkSource.GutterRendererPixbuf.do_draw(self, cr, background_area, cell_area, start, end, state)
+            GtkSource.GutterRendererPixbuf.do_draw(self, cr, background_area,
+                                                   cell_area,
+                                                   start, end, state)
 
         if line == self.source_window.exec_line:
             self.set_pixbuf(self.exec_pixbuf)
-            GtkSource.GutterRendererPixbuf.do_draw(self, cr, background_area, cell_area, start, end, state)
+            GtkSource.GutterRendererPixbuf.do_draw(self, cr, background_area,
+                                                   cell_area,
+                                                   start, end, state)
 
 
 class SourceWindow(Gtk.ScrolledWindow):
@@ -82,8 +87,10 @@ class SourceEditor(GtkSource.View):
         self.set_editable(False)
 
         self.gutter_renderer = BreakpointRenderer(self,
-                                                  paths.get_resource("img/circle.png"),
-                                                  paths.get_resource("img/arrow.png"))
+                                                  paths.get_resource(
+                                                      "img/circle.png"),
+                                                  paths.get_resource(
+                                                      "img/arrow.png"))
         gutter = self.get_gutter(Gtk.TextWindowType.LEFT)
         gutter.insert(self.gutter_renderer, 0)
 
@@ -101,11 +108,14 @@ class SourceEditor(GtkSource.View):
         self.bp_lines = set()
 
         self.analyser = SourceAnalyzer()
-        self.connect("motion-notify-event", lambda widget, event: self._handle_mouse_move(event))
-        self.connect("button-press-event", lambda widget, event: self._handle_mouse_click(event))
+        self.connect("motion-notify-event",
+                     lambda widget, event: self._handle_mouse_move(event))
+        self.connect("button-press-event",
+                     lambda widget, event: self._handle_mouse_click(event))
         self.on_symbol_hover = EventBroadcaster()
 
-        self.debugger.breakpoint_manager.on_breakpoint_changed.subscribe(self._handle_model_breakpoint_change)
+        self.debugger.breakpoint_manager.on_breakpoint_changed.subscribe(
+            self._handle_model_breakpoint_change)
         self.breakpoint_lines = []
 
     def _handle_model_breakpoint_change(self, breakpoint):
@@ -122,7 +132,9 @@ class SourceEditor(GtkSource.View):
         self.breakpoint_lines = lines
 
     def _handle_mouse_move(self, event):
-        x, y = self.window_to_buffer_coords(Gtk.TextWindowType.TEXT, event.x, event.y)
+        x, y = self.window_to_buffer_coords(Gtk.TextWindowType.TEXT,
+                                            event.x,
+                                            event.y)
         iter = self.get_iter_at_location(x, y)
         line = iter.get_line() + 1
         column = iter.get_line_offset() + 1
@@ -132,8 +144,11 @@ class SourceEditor(GtkSource.View):
             self.on_symbol_hover.notify(self, symbol)
 
     def _handle_mouse_click(self, event):
-        if event.type == Gdk.EventType.BUTTON_PRESS and self.get_window(Gtk.TextWindowType.LEFT) == event.window:
-            x, y = self.window_to_buffer_coords(Gtk.TextWindowType.LEFT, event.x, event.y)
+        if (event.type == Gdk.EventType.BUTTON_PRESS and
+                self.get_window(Gtk.TextWindowType.LEFT) == event.window):
+            x, y = self.window_to_buffer_coords(Gtk.TextWindowType.LEFT,
+                                                event.x,
+                                                event.y)
             iter = self.get_iter_at_location(x, y)
             self.toggle_breakpoint(iter.get_line())
 
@@ -183,7 +198,8 @@ class SourceEditor(GtkSource.View):
     @require_gui_thread
     def get_cursor_iter(self):
         cursor_rectangle = self.get_cursor_locations(None)[0]
-        return self.get_iter_at_location(cursor_rectangle.x, cursor_rectangle.y)
+        return self.get_iter_at_location(cursor_rectangle.x,
+                                         cursor_rectangle.y)
 
     @require_gui_thread
     def get_current_column(self):
@@ -245,7 +261,8 @@ class SourceManager(Gtk.Notebook):
         self.on_symbol_hover.subscribe(self._handle_symbol_hover)
         self.on_breakpoint_changed.subscribe(self._handle_breakpoint_change)
 
-        self.debugger.on_process_state_changed.subscribe(self._handle_process_state_change)
+        self.debugger.on_process_state_changed.subscribe(
+            self._handle_process_state_change)
         self.debugger.on_frame_changed.subscribe(self._handle_frame_change)
 
     def _handle_symbol_hover(self, source_editor, symbol):
@@ -287,7 +304,8 @@ class SourceManager(Gtk.Notebook):
         label = Gtk.Label(os.path.basename(path))
 
         button = Gtk.Button()
-        button.add(Gtk.Image.new_from_stock(Gtk.STOCK_CLOSE, Gtk.IconSize.MENU))
+        button.add(Gtk.Image.new_from_stock(Gtk.STOCK_CLOSE,
+                                            Gtk.IconSize.MENU))
         button.set_relief(Gtk.ReliefStyle.NONE)
         button.set_focus_on_click(False)
         button.connect("clicked", lambda *x: self._close_tab(widget))
@@ -316,7 +334,9 @@ class SourceManager(Gtk.Notebook):
 
         label = self._create_label(file_path, window)
 
-        index = self.append_page_menu(window, label, Gtk.Label(label=file_path))
+        index = self.append_page_menu(window,
+                                      label,
+                                      Gtk.Label(label=file_path))
 
         if index != -1:
             self.select_tab(index)

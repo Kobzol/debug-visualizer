@@ -1,7 +1,8 @@
-import os
-import sys
+# -*- coding: utf-8 -*-
 
+import os
 import pytest
+import sys
 
 import src.compile as compile
 
@@ -15,8 +16,8 @@ SRC_DIR = os.path.join(ROOT_DIR, "debugger")
 sys.path.append(SRC_DIR)
 os.chdir(TEST_DIR)
 
-from mi.mi_debugger import MiDebugger
-from mi.parser import Parser
+from mi.mi_debugger import MiDebugger  # noqa
+from mi.parser import Parser  # noqa
 
 
 compile.compile_tests()

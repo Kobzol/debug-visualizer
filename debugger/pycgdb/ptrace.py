@@ -1,7 +1,10 @@
+# -*- coding: utf-8 -*-
+
 import ctypes
 import os
 
-lib = ctypes.cdll.LoadLibrary(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'libptrace.so'))
+lib = ctypes.cdll.LoadLibrary(os.path.join(os.path.dirname(
+    os.path.abspath(__file__)), 'libptrace.so'))
 
 PTRACE_TRACEME = 0
 PTRACE_PEEKTEXT = 1

@@ -20,4 +20,5 @@ class LldbFileManager(object):
         return (line_entry.file.fullpath, line_entry.line)
 
     def get_current_location(self):
-        return self.get_thread_location(self.debugger.thread_manager.get_current_thread())
+        return self.get_thread_location(
+            self.debugger.thread_manager.get_current_thread())

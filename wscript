@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from __future__ import print_function
 
@@ -16,12 +17,14 @@ gdb_archive_length = 34526368
 
 
 def build_gdb():
-    if not os.path.isfile(gdb_src_zip) or os.path.getsize(gdb_src_zip) != gdb_archive_length:
+    if (not os.path.isfile(gdb_src_zip) or
+            os.path.getsize(gdb_src_zip) != gdb_archive_length):
         print("Downloading GDB 7.10.1...")
 
         gdb = urllib2.urlopen("http://ftp.gnu.org/gnu/gdb/gdb-7.10.1.tar.gz")
         if gdb.getcode() != 200:
-            raise BaseException("GDB could not be downloaded, error code {}".format(gdb.getcode()))
+            raise BaseException("GDB could not be downloaded, error code {}".
+                                format(gdb.getcode()))
 
         info = gdb.info()
         length = info["Content-Length"]
@@ -35,7 +38,8 @@ def build_gdb():
                 else:
                     total_read += len(data)
                     archive.write(data)
-                    print("\r{:0.2f} %".format((total_read / float(length)) * 100.0), end="")
+                    print("\r{:0.2f} %".format((total_read / float(length)) *
+                                               100.0), end="")
         print("\n")
     print("Extracting GDB...")
 
@@ -47,7 +51,8 @@ def build_gdb():
 
     print("Compiling and installing GDB...")
 
-    result = subprocess.call("./configure --prefix={0} --bindir={0} --with-python"
+    result = subprocess.call("./configure --prefix={0} --bindir={0}"
+                             "--with-python"
                              .format(gdb_build_dir), shell=True)
     try:
         if result == 0:
@@ -82,7 +87,8 @@ def patch_lldb(conf):
 
 
 def options(opt):
-    opt.add_option("-l", "--lldb", default="", action="store", help="version of LLDB to use")
+    opt.add_option("-l", "--lldb", default="", action="store",
+                   help="version of LLDB to use")
 
     opt.load("python")
     opt.load("compiler_cxx")

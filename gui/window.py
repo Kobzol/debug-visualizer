@@ -51,7 +51,8 @@ class MainWindow(Gtk.Window):
 
         self._init_components(app)
 
-        app.debugger.on_process_state_changed.subscribe(self._handle_process_state_change)
+        app.debugger.on_process_state_changed.subscribe(
+            self._handle_process_state_change)
 
         loaded = self.app.debugger.load_binary("../debugger/test")
 
@@ -82,7 +83,8 @@ class MainWindow(Gtk.Window):
         self._add_to_row(self.menu, 0)
 
         # toolbar
-        self.toolbar_manager = ToolbarManager(Config.GUI_MAIN_WINDOW_TOOLBAR, app.debugger)
+        self.toolbar_manager = ToolbarManager(Config.GUI_MAIN_WINDOW_TOOLBAR,
+                                              app.debugger)
         self._add_to_row(self.toolbar_manager.toolbar, 1)
 
         # content
@@ -112,7 +114,8 @@ class MainWindow(Gtk.Window):
         self.console.watch(app.debugger)
 
         Config.GUI_IO_CONSOLE.connect_signals({
-            "filter-changed": lambda button: self.console.filter_toggle_io(button.get_label()),
+            "filter-changed": lambda button:
+            self.console.filter_toggle_io(button.get_label()),
             "console-clear": lambda button: self.console.clear()
         })
         self.console_wrapper = Config.GUI_IO_CONSOLE.get_object("wrapper")
@@ -130,13 +133,19 @@ class MainWindow(Gtk.Window):
         self.tool_manager.add_tool("Threads", window)
 
         self.register_list = RegisterList(app.debugger)
-        self.tool_manager.add_tool("Registers", TitleWindow("Registers", self.register_list))
+        self.tool_manager.add_tool("Registers",
+                                   TitleWindow("Registers",
+                                               self.register_list))
 
         self.memory_view = MemoryView(app.debugger)
-        self.tool_manager.add_tool("Memory view", TitleWindow("Memory view", self.memory_view))
+        self.tool_manager.add_tool("Memory view",
+                                   TitleWindow("Memory view",
+                                               self.memory_view))
 
         self.heap_detail = HeapDetail(app.debugger)
-        self.tool_manager.add_tool("Heap detail", TitleWindow("Heap detail", self.heap_detail))
+        self.tool_manager.add_tool("Heap detail",
+                                   TitleWindow("Heap detail",
+                                               self.heap_detail))
 
         self._add_to_row(self.tool_manager, 3)
 
@@ -149,15 +158,20 @@ class MainWindow(Gtk.Window):
 
     def _handle_process_state_change(self, state, event_data):
         if state == ProcessState.Exited:
-            run_on_gui(self.add_status_message, "Process exited with code {0}.".format(event_data.return_code))
+            run_on_gui(self.add_status_message,
+                       "Process exited with code {0}.".format(
+                           event_data.return_code))
         elif state == ProcessState.Stopped:
             location = self.app.debugger.file_manager.get_current_location()
             if location and location[0]:
-                run_on_gui(self.add_status_message, "Process stopped at {0}:{1} - {2}"
-                                        .format(location[0], location[1], event_data.stop_reason))
+                run_on_gui(self.add_status_message,
+                           "Process stopped at {0}:{1} - {2}"
+                           .format(location[0],
+                                   location[1],
+                                   event_data.stop_reason))
             else:
                 run_on_gui(self.add_status_message, "Process stopped - {0}"
-                                        .format(event_data.stop_reason))
+                           .format(event_data.stop_reason))
         elif state == ProcessState.Running:
             run_on_gui(self.add_status_message, "Process is running...")
 
@@ -172,27 +186,36 @@ class MainWindow(Gtk.Window):
         self.status_bar.push(1, text)
 
     def add_shortcut(self, key, callback, mask=0):
-        self.accel_group.connect(key, mask, Gtk.AccelFlags.VISIBLE, lambda *x: callback())
+        self.accel_group.connect(key, mask, Gtk.AccelFlags.VISIBLE,
+                                 lambda *x: callback())
 
     @require_gui_thread
     def binary_load_dialog(self):
-        file_path = FileOpenDialog.open_file("Choose a binary file", self, os.path.abspath("../debugger/"))
+        file_path = FileOpenDialog.open_file("Choose a binary file", self,
+                                             os.path.abspath("../debugger/"))
 
         if file_path:
             self.app.debugger.kill(True)
             loaded = self.app.debugger.load_binary(file_path)
 
             if loaded:
-                main_file = self.app.debugger.file_manager.get_main_source_file()
+                main_file = self.app.debugger.file_manager.\
+                    get_main_source_file()
 
                 if main_file:
                     self.source_manager.open_file(main_file)
-                    self.add_status_message("Main file \"{0}\" has been loaded.".format(main_file))
+                    self.add_status_message(
+                        "Main file \"{0}\" has been loaded.".format(main_file))
                 else:
-                    MessageBox.show("The main file of this binary file couldn't be loaded.", "Main file",
-                                    self, Gtk.MessageType.WARNING)
+                    MessageBox.show("The main file of this binary file"
+                                    "couldn't be loaded.",
+                                    "Main file",
+                                    self,
+                                    Gtk.MessageType.WARNING)
             else:
-                MessageBox.show("This file couldn't be loaded.", "Binary load", self, Gtk.MessageType.ERROR)
+                MessageBox.show("This file couldn't be loaded.",
+                                "Binary load",
+                                self, Gtk.MessageType.ERROR)
 
     @require_gui_thread
     def source_open_dialog(self):
@@ -200,7 +223,8 @@ class MainWindow(Gtk.Window):
 
         if file_path:
             self.source_manager.open_file(file_path)
-            self.add_status_message("Source file \"{0}\" has been opened.".format(file_path))
+            self.add_status_message(
+                "Source file \"{0}\" has been opened.".format(file_path))
 
     def quit(self):
         self.console.stop_watch()

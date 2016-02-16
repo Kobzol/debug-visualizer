@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
+import select
 import socket
 import threading
-import select
-import sys
 import traceback
 
 from net.command import Command, CommandType
@@ -27,7 +26,7 @@ class Server(object):
         self.connected_client = None
         self.server = None
         self.server_thread = None
-        
+
     def is_running(self):
         """
         Checks that the server is listening.
@@ -48,10 +47,11 @@ class Server(object):
         """
         if not self.is_running():
             self._create_socket()
-            self.server_thread = threading.Thread(target=self.run_server_thread)
+            self.server_thread = threading.Thread(
+                target=self.run_server_thread)
             self.running = True
             self.server_thread.start()
-    
+
     def stop(self):
         """
         Stop the server (noop if the server is not running).
@@ -60,7 +60,7 @@ class Server(object):
             self.running = False
             self.server_thread.join()
             self.server.close()
-    
+
     def _create_socket(self):
         """
         Creates a TCP socket.
@@ -70,28 +70,30 @@ class Server(object):
         self.server.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         self.server.bind(self.address)
         self.server.listen(1)
-    
+
     def is_data_available(self, fd, timeout=0.1):
         """
-        Checks whether data is available for reading on the given file descriptor.
+        Checks whether data is available for reading on the given file
+        descriptor.
         @type fd: file descriptor
         @type timeout: float
         @rtype: bool
         """
         return len(select.select([fd], [], [], timeout)[0]) != 0
-    
+
     def run_server_thread(self):
         """
         Loop that is run by the server thread.
         """
         while self.is_running():
             try:
-                if self.is_data_available(self.server, 0.1) and not self.is_client_connected():
+                if (self.is_data_available(self.server, 0.1) and
+                        not self.is_client_connected()):
                     client, address = self.server.accept()
                     self.handle_client(client, address)
             except:
                 traceback.print_exc()
-    
+
     def handle_command(self, command):
         """
         Handles an incoming command from the client.
@@ -102,17 +104,19 @@ class Server(object):
         elif command.type == CommandType.StopServer:
             self.server.close()
             self.running = False
-        elif command.type == CommandType.Execute:           
-            arguments = command.data["arguments"] if "arguments" in command.data else None
+        elif command.type == CommandType.Execute:
+            arguments = command.data["arguments"] if "arguments"\
+                                                     in command.data else None
             properties = command.data["properties"]
 
             try:
-                result = Dispatcher.dispatch(self.debugger, properties, arguments)
+                result = Dispatcher.dispatch(self.debugger, properties,
+                                             arguments)
                 self.send_result(command, result)
             except:
                 traceback.print_exc()
                 self.send_result_error(command, traceback.format_exc())
-    
+
     def handle_client(self, client, address):
         """
         Handles an incoming client.
@@ -120,7 +124,7 @@ class Server(object):
         @type address: (str, int)
         """
         self.connected_client = client
-        
+
         try:
             while self.is_running():
                 if self.is_data_available(client, 0.1):
@@ -129,7 +133,7 @@ class Server(object):
             traceback.print_exc()
         finally:
             self.connected_client = None
-            
+
     def send_result(self, command, result):
         """
         Sends result of the given command to the client.
@@ -140,7 +144,7 @@ class Server(object):
             command.send_result(self.connected_client, result)
         except:
             traceback.print_exc()
-        
+
     def send_result_error(self, command, error):
         """
         Sends an error result of the given command to the client.

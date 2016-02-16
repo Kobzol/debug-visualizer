@@ -1,3 +1,11 @@
+# -*- coding: utf-8 -*-
+
+"""
+This test depends on particular implementation of glibc (that does not
+allocate memory on it's own for the given program (src/test_alloc.cpp),
+so it may not work elsewhere.
+"""
+
 import copy
 import time
 

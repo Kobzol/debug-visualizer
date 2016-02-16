@@ -18,7 +18,8 @@ class RegisterList(Gtk.ListBox):
         self.set_selection_mode(Gtk.SelectionMode.NONE)
 
         self.debugger = debugger
-        self.debugger.on_process_state_changed.subscribe(self._handle_process_change)
+        self.debugger.on_process_state_changed.subscribe(
+            self._handle_process_change)
         self.debugger.on_frame_changed.subscribe(self._handle_frame_change)
 
     def _handle_process_change(self, state, event_data):
@@ -37,7 +38,8 @@ class RegisterList(Gtk.ListBox):
             self.remove(widget)
 
         for register in registers:
-            label = Gtk.Label.new("{} = {}".format(register.name, register.value))
+            label = Gtk.Label.new("{} = {}".format(register.name,
+                                                   register.value))
             label.set_halign(Gtk.Align.START)
             row = Gtk.ListBoxRow.new()
             row.add(label)
@@ -46,7 +48,8 @@ class RegisterList(Gtk.ListBox):
         self.show_all()
 
     def update_registers(self):
-        run_on_gui(self._update_register_gui, self.debugger.variable_manager.get_registers())
+        run_on_gui(self._update_register_gui,
+                   self.debugger.variable_manager.get_registers())
 
 
 class MemoryGrid(Gtk.Grid):
@@ -79,7 +82,8 @@ class MemoryGrid(Gtk.Grid):
     def load_address(self, address):
         """
         Loads an address into the view.
-        The address should be a hexadecimal string starting with 0x/0X or a name of a variable.
+        The address should be a hexadecimal string starting with 0x/0X or
+        a name of a variable.
         @type address: str
         """
         address, address_int = self._parse_address(address)
@@ -87,7 +91,9 @@ class MemoryGrid(Gtk.Grid):
         if address_int is None:
             return
 
-        memory = self.debugger.variable_manager.get_memory(address, self.width * self.height)
+        memory = self.debugger.variable_manager.get_memory(address,
+                                                           self.width *
+                                                           self.height)
 
         for i, row in enumerate(self.byte_rows):
             for j, block in enumerate(row):
@@ -153,7 +159,8 @@ class MemoryGrid(Gtk.Grid):
     def _parse_address(self, address):
         """
         Parses the given address and returns tuple (hex address, int address).
-        The input address should either be a hex string starting with 0x/0X or a name of a variable.
+        The input address should either be a hex string starting with 0x/0X
+        or a name of a variable.
         @type address: str
         @rtype: tuple of (str, int)
         """
@@ -200,7 +207,9 @@ class AddressInput(Gtk.Box):
 
         self.on_address_selected = EventBroadcaster()
 
-        self.confirm_button.connect("clicked", lambda *x: self.on_address_selected.notify(self.address_input.get_text()))
+        self.confirm_button.connect("clicked",
+                                    lambda *x: self.on_address_selected.notify(
+                                        self.address_input.get_text()))
 
 
 class MemoryView(Gtk.ScrolledWindow):
@@ -220,4 +229,5 @@ class MemoryView(Gtk.ScrolledWindow):
 
         self.add(self.wrapper)
 
-        self.address_input.on_address_selected.subscribe(lambda address: self.memorygrid.load_address(address))
+        self.address_input.on_address_selected.subscribe(
+            lambda address: self.memorygrid.load_address(address))

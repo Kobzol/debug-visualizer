@@ -4,12 +4,13 @@ from gi.repository import Gtk, GObject
 
 import time
 
+from enums import ProcessState
+
 import matplotlib
 matplotlib.use('gtk3agg')
-from matplotlib.backends.backend_gtk3agg import FigureCanvasGTK3Agg as FigureCanvas
-from matplotlib.figure import Figure
-
-from enums import ProcessState
+from matplotlib.backends.backend_gtk3agg\
+    import FigureCanvasGTK3Agg as Canvas  # noqa
+from matplotlib.figure import Figure  # noqa
 
 
 class HeapDetail(Gtk.ScrolledWindow):
@@ -31,7 +32,7 @@ class HeapDetail(Gtk.ScrolledWindow):
 
         figure.subplots_adjust(bottom=0.3)
 
-        self.canvas = FigureCanvas(figure)
+        self.canvas = Canvas(figure)
         self.add_with_viewport(self.canvas)
 
         self.heap_size = 0
