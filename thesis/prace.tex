@@ -12,6 +12,9 @@
 \usepackage[bottom]{footmisc}
 \usepackage{xifthen}
 \usepackage{float}
+\usepackage{tikz-uml}
+
+\tikzumlset{fill class=white!20, fill template=white!20}
 
 \renewcommand\multinamedelim{\addcomma\space}	%  redefinice oddělování jmén autorů dle ISO690:2011
 \renewcommand\finalnamedelim{\addspace\mainsstring{and}\space}
@@ -77,7 +80,7 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 % Pri sazbe se pak hledaji soubory Figures/Zadani1.jpg, Figures/Zadani2.jpg atd.
 % Do diplomove prace se postupne vlozi vsechny existujici soubory Figures/ZadaniXXX.jpg
 % Pokud toto makro zapoznamkujeme sazi se stranka s upozornenim
-%\ThesisAssignmentImagePath{Figures/Zadani}
+\ThesisAssignmentImagePath{Figures/Zadani}
 
 % Zadame soubor s digitalizovanou podobou prohlaseni
 % Pokud toto makro zapoznamkujeme sazi se cisty text prohlaseni
@@ -423,13 +426,18 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 			standardní knihovna Pythonu. % TODO: psát, že jsem si to ulehčil?
 			Po odeslání příkazu knihovna čeká, než jí přijde odpověď, která musí následovat po každém příkazu.
 			
-			\par Kromě této synchronní komunikace (zaslání příkazu - přijetí odpovědi) posílá GDB také zprávy o asynchronních událostech, jako je např.
+			\parspace Kromě této synchronní komunikace (zaslání příkazu - přijetí odpovědi) posílá GDB také zprávy o asynchronních událostech, jako je např.
 			vytvoření vlákna nebo zastavení procesu. Grafické rozhraní debuggeru musí na tyto zprávy reagovat ihned poté, co jsou debuggerem zaslány.
 			Kvůli toho se v komunikačním modulu vytváří samostatné vlákno, které v pravidelném časovém intervalu kontroluje výstup z debuggeru a pokud zjistí, že došlo
 			k asynchronní události, tak vyvolá vlastní událost, ke které se může přihlásit libovolný klient. Při tomto periodickém čtení může dojít k souběhu, pokud
 			by během čtení přišel od klienta knihovny požadavek na odeslání příkazu, který se také snaží číst výstup z GDB při čekání na svou odpověď.
 			% TODO: vysvětlit, co je souběh, mutex?
 			Z tohoto důvodu je čtení výstupu debuggeru zamknuto mutexem, který potencionální souběh vylučuje.
+			
+			\parspace Některé funkce knihovny jsou naimplementované jinak než zasláním textového příkazu do GDB, například přerušení programu, které
+			slouží k zastavení programu v libovolnou chvíli. Přerušení je vyvoláno tak, že se procesu zašle signál SIGINT, který vyvolá zastavení procesu v GDB a to
+			už je následně zpracováno knihovnou standardně, jako by se jednalo o zastavení při breakpointu. Stejně tak násilné ukončení programu ho nejprve přeruší,
+			a teprve poté pošle GDB příkaz k ukončení laděného procesu.
 			
 			\item[Komunikace s laděným procesem]
 			MI implicitně přesměrovává veškerý výstup z laděného procesu na svůj vlastní výstup. Toto chování není moc užitečné, jelikož se výstup a vstup laděného
@@ -440,7 +448,7 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 			Rozhodl jsem se tedy použít třetí řešení, které při komunikaci s laděným procesem naprosto obchází GDB.
 			% TODO: vložit obrázek s nákresem I/O komunikace
 			
-			\par Před zapnutím laděného procesu se v systémové složce pro dočasná data vytvoří čtyři speciální soubory, jeden pro vstup, dva pro výstup
+			\parspace Před zapnutím laděného procesu se v systémové složce pro dočasná data vytvoří čtyři speciální soubory, jeden pro vstup, dva pro výstup
 			(klasický a chybový) a jeden pro alokace, které jsou popsány dále v textu. Komunikace se soubory je znázorněna na obrázku \ref{fig:DebugeeIO}.
 			Tyto soubory jsou vytvořeny pomocí systémového volání \textit{mkfifo}\footnote{http://linux.die.net/man/3/mkfifo}, které vytváří pojmenovanou rouru
 			% TODO: roura?
@@ -504,13 +512,66 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 				Jejich explicitní použití v programech ale není běžné, takže je \textit{Devi} nesleduje.}
 			\end{description}
 			
-			\InsertFigure{Figures/bak_io_alloc}{\textwidth}{Komunikace s laděným procesem}{fig:DebugeeIO}
-			
+			\InsertFigure{Figures/bak_io_alloc}{\textwidth}{Komunikace s laděným procesem}{fig:DebugeeIO}		
 		\end{description}
 			
-	\subsection{Vizualizace ladění}
-	Pro samotnou vizualizaci ladění procesu jsem vytvořil GUI aplikaci, která 
+	\subsection{Vizualizační aplikace}
+	Pro samotné ladění aplikací a využití komunikační knihovny jsem vytvořil GUI aplikaci \textit{Devi}.
+	Ta poskytuje grafické rozhraní pro veškeré naimplementované funkce knihovny a dále k nim přidává vizualizaci paměti procesu.
 	
+	\subsubsection{Vykreslovací komponenta}
+	% TODO: canvas, drawable, UML, Clang
+	
+	\subsubsection{Používání aplikace}
+	Na obrázku \ref{fig:DeviGui} je zobrazeno rozhraní aplikce a jsou na něm označeny její jednotlivé části. Následuje popis funkcí a možností použití
+	jednotlivých částí rozhraní.
+	
+	\remark{Většina oken a panelů v \textit{Devi} popisuje nebo modifikuje stav laděného procesu a z toho důvodu s nimi lze pracovat pouze když je proces
+	zastavený. Dnešní počítače zvládnou provádět miliardy operací za vteřinu a takto častá aktualizace informací o stavu procesu by byla nepraktická.}
+	
+	\begin{description}
+		\item[Hlavní menu] V menu lze načíst spustitelný soubor aplikace, což je nutný první krok, pokud tuto aplikaci chceme v \textit{Devi} ladit.
+			Spustitelný soubor musí být přeložený s ladícími symboly, jinak ladění nebude spolehlivě fungovat.
+		\item[Panel ovládání procesu] Tento panel obsahuje nejpoužívanější příkazy sloužící k ovládání běhu procesu, jako je jeho zapnutí, přerušení, násilné
+			ukončení a několik typů krokování. Jednotlivé příkazy jsou automaticky blokovány a povolovány podle stavu laděného procesu, nelze tedy např. zapnout
+			proces, když už běží, anebo ho krokovat, když není zastavený.
+		\item[Zdrojový kód] \textit{Devi} obsahuje okno, které zobrazuje obsah zdrojového kódu souboru v textovém editoru. Zobrazeno může být několik souborů naráz,
+			lze mezi nimi přepínat pomocí záložek. Při načtení spustitelného souboru se automaticky načte a zobrazí soubor, který obsahuje vstupní bod daného programu
+			% TODO: Je to vážně soubor s mainem?
+			(funkci \textit{main}). Pokud se laděný proces zastaví na breakpointu v nějakém zdrojovém souboru, tak je tento soubor automaticky otevřen a zobrazen
+			v editoru a ten se posune tak, aby byl daný breakpoint vidět a uživatel ho nemusel hledat. Pokud chce uživatel manuálně přidat breakpoint v jiném, než
+			hlavním zdrojovém souboru, může využít funkce načtení libovolného zdrojového souboru z hlavního menu. Samotný textový editor nepovoluje změny zdrojového
+			kódu, jelikož k tomu debugger není určen a neobsahuje ani žádnou vestavěnou podporu překladu kódu do spustitelné podoby. Kód je tak zobrazen pouze pro
+			čtení, aby náhodou nedošlo k jeho nechtěné změně. Ve sloupci vedle zdrojového kódu lze přidávat a odebírat breakpointy. Zároveň se v něm při běhu procesu
+			ukazuje, na kterém řádku v daném souboru je proces zastavený. Pokud je laděný proces zastavený, tak při přesunutí kurzoru myši nad proměnnou ve zdrojovém
+			kódu se zobrazí její současná hodnota v procesu. Tuto funkcionalitu zajišťuje knihovna Clang\footnote{http://clang.llvm.org}, což je parser a překladač
+			jazyků C, C++ a Objective C, který kód dále překládá do formátu překladače LLVM, a ten z něj poté generuje strojový kód.
+		\item[Konzole] Pomocí konzole lze komunikovat s laděným procesem. Zobrazuje se v ní obsah jeho standardního (\textit{stdout}) i chybového (\textit{stderr})
+			výstupu. Lze do ní také psát text, který se po odřádkování odešle laděnému procesu. Výstup, chybový výstup i vstup lze jednotlivě skrýt pomocí
+			zaškrtávacích tlačítek.
+		\item[Zásobník funkcí] V tomto okně je zobrazen stav zásobníku volaných funkcí pro aktivní vlákno. Lze se mezi nimi přepínat, což způsobí aktualizaci
+			ukazatele současného řádku v editoru zdrojového kódu. Mezi zásobníkovými rámci lze přepínat i pomocí vizualizačního plátna, které je popsáno dále.
+		\item[Seznam vláken] Zde je zobrazen seznam všech vláken laděného procesu spolu s jejich základními informacemi, jako je název nebo id. Pokud je proces
+			zastavený, lze se mezi přepínat. Jelikož změna vlákna způsobí i změně zásobníku funkcí, tak při ní dochází ke kompletnímu překreslení vizualizačního
+			plátna.
+		\item[Seznam registrů] % TODO: měnit registry?
+			Pokud je proces zastavený, tak je zde zobrazen seznam názvů a hodnot všech registrů procesoru. To může sloužit k nízkoúrovňovému ladění procesu, např.
+			při práci s jazykem symbolických adres.
+		\item[Zobrazení paměti] V tomto okně lze zadat hexadecimální adresu paměti, ze které se načte 40 bytů, které jsou poté zobrazeny ve formě dvou tabulek.
+			% TODO: určit, kolik bytů zobrazit
+			V první tabulce je přímá hodnota bytů ve formě čísla o rozsahu 0 až 255, ve druhé tabulce je pak jejich ASCII reprezentace, vhodná pro zkoumání textových
+			polí v paměti. Kromě adresy v paměti lze zadat také název proměnné ze současně aktivního zásobníkového rámce. Adresa této proměnné se poté odvodí
+			a zobrazí se hodnota její paměti.
+		\item[Detail haldy] % TODO: zobrazit počet alokovaných bloků
+			Toto okno zobrazuje graf velikosti paměti alokované na haldě v závislosti na čase. Pokud laděný proces běží, tak se hodnota grafu aktualizuje co vteřinu
+			a zobrazuje tak stav haldy v reálném čase.
+		\item[Vizualizační plátno] Na tomto plátně se při zastavení procesu vykreslí všechny jeho zásobníkového rámce (pro aktivní vlákno). V každém rámci je
+			vykreslen seznam lokálních proměnných a parametrů dané funkce. U každé proměnné je zobrazen její název a současná hodnota, při podržení myši nad ní se dále
+			zobrazí dodatečné informace, jako je její adresa v paměti. Na jednoduché typy proměnných, jako jsou primitivní datové typy (\textit{int}, \textit{bool}
+			aj.), lze po kliknutí změnit jejich hodnotu pomocí textového pole. Aktivní zásobníkový rámec lze změnit kliknutím na hlavičku některého z vykreslených
+			rámců, současný aktivní rámec je zvýrazněn červenou barvou.
+		
+	\end{description}
 
 \end{section}
 \begin{section}{Závěr}
@@ -544,8 +605,8 @@ zobrazení proměnných ve stromové struktuře.
 Jakub Beránek
 \end{flushright}
 
-\printbibheading[title=Zdroje, heading=bibintoc]
-\printbibliography
+%\printbibheading[title=Zdroje, heading=bibintoc]
+\printbibliography % TODO: do obsahu
 
 \appendix
 \begin{section}{Grafická rozhraní debuggerů}
