@@ -3,10 +3,10 @@
 import paths
 import sys
 from config import Config
-from app import VisualiserApp
 
 sys.path.append(paths.DIR_DEBUGGER)
 
+from app import VisualiserApp
 
 if __name__ == '__main__':
     Config.preload()

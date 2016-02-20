@@ -83,7 +83,7 @@ class IOConsole(Console):
                                                        foreground="red",
                                                        editable=False)
         self.tag_stdin = self.get_buffer().create_tag("stdin",
-                                                      oreground="blue",
+                                                      foreground="blue",
                                                       editable=True)
         self.tag_handled = self.get_buffer().create_tag("handled",
                                                         editable=False)
