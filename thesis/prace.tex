@@ -70,6 +70,7 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 \EnglishKeywords{typography, \LaTeX, master thesis}
 
 \AddAcronym{API}{Application Programmable Interface}
+\AddAcronym{GCC}{GNU Compiler Collection}
 \AddAcronym{GDB}{The GNU Project Debugger}
 \AddAcronym{GNU}{GNU's Not Unix!}
 \AddAcronym{GUI}{Graphical user interface}
@@ -218,6 +219,38 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 				systémového volání anebo přijetí signálu. Většina těchto událostí je ze své podstaty asynchronní, nelze u nich tedy dopředu určit, kdy budou zavolány
 				a použití breakpointu tedy není možné.
 		\end{description}
+		
+	\subsection{Zásobník}
+		Adresní prostor procesů je rozdělen do několika segmentů\cite[53]{tanenbaum}. Jedním z nich je zásobník (\textit{stack}), což je úsek paměti, který
+		obsahuje lokální proměnné a parametry funkcí a údaje o jejich jednotlivých invokacích. Pokaždé, když proces zavolá funkci, tak se na zásobník uloží tzv.
+		\textit{zásobníkový rámec}. Informace o současném rámci jsou uloženy v procesorových registrech \textit{esp} a \textit{ebp} na 32-bitových systémech
+		a \textit{rsp} a \textit{rbp} na 64-bitových systémech. Registr \textit{ebp} ukazuje na bázi současného rámce a registr \textit{esp} jeho vrchol, který
+		má ale ve skutečnosti nižší adresu v paměti, jelikož zásobník obvykle roste v paměti směrem dolů. Při zavolání funkce se na zásobník vloží předané parametry,
+		návratová adresa, na kterou se má skočit po dokončení funkce, hodnota báze předchozího rámce a lokální proměnné dané funkce.
+		Jelikož registr \textit{ebp} ukazuje obvykle doprostřed zásobníkového rámce, tak se kód funkce na lokální proměnné a parametry odkazuje
+		relativně k jeho hodnotě. Detaily ukládání parametrů a získávání návratové hodnoty ze zásobníkového rámce jsou silně závislé na konkrétní architektuře
+		a použitého způsobu volání funkcí (tzv. \textit{call convention}).
+		
+		\remark{Na architektuře x86-64 je definovaná červená zóna\cite[16]{x64abi}, což je oblast o velikosti 128 bytů, která je umístěná pod ukazatelem vrcholu
+		zásobníku (registr \textit{rsp}). Lze jí použít k libovolným účelům, překladače tento prostor obvykle využívají u listových funkcí (tj. funkcí,
+		které nevolají žádné další funkce). U nich se totiž nemusí nijak měnit hodnota \textit{rsp}, a proto zde můžou libovolně používat paměť bez
+		zbytečné změny hodnoty tohoto registru. Je zaručeno, že tato paměť nebude modifikována žádnými obslužnými procedurami signálů ani přerušení.}
+		
+		\parspace Z hlediska ladění je zásobník zajímavý, jelikož jeho stav reprezentuje funkci, ve které je proces zastaven, a zároveň také všechna volání
+		funkcí, které dané situaci předcházely. Lze tak analyzovat, jakou cestou se proces dostal do určitého stavu, což je často jedna z prvních věcí, která
+		programátora při ladění zajímá. Pokud překladač vygeneroval kód který korektně při volání každé funkce ukládá hodnotu \textit{ebp} a provádí
+		celý prolog i epilog funkce, je pro debugger jednoduché provést zpětný průchod zásobníkem a zjistit informace o všech zásobníkových rámcích.
+		Mimo debuggery se tyto údaje mohou používat i pro implementaci výjimek v jazyce C++.
+		Toto chování nicméně spotřebuje jeden registr procesoru pouze pro ukládání informací o rámcích a vyžaduje provedení celého zmíněného postupu při každém
+		zavolání funkce, čímž může proces zpomalovat.
+		
+		\parspace Při návrhu architektury x86-64 bylo rozhodnuto, že toto chování nebude vynucováno\cite[16]{x64abi}, a překladače této skutečnosti
+		obvykle využívají, rámce explicitně nezaznamenávají a adresy lokálních proměnných a parametrů počítají relativně od vrcholu zásobníku,
+		který je uložen v registru \textit{rsp}. Poté je ale někdy nemožné zobrazit zásobník volaných funkcí v debuggeru, a proto je vhodné se ujistit,
+		že se rámce zaznamenávají\footnote{U překladače GCC to lze zajistit pomocí přepínače \textit{-fno-omit-frame-pointer}}. Debuggery můžou
+		informace o volaných funkcí získat i z ladících metadat, pokud je s nimi daný program přeložen, nebo analýzou strojového kódu procesu, ale tato řešení
+		nemusí být vždy spolehlivá.
+		
 \end{section}
 \begin{section}{Existující ladící nástroje}
 \label{sec:ExistingDebuggers}
