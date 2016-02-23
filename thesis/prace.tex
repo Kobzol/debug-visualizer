@@ -13,6 +13,7 @@
 \usepackage{xifthen}
 \usepackage{float}
 \usepackage{tikz-uml}
+\usepackage{dirtree}
 
 \tikzumlset{fill class=white!20, fill template=white!20}
 
@@ -42,19 +43,6 @@
 
 \SubmissionDate{29. dubna 2016}
 
-\AccessRestriction{Zde vložte text dohodnutého omezení přístupu k Vaší práci, chránící například firemní know-how.
-Zde vložte text dohodnutého omezení přístupu k Vaší práce, chránící například firemní know-how.
-A zavazujete se, že\par
-\begin{enumerate}
-\item o práci nikomu neřeknete,
-\item po obhajobě na ni zapomenete a
-\item budete popírat její existenci.
-\end{enumerate}
-A ještě jeden důležitý odstavec. A ještě jeden důležitý odstavec.
-A ještě jeden důležitý odstavec. A ještě jeden důležitý odstavec.
-A ještě jeden důležitý odstavec. A ještě jeden důležitý odstavec.
-Konec textu dohodnutého omezení přístupu k Vaší práci.}
-
 \Thanks{Chtěl bych poděkovat svému vedoucímu, Ing. Marku Běhálkovi, Ph.D., za pomoc a připomínky k tvorbě této práce.}
 
 \CzechAbstract{Tato bakalářská práce se zabývá vizualizací ladění programů napsaných v jazyce C a C++. První část pojednává o
@@ -65,10 +53,12 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 
 \CzechKeywords{ladění programů, vizualizace paměti}
 
+%TODO: přeložit
 \EnglishAbstract{This is English abstract. This is English abstract. This is English abstract. This is English abstract. This is English abstract. This is English abstract.}
 
 \EnglishKeywords{typography, \LaTeX, master thesis}
 
+\iffalse
 \AddAcronym{API}{Application Programmable Interface}
 \AddAcronym{GCC}{GNU Compiler Collection}
 \AddAcronym{GDB}{The GNU Project Debugger}
@@ -76,6 +66,7 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 \AddAcronym{GUI}{Graphical user interface}
 \AddAcronym{IPC}{Inter-process communication}
 \AddAcronym{JSON}{JavaScript Object Notation}
+\fi
 
 % Zadame cestu a jmeno souboru ci nekolika souboru s digitalizovanou podobou zadani prace
 % Pri sazbe se pak hledaji soubory Figures/Zadani1.jpg, Figures/Zadani2.jpg atd.
@@ -85,7 +76,8 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 
 % Zadame soubor s digitalizovanou podobou prohlaseni
 % Pokud toto makro zapoznamkujeme sazi se cisty text prohlaseni
-\DeclarationImageFile{Figures/Prohlaseni.jpg}
+%\DeclarationImageFile{Figures/Prohlaseni.jpg}
+% TODO: vytisknout, podepsat a naskenovat s reálným datem odevzdání
 
 % Zacatek dokumentu
 \begin{document}
@@ -98,16 +90,16 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 \cleardoublepage	% odstrankujeme, u jednostranneho dokumentu o jednu stranku, u oboustrenneho o dve
 
 % Jsou v praci tabulky? Pokud ano vysazime jejich seznam.
-\listoftables
-\cleardoublepage	% odstrankujeme, u jednostranneho dokumentu o jednu stranku, u oboustrenneho o dve
+%\listoftables
+%\cleardoublepage	% odstrankujeme, u jednostranneho dokumentu o jednu stranku, u oboustrenneho o dve
 
 % Jsou v praci obrazky? Pokud ano vysazime jejich seznam.
-\listoffigures
-\cleardoublepage	% odstrankujeme, u jednostranneho dokumentu o jednu stranku, u oboustrenneho o dve
+%\listoffigures
+%\cleardoublepage	% odstrankujeme, u jednostranneho dokumentu o jednu stranku, u oboustrenneho o dve
 
 % Jsou v praci vypisy programu? Pokud ano vysazime jejich seznam.
-\lstlistoflistings
-\cleardoublepage	% odstrankujeme, u jednostranneho dokumentu o jednu stranku, u oboustrenneho o dve
+%\lstlistoflistings
+%\cleardoublepage	% odstrankujeme, u jednostranneho dokumentu o jednu stranku, u oboustrenneho o dve
 
 % Zacneme uvodem
 \begin{section}{Úvod}
@@ -642,12 +634,60 @@ Jakub Beránek
 \printbibliography % TODO: do obsahu
 
 \appendix
+\begin{section}{Struktura a instalace}
+	% TODO: examples, úprava balíčků
+	Projekt, který je přiložen na DVD, má následující adresářovou strukturu.
+	
+	\vspace{5mm}
+	
+	\dirtree{%
+	.1 /.
+	.2 debugger\DTcomment{zdrojové kódy komunikační knihovny}.
+	.3 analysis\DTcomment{analýza kódu}.
+	.3 gdbc\DTcomment{komunikace s GDB pomocí GDB Python API}.
+	.3 lldbc\DTcomment{komunikace s LLDB pomocí LLDB Python API}.
+	.3 mi\DTcomment{komunikace s GDB pomocí textového MI rozhraní}.
+	.3 net\DTcomment{síťová komunikace mezi debuggerem a klientem}.
+	.3 pycgdb\DTcomment{experimentální implementace debuggeru v Pythonu}.
+	.2 gui\DTcomment{zdrojové kódy uživatelského rozhraní}.
+	.3 drawing\DTcomment{kreslící framework a vizualizace paměti}.
+	.2 res\DTcomment{vizuální zdroje aplikace}.
+	.3 css\DTcomment{CSS styly pro úpravu vzhledu aplikace}.
+	.3 gui\DTcomment{Glade soubory s nákresy GUI prvků}.
+	.3 img\DTcomment{obrázky}.
+	.2 tests\DTcomment{unit testy}.
+	.3 src\DTcomment{zdrojové kódy C++ aplikací pro unit testy}.
+	.2 util\DTcomment{pomocné skripty}.
+	}
+	
+	\parspace Pro kompletní instalaci programu je nutné mít GTK3+, překladač C++ a Pythonovské balíčky \texttt{enum}, \texttt{jsonpickle}, \texttt{matplotlib}
+	a \texttt{clang}. Pro spuštění testů je potřeba balíček \texttt{pytest} a pro vygenerování dokumentace balíček \texttt{epydoc}.
+	O sestavení programu se stará program waf. Pro jeho použití stačí spustit v interpreteru příkazové řádky ve složce projektu \texttt{./waf <příkaz>}.
+	Je možné pro něj použít následující příkazy.
+	
+	\begin{description}
+		\item[configure] nakonfiguruje projekt, tento příkaz musí být zavolán před příkazem \texttt{build}
+		\item[build] přeloží sdílenou knihovnu pro zachytávání alokací a stáhne a přeloží GDB 7.10.1
+		\item[docs] vygeneruje dokumentaci programu do složky docs
+		\item[download] stáhne všechny potřebné programy a balíčky pro běh aplikace pomocí balíčkového manažeru \textit{Aptitude}
+		\item[cleanall] vymaže dokumentaci a soubory s byte kódem Pythonu
+		%TODO: cleanall > clean?
+	\end{description}
+	
+	%TODO: quick install script?
+	\parspace Pro rychlou instalaci je vhodné použít příkazy \texttt{download}, \texttt{configure} a \texttt{build} (v tomto pořadí).
+	Pro otestování aplikace lze použít příkaz \texttt{py.test tests}.
+	
+	\vspace{5mm}
+	
+	Projekt je verzován pomocí verzovacího systému \textit{git} a je dostupný také online na adrese \url{https://github.com/Kobzol/debug-visualizer}.
+\end{section}
+
 \begin{section}{Grafická rozhraní debuggerů}
 \label{appendix:gui}
-\InsertFigure{Figures/appendix_gui_gdb_tui}{\textwidth}{Textové rozhraní GDB (TUI)}{fig:AppendixGuiGdbTui}
-\InsertFigure{Figures/appendix_gui_ddd}{\textwidth}{Rozhraní programu DDD}{fig:AppendixGuiDDD}
-\InsertFigure{Figures/appendix_gui_clion}{\textwidth}{Rozhraní programu CLion (zdroj: https://www.jetbrains.com/clion)}{fig:AppendixGuiClion}
-%\InsertFigure{Figures/appendix_gui_gede}{\textwidth}{Rozhraní programu Gede (http://gede.acidron.com/)}{fig:AppendixGuiGede}
+	\InsertFigure{Figures/appendix_gui_gdb_tui}{\textwidth}{Textové rozhraní GDB (TUI)}{fig:AppendixGuiGdbTui}
+	\InsertFigure{Figures/appendix_gui_ddd}{\textwidth}{Rozhraní programu DDD}{fig:AppendixGuiDDD}
+	\InsertFigure{Figures/appendix_gui_clion}{\textwidth}{Rozhraní programu CLion (zdroj: https://www.jetbrains.com/clion)}{fig:AppendixGuiClion}
 \end{section}
 
 \clearpage
