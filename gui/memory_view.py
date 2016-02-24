@@ -79,6 +79,11 @@ class MemoryGrid(Gtk.Grid):
             for y in xrange(width + 1, width * 2 + 1):
                 self.ascii_rows[-1].append(self._create_ascii_block_view(x, y))
 
+        self.attach(self._create_column_heading("Address"), 0, 0, 1, 1)
+        self.attach(self._create_column_heading("Byte value"), 1, 0, width, 1)
+        self.attach(self._create_column_heading("ASCII value"), width + 1, 0, width, 1)
+
+    @require_gui_thread
     def load_address(self, address):
         """
         Loads an address into the view.
@@ -127,6 +132,7 @@ class MemoryGrid(Gtk.Grid):
             label.set_label(text)
             address_int += self.width
 
+    @require_gui_thread
     def _create_row_label(self, row):
         view = Gtk.Label()
         view.set_label("?")
@@ -135,9 +141,12 @@ class MemoryGrid(Gtk.Grid):
 
         return view
 
+    @require_gui_thread
     def _create_block_view(self, row, column, width=1, height=1):
-        view = Gtk.Button()
+        view = Gtk.Label()
         view.set_label("?")
+        view.set_margin_left(5)
+        view.set_margin_right(5)
 
         if column == self.width:
             view.set_margin_right(15)
@@ -146,13 +155,19 @@ class MemoryGrid(Gtk.Grid):
 
         return view
 
+    @require_gui_thread
     def _create_ascii_block_view(self, row, column, width=1, height=1):
         view = Gtk.Label()
-        view.set_selectable(True)
         view.set_label("?")
         view.set_margin_left(5)
         view.set_margin_right(5)
         self.attach(view, column, row, width, height)
+
+        return view
+
+    def _create_column_heading(self, text):
+        view = Gtk.Label.new()
+        view.set_markup("<b>{}</b>".format(text))
 
         return view
 
@@ -186,7 +201,7 @@ class AddressInput(Gtk.Box):
 
         self.label_row = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
 
-        self.label = Gtk.Label().new("Hex address or variable name")
+        self.label = Gtk.Label().new("Hex address or expression")
         self.label_row.pack_start(self.label, False, False, 0)
 
         self.input_row = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
@@ -211,6 +226,14 @@ class AddressInput(Gtk.Box):
                                     lambda *x: self.on_address_selected.notify(
                                         self.address_input.get_text()))
 
+    def set_enabled(self, value):
+        """
+        Sets whether the input should be enabled.
+        @type value: bool
+        """
+        self.confirm_button.set_sensitive(value)
+        self.address_input.set_sensitive(value)
+
 
 class MemoryView(Gtk.ScrolledWindow):
     """
@@ -218,10 +241,14 @@ class MemoryView(Gtk.ScrolledWindow):
     Enables selection of which memory will be shown.
     """
     def __init__(self, debugger):
+        """
+        @type debugger: debugger.Debugger
+        """
         Gtk.ScrolledWindow.__init__(self)
 
         self.address_input = AddressInput()
-        self.memorygrid = MemoryGrid(debugger, 10, 4)
+        self.address_input.set_enabled(False)
+        self.memorygrid = MemoryGrid(debugger, 20, 8)
 
         self.wrapper = Gtk.Box.new(Gtk.Orientation.VERTICAL, 0)
         self.wrapper.pack_start(self.address_input, False, False, 10)
@@ -231,3 +258,15 @@ class MemoryView(Gtk.ScrolledWindow):
 
         self.address_input.on_address_selected.subscribe(
             lambda address: self.memorygrid.load_address(address))
+
+        debugger.on_process_state_changed.subscribe(self._handle_process_state_change)
+
+    def _handle_process_state_change(self, state, data):
+        """
+        @type state: enums.ProcessState
+        @type data: debugger.ProcessStoppedEventData
+        """
+        if state == ProcessState.Stopped:
+            self.address_input.set_enabled(True)
+        else:
+            self.address_input.set_enabled(False)
