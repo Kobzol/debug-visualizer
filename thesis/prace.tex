@@ -383,6 +383,7 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 	\InsertFigure{Figures/bak_architektura}{\textwidth}{Architektura programu \textit{Devi}}{fig:DeviArchitecture}
 		
 	\subsection{Knihovna pro komunikaci s debuggery}
+	\label{sec:DebuggerApi}
 		Tato knihovna tvoří rozhraní pro komunikaci s libovolným ladícím nástrojem. Definuje abstraktní typy popisující laděný proces a není tak závislá na
 		použitém ladícím nástroji. Není nijak závislá ani na grafickém rozhraní nástroje, lze ji tedy použít pro programovatelné ovládání debuggerů i v jiném
 		projektu. Knihovna obsahuje třídy představující části laděného procesu, které jsou dostatečně obecné na to, aby se daly aplikovat na libovolný
@@ -543,6 +544,13 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 	\subsection{Vizualizační aplikace}
 	Pro samotné ladění aplikací a využití komunikační knihovny jsem vytvořil GUI aplikaci \textit{Devi}.
 	Ta poskytuje grafické rozhraní pro veškeré naimplementované funkce knihovny a dále k nim přidává vizualizaci paměti procesu.
+	Z popsaných implementací komunikace s debuggerem jsem zvolil GDB/MI protokol, protože byl nejstabilnější. Nicméně uživatelské rozhraní používá výhradně
+	mnou navržené API popsané v sekci \ref{sec:DebuggerApi}, takže implementaci komunikační vrstvy lze v případě potřeby jednoduše zaměnit za jinou.
+	Jelikož se chování a výstupy příkazů GDB v různých verzích značně liší, tak se nelze spoléhat na verzi GDB nainstalovanou v systému.
+	Komunikační vrstva předpokládá spolupráci s GDB ve verzi 7.10.1 (ta je v současnosti nejaktuálnější). Při kompilaci projektu se tato verze GDB stáhne a
+	nainstaluje do složky projektu (podrobnější informace jsou uvedeny v příloze \ref{appendix:manual}).
+	
+	\remark{Přibalení konkrétní verze debuggeru k jeho uživatelské nádstavbě používají i jiné programy, například CLion.}
 	
 	\subsubsection{Vykreslovací komponenta}
 	% TODO: canvas, drawable, UML, Clang
@@ -634,8 +642,9 @@ Jakub Beránek
 \printbibliography % TODO: do obsahu
 
 \appendix
-\begin{section}{Struktura a instalace}
-	% TODO: examples, úprava balíčků
+\begin{section}{Struktura projektu a instalační manuál}
+\label{appendix:manual}
+	% TODO: examples
 	Projekt, který je přiložen na DVD, má následující adresářovou strukturu.
 	
 	\vspace{5mm}
@@ -660,30 +669,29 @@ Jakub Beránek
 	.2 util\DTcomment{pomocné skripty}.
 	}
 	
-	\parspace Pro kompletní instalaci programu je nutné mít GTK3+, překladač C++ a Pythonovské balíčky \texttt{enum}, \texttt{jsonpickle}, \texttt{matplotlib}
-	a \texttt{clang}. Pro spuštění testů je potřeba balíček \texttt{pytest} a pro vygenerování dokumentace balíček \texttt{epydoc}.
-	O sestavení programu se stará program waf. Pro jeho použití stačí spustit v interpreteru příkazové řádky ve složce projektu \texttt{./waf <příkaz>}.
-	Je možné pro něj použít následující příkazy.
+	\parspace Pro kompletní instalaci programu je nutné mít GTK3+ (verze 3.10.8 nebo vyšší), překladač C++ a Pythonovské balíčky \texttt{enum},
+	\texttt{matplotlib} a \texttt{clang}. Pro spuštění testů je potřeba balíček \texttt{pytest} (ve verzi pro Python 2) a
+	pro vygenerování dokumentace balíček \texttt{epydoc}. O sestavení programu se stará program \textit{waf}. Pro jeho použití stačí spustit v interpreteru
+	příkazové řádky ve složce projektu \texttt{./waf <příkaz>}. Je možné pro něj použít následující příkazy.
 	
 	\begin{description}
 		\item[configure] nakonfiguruje projekt, tento příkaz musí být zavolán před příkazem \texttt{build}
 		\item[build] přeloží sdílenou knihovnu pro zachytávání alokací a stáhne a přeloží GDB 7.10.1
 		\item[docs] vygeneruje dokumentaci programu do složky docs
 		\item[download] stáhne všechny potřebné programy a balíčky pro běh aplikace pomocí balíčkového manažeru \textit{Aptitude}
-		\item[cleanall] vymaže dokumentaci a soubory s byte kódem Pythonu
-		%TODO: cleanall > clean?
+		\item[cleanall] vymaže dokumentaci, zkompilované soubory sdílené knihovny a GDB a soubory s byte kódem Pythonu
 	\end{description}
 	
-	%TODO: quick install script?
-	\parspace Pro rychlou instalaci je vhodné použít příkazy \texttt{download}, \texttt{configure} a \texttt{build} (v tomto pořadí).
-	Pro otestování aplikace lze použít příkaz \texttt{py.test tests}.
+	\parspace Pro rychlou instalaci lze použít přiložený skript \texttt{install.sh}, který provede \textit{waf} příkazy \texttt{download}, \texttt{configure}
+	a \texttt{build} (v tomto pořadí).
+	Pro otestování aplikace lze použít příkaz \texttt{py.test} ve složce tests.
 	
 	\vspace{5mm}
 	
 	Projekt je verzován pomocí verzovacího systému \textit{git} a je dostupný také online na adrese \url{https://github.com/Kobzol/debug-visualizer}.
 \end{section}
 
-\begin{section}{Grafická rozhraní debuggerů}
+\begin{section}{Ukázky grafických rozhraní debuggerů}
 \label{appendix:gui}
 	\InsertFigure{Figures/appendix_gui_gdb_tui}{\textwidth}{Textové rozhraní GDB (TUI)}{fig:AppendixGuiGdbTui}
 	\InsertFigure{Figures/appendix_gui_ddd}{\textwidth}{Rozhraní programu DDD}{fig:AppendixGuiDDD}
