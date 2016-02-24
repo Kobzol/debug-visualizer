@@ -42,6 +42,18 @@ class HeapManager(object):
         """
         raise NotImplementedError()
 
+    def get_total_allocations(self):
+        """
+        @rtype: int
+        """
+        raise NotImplementedError()
+
+    def get_total_deallocations(self):
+        """
+        @rtype: int
+        """
+        raise NotImplementedError()
+
 
 class IOManager(object):
     def __init__(self):

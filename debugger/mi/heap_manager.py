@@ -18,6 +18,10 @@ class HeapManager(debugger.HeapManager):
         super(HeapManager, self).__init__(debugger)
         self.heap = []
         """@type heap: list of HeapBlock"""
+
+        self.total_allocations = 0
+        self.total_deallocations = 0
+
         self.read_thread = None
         self.alloc_path = None
         self.file = None
@@ -28,6 +32,9 @@ class HeapManager(debugger.HeapManager):
         @rtype: str
         """
         assert self.read_thread is None
+
+        self.total_allocations = 0
+        self.total_deallocations = 0
 
         self.stop_flag.clear()
 
@@ -53,6 +60,29 @@ class HeapManager(debugger.HeapManager):
         self.heap = []
         self.read_thread = None
 
+    def find_block_by_address(self, addr):
+        """
+        @type addr: str
+        @rtype: HeapBlock | None
+        """
+        for block in self.heap:
+            if block.address == addr:
+                return block
+
+        return None
+
+    def get_total_allocations(self):
+        """
+        @rtype: int
+        """
+        return self.total_allocations
+
+    def get_total_deallocations(self):
+        """
+        @rtype: int
+        """
+        return self.total_deallocations
+
     def _read_thread(self, alloc_path):
         """
         @type alloc_path: str
@@ -71,17 +101,6 @@ class HeapManager(debugger.HeapManager):
         except:
             traceback.print_exc()
 
-    def find_block_by_address(self, addr):
-        """
-        @type addr: str
-        @rtype: HeapBlock | None
-        """
-        for block in self.heap:
-            if block.address == addr:
-                return block
-
-        return None
-
     def _handle_malloc(self, addr, size, notify=True):
         """
         @type addr: str
@@ -90,6 +109,8 @@ class HeapManager(debugger.HeapManager):
         size = int(size)
         block = HeapBlock(addr, size)
         self.heap.append(block)
+
+        self.total_allocations += 1
 
         if notify:
             self.on_heap_change.notify(self.heap)
@@ -117,6 +138,8 @@ class HeapManager(debugger.HeapManager):
             self.on_free_error.notify(addr)
 
         self.heap.remove(block)
+
+        self.total_deallocations += 1
 
         if notify:
             self.on_heap_change.notify(self.heap)
