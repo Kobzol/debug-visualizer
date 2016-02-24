@@ -2,7 +2,7 @@
 
 import re
 
-from gdbc import type
+import type
 
 
 class MemoryBlock(object):

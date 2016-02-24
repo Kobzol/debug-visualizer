@@ -2,7 +2,7 @@
 
 import os
 
-from conftest import TEST_SRC_DIR
+from tests.conftest import TEST_SRC_DIR
 
 
 def test_bp_add(debugger):

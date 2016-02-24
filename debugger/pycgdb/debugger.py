@@ -2,8 +2,8 @@ import os
 from elftools.elf.elffile import ELFFile
 
 from programinfo import ProgramInfo
-from pycgdb.breakpoint_manager import BreakpointManager
-from pycgdb.programrunner import ProgramRunner
+from breakpoint_manager import BreakpointManager
+from programrunner import ProgramRunner
 
 
 class Debugger(object):

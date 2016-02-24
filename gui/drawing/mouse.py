@@ -4,7 +4,7 @@ from gi.repository import Gdk
 
 from enum import Enum
 
-from drawing.vector import Vector
+from vector import Vector
 
 
 class ClickedState(Enum):

@@ -4,7 +4,7 @@ from gi.repository import Gtk, GObject
 
 import time
 
-from enums import ProcessState
+from debugger.enums import ProcessState
 from gui_util import require_gui_thread, run_on_gui
 
 import matplotlib
@@ -123,10 +123,13 @@ class HeapDetail(Gtk.ScrolledWindow):
         """
         self.block_tracker.set_label("Block count: {}".format(len(heap)))
         self.total_allocation_tracker.set_label(
-            "Total allocations: {}".format(self.debugger.heap_manager.get_total_allocations()))
+            "Total allocations: {}".format(
+                self.debugger.heap_manager.get_total_allocations()))
         self.total_deallocation_tracker.set_label(
-            "Total deallocations: {}".format(self.debugger.heap_manager.get_total_deallocations()))
-        self.total_memory_tracker.set_label("Heap size: {}".format(sum([block.size for block in heap])))
+            "Total deallocations: {}".format(
+                self.debugger.heap_manager.get_total_deallocations()))
+        self.total_memory_tracker.set_label("Heap size: {}".format(
+            sum([block.size for block in heap])))
 
     def _create_stat_label(self):
         """

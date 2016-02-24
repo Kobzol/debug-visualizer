@@ -3,7 +3,8 @@ from __future__ import print_function
 
 
 from gi.repository import Gtk
-from mi.mi_debugger import MiDebugger
+
+from debugger.mi.mi_debugger import MiDebugger
 from window import MainWindow
 
 

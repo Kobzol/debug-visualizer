@@ -3,11 +3,10 @@
 import os
 import threading
 
-import debugger
-import util
+from debugger import util, debugger_api
 
 
-class IOManager(debugger.IOManager):
+class IOManager(debugger_api.IOManager):
     def __init__(self):
         super(IOManager, self).__init__()
 

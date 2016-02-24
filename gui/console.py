@@ -9,7 +9,7 @@ import threading
 import time
 import traceback
 
-from enums import ProcessState
+from debugger.enums import ProcessState
 from gui_util import require_gui_thread, run_on_gui
 
 

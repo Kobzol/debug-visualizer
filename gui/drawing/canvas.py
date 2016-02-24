@@ -3,13 +3,13 @@
 from gi.repository import Gtk
 from gi.repository import Gdk
 
-from drawing.drawable import DrawingUtils, Color, LinearLayout,\
+from drawable import DrawingUtils, Color, LinearLayout,\
     LinearLayoutDirection, VariableContainer
-from drawing.memtoview import MemToViewTransformer
-from drawing.mouse import MouseButtonState, MouseData, TranslationHandler
-from drawing.vector import Vector
-from enums import ProcessState
-from gui_util import run_on_gui, require_gui_thread
+from memtoview import MemToViewTransformer
+from mouse import MouseButtonState, MouseData, TranslationHandler
+from vector import Vector
+from debugger.enums import ProcessState
+from gui.gui_util import run_on_gui, require_gui_thread
 
 
 class FixedGuiWrapper(Gtk.Fixed):

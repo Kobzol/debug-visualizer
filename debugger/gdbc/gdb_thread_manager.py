@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import gdb
-from gdbc.gdb_helper import GdbHelper
+from gdb_helper import GdbHelper
 
 
 class GdbThreadManager(object):

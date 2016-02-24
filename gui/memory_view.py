@@ -4,9 +4,9 @@ from gi.repository import Gtk
 
 import re
 
-from enums import ProcessState
+from debugger.enums import ProcessState
+from debugger.util import EventBroadcaster
 from gui_util import require_gui_thread, run_on_gui
-from util import EventBroadcaster
 
 
 class RegisterList(Gtk.ListBox):
@@ -81,7 +81,8 @@ class MemoryGrid(Gtk.Grid):
 
         self.attach(self._create_column_heading("Address"), 0, 0, 1, 1)
         self.attach(self._create_column_heading("Byte value"), 1, 0, width, 1)
-        self.attach(self._create_column_heading("ASCII value"), width + 1, 0, width, 1)
+        self.attach(self._create_column_heading("ASCII value"), width + 1, 0,
+                    width, 1)
 
     @require_gui_thread
     def load_address(self, address):
@@ -259,7 +260,8 @@ class MemoryView(Gtk.ScrolledWindow):
         self.address_input.on_address_selected.subscribe(
             lambda address: self.memorygrid.load_address(address))
 
-        debugger.on_process_state_changed.subscribe(self._handle_process_state_change)
+        debugger.on_process_state_changed.subscribe(
+            self._handle_process_state_change)
 
     def _handle_process_state_change(self, state, data):
         """

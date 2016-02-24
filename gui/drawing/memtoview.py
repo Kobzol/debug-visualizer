@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import drawable
-from drawing.geometry import Padding
-from enums import TypeCategory
+from geometry import Padding
+from debugger.enums import TypeCategory
 
 
 class MemToViewTransformer(object):

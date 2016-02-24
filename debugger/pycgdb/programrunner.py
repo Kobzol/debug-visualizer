@@ -7,8 +7,8 @@ import signal
 import threading
 import traceback
 
-from enums import ProcessState
-from util import EventBroadcaster
+from debugger.enums import ProcessState
+from debugger.util import EventBroadcaster
 
 
 class ProcessExitException(BaseException):

@@ -4,14 +4,14 @@ import cairo
 
 from enum import Enum
 
-from drawing.geometry import Margin, RectangleBBox, Padding
-from drawing.size import Size
-from drawing.vector import Vector
-from drawing.widgets import ValueEntry
-from enums import TypeCategory
-from gui_util import require_gui_thread
-from util import EventBroadcaster
+from geometry import Margin, RectangleBBox, Padding
 from mouse import ClickHandler
+from size import Size
+from vector import Vector
+from widgets import ValueEntry
+from debugger.enums import TypeCategory
+from debugger.util import EventBroadcaster
+from gui.gui_util import require_gui_thread
 
 
 class FontStyle(object):
@@ -644,13 +644,12 @@ class LinearLayout(Drawable):
                                                child.margin.top)  # add margin
             child.position = child_position
             rect = child.get_rect()
+            margin = child.margin
 
             if self.direction == LinearLayoutDirection.Horizontal:
-                position.x += child.margin.left + rect.width +\
-                              child.margin.right
+                position.x += margin.left + rect.width + margin.right
             elif self.direction == LinearLayoutDirection.Vertical:
-                position.y += child.margin.top + rect.height +\
-                              child.margin.bottom
+                position.y += margin.top + rect.height + margin.bottom
 
     def get_content_size(self):
         rectangle = RectangleBBox.contain([child.get_rect() + child.margin

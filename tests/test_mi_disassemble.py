@@ -20,6 +20,11 @@ def prepare_program(debugger, line=None):
         debugger.wait_for_stop()
 
 
+def generate_instructions(instruction, reg32bit, reg64bit):
+    return (instruction.format(reg32bit),
+            instruction.format(reg64bit))
+
+
 def test_address_invalid_file(debugger):
     prepare_program(debugger, 3)
 
@@ -41,9 +46,11 @@ def test_address_no_code(debugger):
 def test_address_with_code(debugger):
     prepare_program(debugger, 3)
 
-    assert debugger.file_manager.get_line_address(SRC_FILE, 3) == (
+    assert debugger.file_manager.get_line_address(SRC_FILE, 3) in ((
         "0x8048471", "0x8048478"
-    )
+    ), (
+        "0x4004f8", "0x4004ff"
+    ))
 
 
 def test_disassemble(debugger):
@@ -57,10 +64,12 @@ def test_disassemble(debugger):
 
     assert decl_ds["line"] == 3
     assert len(decl_ds["instructions"]) == 1
-    assert decl_ds["instructions"][0] == "movl   $0x5,-0x4(%ebp)"
+    assert decl_ds["instructions"][0] in (
+        generate_instructions("movl   $0x5,-0x4(%{})", "ebp", "rbp"))
 
     assign_ds = disas[2]
 
     assert assign_ds["line"] == 4
     assert len(assign_ds["instructions"]) == 1
-    assert assign_ds["instructions"][0] == "addl   $0xa,-0x4(%ebp)"
+    assert assign_ds["instructions"][0] in (
+        generate_instructions("addl   $0xa,-0x4(%{})", "ebp", "rbp"))

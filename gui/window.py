@@ -8,8 +8,8 @@ import paths
 from config import Config
 
 from drawing.canvas import MemoryCanvas, CanvasToolbarWrapper
-from enums import ProcessState
 from gui_util import require_gui_thread, run_on_gui
+from debugger.enums import ProcessState
 from heap_detail import HeapDetail
 from memory_view import MemoryView, RegisterList
 from source_edit import SourceManager

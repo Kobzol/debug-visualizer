@@ -5,12 +5,11 @@ import threading
 import select
 import traceback
 
-import debugger
-import util
-from debugee import HeapBlock
+from debugger.debugee import HeapBlock
+from debugger import debugger_api, util
 
 
-class HeapManager(debugger.HeapManager):
+class HeapManager(debugger_api.HeapManager):
     def __init__(self, debugger):
         """
         @type debugger: debugger.Debugger

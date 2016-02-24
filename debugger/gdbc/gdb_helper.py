@@ -3,7 +3,7 @@
 import gdb
 import re
 
-from gdbc.variable import Variable
+from variable import Variable
 from type import Type
 
 

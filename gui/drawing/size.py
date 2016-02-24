@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import numbers
-from drawing.vector import Vector
+from vector import Vector
 
 
 class Size(object):

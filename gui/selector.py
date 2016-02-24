@@ -4,7 +4,7 @@ import abc
 
 from gi.repository import Gtk
 
-from enums import ProcessState
+from debugger.enums import ProcessState
 from gui_util import run_on_gui, require_gui_thread, truncate
 
 

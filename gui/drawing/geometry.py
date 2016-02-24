@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from drawing.size import Size
-from drawing.vector import Vector
+from size import Size
+from vector import Vector
 
 
 class RectangleBBox(object):

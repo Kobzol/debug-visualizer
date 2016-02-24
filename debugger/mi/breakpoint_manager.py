@@ -2,12 +2,12 @@
 
 import os
 
-import debugger
-from enums import DebuggerState
-from mi.parser import Parser
+from debugger.enums import DebuggerState
+from debugger.mi.parser import Parser
+from debugger import debugger_api
 
 
-class BreakpointManager(debugger.BreakpointManager):
+class BreakpointManager(debugger_api.BreakpointManager):
     def __init__(self, debugger):
         super(BreakpointManager, self).__init__(debugger)
         self.parser = Parser()

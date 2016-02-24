@@ -3,16 +3,16 @@
 import os
 import threading
 
-import debugger
-import util
-from enums import ProcessState, DebuggerState
-from mi.breakpoint_manager import BreakpointManager
-from mi.communicator import Communicator
-from mi.file_manager import FileManager
-from mi.heap_manager import HeapManager
-from mi.io_manager import IOManager
-from mi.thread_manager import ThreadManager
-from mi.variable_manager import VariableManager
+import debugger.util as util
+from debugger.enums import ProcessState, DebuggerState
+from debugger.mi.breakpoint_manager import BreakpointManager
+from debugger.mi.communicator import Communicator
+from debugger.mi.file_manager import FileManager
+from debugger.mi.heap_manager import HeapManager
+from debugger.mi.io_manager import IOManager
+from debugger.mi.thread_manager import ThreadManager
+from debugger.mi.variable_manager import VariableManager
+from debugger import debugger_api
 
 
 shlib_path = util.get_root_path("build/debugger/liballochook.so")
@@ -20,7 +20,7 @@ if not os.path.isfile(shlib_path):
     raise BaseException("liballochook.so is not compiled in build/debugger")
 
 
-class MiDebugger(debugger.Debugger):
+class MiDebugger(debugger_api.Debugger):
     def __init__(self):
         super(MiDebugger, self).__init__()
 
@@ -50,7 +50,7 @@ class MiDebugger(debugger.Debugger):
         elif output.state == ProcessState.Stopped:
             self.on_process_state_changed.notify(
                 output.state,
-                debugger.ProcessStoppedEventData(output.reason)
+                debugger_api.ProcessStoppedEventData(output.reason)
             )
         else:
             self.on_process_state_changed.notify(output.state, None)
@@ -156,6 +156,6 @@ class MiDebugger(debugger.Debugger):
 
     def _on_program_ended(self, return_code):
         self.process_state = ProcessState.Exited
-        self.on_process_state_changed.notify(ProcessState.Exited,
-                                             debugger.ProcessExitedEventData(
-                                                 return_code))
+        self.on_process_state_changed.notify(
+            ProcessState.Exited,
+            debugger_api.ProcessExitedEventData(return_code))

@@ -6,7 +6,7 @@ import select
 import socket
 import sys
 
-from net.command import Command, CommandType
+from command import Command, CommandType
 
 
 class Client(object):

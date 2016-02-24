@@ -2,12 +2,12 @@
 
 import os
 
-import debugger
-from debugee import Breakpoint
-from enums import DebuggerState
+from debugger.debugee import Breakpoint
+from debugger.enums import DebuggerState
+from debugger import debugger_api
 
 
-class LldbBreakpointManager(debugger.BreakpointManager):
+class LldbBreakpointManager(debugger_api.BreakpointManager):
     def __init__(self, debugger):
         super(LldbBreakpointManager, self).__init__(debugger)
 

@@ -2,8 +2,8 @@
 
 import os
 
-from enums import DebuggerState
-from conftest import TEST_SRC_DIR
+from debugger.enums import DebuggerState
+from tests.conftest import TEST_SRC_DIR
 
 
 def test_stop_no_launch(debugger):

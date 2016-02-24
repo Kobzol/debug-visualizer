@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import time
-import util
 
+import util
 from enums import DebuggerState, ProcessState
 
 

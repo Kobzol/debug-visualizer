@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import os
-
-from debugee import Breakpoint
 import ptrace
+
+from debugger.debugee import Breakpoint
 
 
 class BreakpointManager(object):

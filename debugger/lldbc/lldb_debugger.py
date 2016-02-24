@@ -1,26 +1,25 @@
 # -*- coding: utf-8 -*-
 
 import logging
-import util
-
 import lldb
 import threading
 import os
 import time
 
-import debugger
-from lldbc.lldb_breakpoint_manager import LldbBreakpointManager
-from lldbc.lldb_file_manager import LldbFileManager
-from lldbc.lldb_io_manager import LldbIOManager
-from lldbc.lldb_memory_manager import LldbMemoryManager
-from lldbc.lldb_thread_manager import LldbThreadManager
-from enums import ProcessState, StopReason, DebuggerState
-from lldbc.lldb_variable_editor import LldbVariableEditor
+import debugger.util as util
+from lldb_breakpoint_manager import LldbBreakpointManager
+from lldb_file_manager import LldbFileManager
+from lldb_io_manager import LldbIOManager
+from .lldb_memory_manager import LldbMemoryManager
+from lldb_thread_manager import LldbThreadManager
+from debugger.enums import ProcessState, StopReason, DebuggerState
+from lldb_variable_editor import LldbVariableEditor
+from debugger import debugger_api
 
 logging.basicConfig(level=logging.INFO)
 
 
-class LldbDebugger(debugger.Debugger):
+class LldbDebugger(debugger_api.Debugger):
     def __init__(self):
         super(LldbDebugger, self).__init__()
         self.debugger = lldb.SBDebugger.Create()
@@ -69,7 +68,7 @@ class LldbDebugger(debugger.Debugger):
 
             self.on_process_state_changed.notify(
                 state,
-                debugger.ProcessStoppedEventData(stop_reason)
+                debugger_api.ProcessStoppedEventData(stop_reason)
             )
 
             return
@@ -179,7 +178,7 @@ class LldbDebugger(debugger.Debugger):
 
                 self.on_process_state_changed.notify(
                     ProcessState.Exited,
-                    debugger.ProcessExitedEventData(return_code)
+                    debugger_api.ProcessExitedEventData(return_code)
                 )
                 self.process = None
 
@@ -205,7 +204,7 @@ class LldbDebugger(debugger.Debugger):
             self.process_state = ProcessState.Exited
             self.on_process_state_changed.notify(
                 ProcessState.Exited,
-                debugger.ProcessExitedEventData(return_code)
+                debugger_api.ProcessExitedEventData(return_code)
             )
             util.Logger.debug("Debugger process ended")
             self.state.unset(DebuggerState.Running)

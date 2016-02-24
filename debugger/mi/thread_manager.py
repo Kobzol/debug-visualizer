@@ -2,12 +2,11 @@
 
 import traceback
 
-import debugger
-from mi.parser import Parser
-from util import Logger
+from debugger.mi.parser import Parser
+from debugger import util, debugger_api
 
 
-class ThreadManager(debugger.ThreadManager):
+class ThreadManager(debugger_api.ThreadManager):
     def __init__(self, debugger):
         """
         @type debugger: debugger.Debugger
@@ -47,7 +46,8 @@ class ThreadManager(debugger.ThreadManager):
                 self.get_thread_info().selected_thread)
             self.debugger.on_frame_changed.notify(self.get_current_frame())
 
-            Logger.debug("Changed to thread with id {0}".format(thread_id))
+            util.Logger.debug("Changed to thread with id {0}".format(
+                thread_id))
 
             return True
         else:
@@ -126,7 +126,7 @@ class ThreadManager(debugger.ThreadManager):
             if notify:
                 self.debugger.on_frame_changed.notify(self.get_current_frame())
 
-                Logger.debug("Changed to frame with id {0}".format(
+                util.Logger.debug("Changed to frame with id {0}".format(
                     frame_index))
 
             return True

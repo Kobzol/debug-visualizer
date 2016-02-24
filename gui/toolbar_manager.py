@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from enums import ProcessState, DebuggerState
+from debugger.enums import ProcessState, DebuggerState
 from gui_util import require_gui_thread, run_on_gui
 
 

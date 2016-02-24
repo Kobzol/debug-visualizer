@@ -5,8 +5,8 @@ import socket
 import threading
 import traceback
 
-from net.command import Command, CommandType
-from util import Dispatcher
+from command import Command, CommandType
+from debugger.util import Dispatcher
 
 
 class Server(object):

@@ -8,11 +8,11 @@ import subprocess
 import threading
 import traceback
 import signal
-
-import util
 from enum import Enum
-from enums import ProcessState
-from mi.parser import Parser
+
+import debugger.util as util
+from debugger.enums import ProcessState
+from debugger.mi.parser import Parser
 
 
 gdb_pretty_print_file = os.path.join(os.path.dirname(__file__),

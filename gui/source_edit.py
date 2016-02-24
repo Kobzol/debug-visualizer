@@ -9,10 +9,9 @@ import os
 from enum import Enum
 
 import paths
-from analysis.source_analyser import SourceAnalyzer
-from util import EventBroadcaster
-from enums import ProcessState
-from util import Logger
+from debugger.analysis.source_analyser import SourceAnalyzer
+from debugger.util import EventBroadcaster, Logger
+from debugger.enums import ProcessState
 from gui_util import run_on_gui, require_gui_thread
 
 

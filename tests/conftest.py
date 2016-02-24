@@ -4,11 +4,11 @@ import os
 import pytest
 import sys
 
-import src.compile as compile
+from tests.src import compile
 
-path = os.path.dirname(__file__)
+path = os.path.dirname(os.path.abspath(__file__))
 
-TEST_DIR = os.path.dirname(__file__)
+TEST_DIR = path
 TEST_SRC_DIR = os.path.join(TEST_DIR, "src")
 ROOT_DIR = os.path.dirname(TEST_DIR)
 SRC_DIR = os.path.join(ROOT_DIR, "debugger")
@@ -16,8 +16,8 @@ SRC_DIR = os.path.join(ROOT_DIR, "debugger")
 sys.path.append(SRC_DIR)
 os.chdir(TEST_DIR)
 
-from mi.mi_debugger import MiDebugger  # noqa
-from mi.parser import Parser  # noqa
+from debugger.mi.mi_debugger import MiDebugger  # noqa
+from debugger.mi.parser import Parser  # noqa
 
 
 compile.compile_tests()

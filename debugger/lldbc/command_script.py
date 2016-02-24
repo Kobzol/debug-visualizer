@@ -12,8 +12,8 @@ with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
 
 sys.path.append(data["code_path"])
 
-from lldbc.lldb_debugger import LldbDebugger  # noqa
-from net.server import Server  # noqa
+from debugger.lldbc.lldb_debugger import LldbDebugger  # noqa
+from debugger.net.server import Server  # noqa
 
 debugger = LldbDebugger()
 

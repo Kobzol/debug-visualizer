@@ -3,8 +3,8 @@
 import json
 import re
 
-from debugee import Breakpoint, InferiorThread, ThreadInfo, Frame
-from enums import ThreadState
+from debugger.debugee import Breakpoint, InferiorThread, ThreadInfo, Frame
+from debugger.enums import ThreadState
 
 
 class Parser(object):

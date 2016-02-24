@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from enums import DebuggerState
+from debugger.enums import DebuggerState
 
 
 class LldbVariableEditor(object):

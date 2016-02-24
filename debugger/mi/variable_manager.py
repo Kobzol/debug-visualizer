@@ -2,10 +2,10 @@
 
 import re
 
-import debugger
-from enums import BasicTypeCategory, TypeCategory
-from mi.parser import Parser
-from debugee import Type, Variable, Register, PointerVariable
+from debugger.enums import BasicTypeCategory, TypeCategory
+from debugger.mi.parser import Parser
+from debugger.debugee import Type, Variable, Register, PointerVariable
+from debugger import debugger_api
 
 basic_type_map = {
     "bool": BasicTypeCategory.Bool,
@@ -91,7 +91,7 @@ basic_type_map = {
     """
 
 
-class VariableManager(debugger.VariableManager):
+class VariableManager(debugger_api.VariableManager):
     """
     Handles retrieval and updating of variables and raw memory of the
     debugged process.

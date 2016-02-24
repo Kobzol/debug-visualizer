@@ -22,8 +22,8 @@ with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
 
 sys.path.append(data["code_path"])
 
-from gdbc.gdb_debugger import GdbDebugger  # noqa
-from net.server import Server  # noqa
+from debugger.gdbc.gdb_debugger import GdbDebugger  # noqa
+from debugger.net.server import Server  # noqa
 
 debugger = GdbDebugger(data)
 tstcommand = TestCommand(debugger)

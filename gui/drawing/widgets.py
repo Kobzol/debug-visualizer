@@ -2,8 +2,8 @@
 
 from gi.repository import Gtk
 
-from gui_util import require_gui_thread
-from util import EventBroadcaster
+from gui.gui_util import require_gui_thread
+from debugger.util import EventBroadcaster
 
 
 class ValueEntry(Gtk.Frame):

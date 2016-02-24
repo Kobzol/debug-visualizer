@@ -3,12 +3,12 @@
 import re
 import traceback
 
-import debugger
-from mi.parser import Parser
-from util import Logger
+from debugger.mi.parser import Parser
+from debugger.util import Logger
+from debugger import debugger_api
 
 
-class FileManager(debugger.FileManager):
+class FileManager(debugger_api.FileManager):
     def __init__(self, debugger):
         """
         @type debugger: debugger.Debugger
