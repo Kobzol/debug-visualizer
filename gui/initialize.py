@@ -4,9 +4,9 @@ import paths
 import sys
 from config import Config
 
-sys.path.append(paths.DIR_DEBUGGER)
+sys.path.append(paths.DIR_ROOT)
 
-from app import VisualiserApp
+from app import VisualiserApp  # noqa
 
 if __name__ == '__main__':
     Config.preload()

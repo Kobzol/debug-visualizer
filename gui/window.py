@@ -195,7 +195,7 @@ class MainWindow(Gtk.Window):
                                              os.path.abspath("../debugger/"))
 
         if file_path:
-            self.app.debugger.kill(True)
+            self.app.debugger.quit_program()
             loaded = self.app.debugger.load_binary(file_path)
 
             if loaded:

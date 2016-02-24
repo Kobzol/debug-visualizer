@@ -17,7 +17,10 @@ from debugger import debugger_api
 
 shlib_path = util.get_root_path("build/debugger/liballochook.so")
 if not os.path.isfile(shlib_path):
-    raise BaseException("liballochook.so is not compiled in build/debugger")
+    raise BaseException(
+        "liballochook.so is missing in {}. Please run install.sh."
+        "".format(os.path.dirname(shlib_path))
+    )
 
 
 class MiDebugger(debugger_api.Debugger):

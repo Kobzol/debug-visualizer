@@ -14,6 +14,13 @@ import debugger.util as util
 from debugger.enums import ProcessState
 from debugger.mi.parser import Parser
 
+GDB_PATH = util.get_root_path("build/gdb-build/gdb")
+
+if not os.path.isfile(GDB_PATH):
+    raise BaseException(
+        "GDB executable is missing in {}. Please run install.sh."
+        "".format(os.path.dirname(GDB_PATH)))
+
 
 gdb_pretty_print_file = os.path.join(os.path.dirname(__file__),
                                      "gdb_pretty_print.py")
@@ -189,7 +196,7 @@ class Communicator(object):
 
         self.process = subprocess.Popen(
             bufsize=0,
-            args=["{}".format(util.get_root_path("build/gdb-build/gdb")),
+            args=["{}".format(GDB_PATH),
                   "-return-child-result",
                   "-quiet",
                   "-nx",  # ignore .gdbinit

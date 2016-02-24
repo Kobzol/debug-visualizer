@@ -52,7 +52,7 @@ def build_gdb():
     print("Compiling and installing GDB...")
 
     result = subprocess.call("./configure --prefix={0} --bindir={0}"
-                             "--with-python"
+                             " --with-python"
                              .format(gdb_build_dir), shell=True)
     try:
         if result == 0:
@@ -105,8 +105,6 @@ def configure(conf):
         conf.check_python_module("lldb")
     conf.check_python_module("enum")
     conf.check_python_module("gi.repository.Gtk")
-    conf.check_python_module("jsonpickle")
-    conf.check_python_module("epydoc")
     conf.check_python_module("matplotlib")
     conf.check_python_module("clang.cindex")
 
@@ -117,15 +115,15 @@ def build(ctx):
 
 
 def download(ctx):
-    apt_args = ["g++", "texinfo", "python-dev", "python-pip",
-                "python-matplotlib", "python-enum34", "python-jsonpickle",
-                "python-epydoc", "python-pytest", "python-clang-3.6"]
+    apt_args = ["g++", "texinfo", "python-dev", "python-matplotlib",
+                "python-enum34", "python-clang-3.6"]
     subprocess.check_call(["sudo", "apt-get", "install"] + apt_args)
 
 
 def cleanall(ctx):
     import shutil
     shutil.rmtree("./docs", True)
+    shutil.rmtree("./build", True)
     subprocess.call(["find", ".", "-name", "*.pyc", "-delete"])
 
 
