@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from enums import TypeCategory, BasicTypeCategory, ProcessState
+from debugger.enums import TypeCategory, BasicTypeCategory, ProcessState
 
 
 def prepare_debugger(debugger, on_state_change=None):

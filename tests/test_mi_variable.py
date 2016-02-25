@@ -2,7 +2,7 @@
 
 import ctypes
 
-from enums import ProcessState
+from debugger.enums import ProcessState
 
 int_size = ctypes.sizeof(ctypes.c_voidp)
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from enums import ProcessState
+from debugger.enums import ProcessState
 
 THREAD_LINE = 22
 
