@@ -47,7 +47,7 @@ class MainWindow(Gtk.Window):
         self.connect("delete-event", lambda *x: self.quit())
 
         self.set_default_size(1024, 768)
-        self.set_icon_from_file(paths.get_resource("img/circle.png"))
+        self.set_icon_from_file(paths.get_resource("img/circle32x32.png"))
 
         self._init_components(app)
 
