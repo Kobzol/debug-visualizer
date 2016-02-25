@@ -84,25 +84,21 @@ class HeapGraph(Gtk.ScrolledWindow):
         self.heap_size = size / 1024.0  # size in MiBs
 
 
-class HeapDetail(Gtk.ScrolledWindow):
+class HeapDetail(Gtk.Box):
     def __init__(self, debugger, *args, **kwargs):
         """
         @type debugger: debugger.Debugger
         """
-        Gtk.ScrolledWindow.__init__(self, *args, **kwargs)
+        Gtk.Box.__init__(self, *args, **kwargs)
+        self.set_orientation(Gtk.Orientation.VERTICAL)
 
         self.debugger = debugger
         self.debugger.heap_manager.on_heap_change.subscribe(
             lambda heap: self._handle_heap_change(heap))
 
-        self.wrapper = Gtk.Box.new(Gtk.Orientation.VERTICAL, 0)
-
-        stats_wrapper = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
         self.stats_wrapper = Gtk.Box.new(Gtk.Orientation.VERTICAL, 0)
         self.stats_wrapper.set_margin_bottom(5)
-        stats_wrapper.pack_start(self.stats_wrapper, False, False, 0)
-
-        self.wrapper.pack_start(stats_wrapper, False, False, 0)
+        self.pack_start(self.stats_wrapper, False, False, 0)
 
         self.block_tracker = self._create_stat_label()
         self.total_allocation_tracker = self._create_stat_label()
@@ -110,9 +106,7 @@ class HeapDetail(Gtk.ScrolledWindow):
         self.total_memory_tracker = self._create_stat_label()
 
         self.graph = HeapGraph(debugger)
-        self.wrapper.pack_start(self.graph, True, True, 0)
-
-        self.add(self.wrapper)
+        self.pack_start(self.graph, True, True, 0)
 
         self.update_blocks([])
 
