@@ -121,6 +121,9 @@ class SourceEditor(GtkSource.View):
         """
         @type breakpoint: debugee.Breakpoint
         """
+        self._refresh_breakpoints()
+
+    def _refresh_breakpoints(self):
         lines = []
 
         if self.file:
@@ -193,6 +196,8 @@ class SourceEditor(GtkSource.View):
             self.get_buffer().set_text(content)
             self.stop_undoable()
             self.analyser.set_file(path)
+            self._refresh_breakpoints()
+            self.gutter_renderer.queue_draw()  # show existing breakpoints
 
     @require_gui_thread
     def get_cursor_iter(self):
