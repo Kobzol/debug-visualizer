@@ -564,7 +564,8 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 	
 	\begin{description}
 		\item[Hlavní menu] V menu lze načíst spustitelný soubor aplikace, což je nutný první krok, pokud tuto aplikaci chceme v \textit{Devi} ladit.
-			Spustitelný soubor musí být přeložený s ladícími symboly, jinak ladění nebude spolehlivě fungovat.
+			Spustitelný soubor musí být přeložený s ladícími symboly, jinak ladění nebude spolehlivě fungovat. Dále zde lze upravit spouštění laděného procesu.
+			Nastavit jdou předané parametry prostředí a příkazové řádky a pracovní adresář procesu.
 		\item[Panel ovládání procesu] Tento panel obsahuje nejpoužívanější příkazy sloužící k ovládání běhu procesu, jako je jeho zapnutí, přerušení, násilné
 			ukončení a několik typů krokování. Jednotlivé příkazy jsou automaticky blokovány a povolovány podle stavu laděného procesu, nelze tedy např. zapnout
 			proces, když už běží, anebo ho krokovat, když není zastavený.
@@ -587,23 +588,22 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 		\item[Seznam vláken] Zde je zobrazen seznam všech vláken laděného procesu spolu s jejich základními informacemi, jako je název nebo id. Pokud je proces
 			zastavený, lze se mezi přepínat. Jelikož změna vlákna způsobí i změně zásobníku funkcí, tak při ní dochází ke kompletnímu překreslení vizualizačního
 			plátna.
-		\item[Seznam registrů] % TODO: měnit registry?
+		\item[Seznam registrů]
 			Pokud je proces zastavený, tak je zde zobrazen seznam názvů a hodnot všech registrů procesoru. To může sloužit k nízkoúrovňovému ladění procesu, např.
 			při práci s jazykem symbolických adres.
-		\item[Zobrazení paměti] V tomto okně lze zadat hexadecimální adresu paměti, ze které se načte 40 bytů, které jsou poté zobrazeny ve formě dvou tabulek.
-			% TODO: určit, kolik bytů zobrazit
+		\item[Zobrazení paměti] V tomto okně lze zadat hexadecimální adresu paměti, ze které se načte 160 bytů, které jsou poté zobrazeny ve formě dvou tabulek.
 			V první tabulce je přímá hodnota bytů ve formě čísla o rozsahu 0 až 255, ve druhé tabulce je pak jejich ASCII reprezentace, vhodná pro zkoumání textových
 			polí v paměti. Kromě adresy v paměti lze zadat také název proměnné ze současně aktivního zásobníkového rámce. Adresa této proměnné se poté odvodí
 			a zobrazí se hodnota její paměti.
-		\item[Detail haldy] % TODO: zobrazit počet alokovaných bloků
+		\item[Detail haldy]
 			Toto okno zobrazuje graf velikosti paměti alokované na haldě v závislosti na čase. Pokud laděný proces běží, tak se hodnota grafu aktualizuje co vteřinu
-			a zobrazuje tak stav haldy v reálném čase.
+			a zobrazuje tak stav haldy v reálném čase. Dále se zde zobrazuje současný počet naalokovaných bloků na haldě, její velikost v bytech a celkový počet
+			alokací a dealokací zaznamenaných od spuštění procesu.
 		\item[Vizualizační plátno] Na tomto plátně se při zastavení procesu vykreslí všechny jeho zásobníkového rámce (pro aktivní vlákno). V každém rámci je
 			vykreslen seznam lokálních proměnných a parametrů dané funkce. U každé proměnné je zobrazen její název a současná hodnota, při podržení myši nad ní se dále
 			zobrazí dodatečné informace, jako je její adresa v paměti. Na jednoduché typy proměnných, jako jsou primitivní datové typy (\textit{int}, \textit{bool}
 			aj.), lze po kliknutí změnit jejich hodnotu pomocí textového pole. Aktivní zásobníkový rámec lze změnit kliknutím na hlavičku některého z vykreslených
-			rámců, současný aktivní rámec je zvýrazněn červenou barvou.
-		
+			rámců, současný aktivní rámec je zvýrazněn červenou barvou.		
 	\end{description}
 
 \end{section}
@@ -615,7 +615,7 @@ Nicméně objem paměti používané programy je v dnešní době obrovský a zo
 popis a z toho důvodu nemusí stačit k zobrazení všech proměnných a částí paměti, které programátora ladícího daný proces zajímají. Pro největší flexibilitu
 při ladění je tedy vhodné zkombinovat oba dva způsoby reprezentace paměti procesu.
 
-\parspace Tato forma vizualizace paměti by dle mého názoru dala využít pro výuku programování. Jazyky C a C++ pracují bezprostředně s pamětí procesu,
+\parspace Tato forma vizualizace paměti by se dle mého názoru dala využít pro výuku programování. Jazyky C a C++ pracují bezprostředně s pamětí procesu,
 bez několika vrstev abstrakcí, jako tomu bývá např. u skriptovacích jazyků nebo vyšších jazyků, jako je Java či C\#.
 Pro pochopení sémantiky jejich jazykových konstrukcí, uspořádání struktur a polí v paměti apod. je nutné mít dobrou představu o paměťovém modelu,
 který používají. A to nejen pro správné pochopení fungování programu, který je jejich kódem vygenerován, ale také z důvodu absence automatické správy paměti.
@@ -624,12 +624,13 @@ Kvůli toho často chování jejich programů považují za neintuitivní, proto
 samotného zdrojového kódu nejdou vyčíst. Zobrazení stavu paměti v intuitivní podobě, která zachycuje umístění proměnných, vznik zásobníkových rámců při volání
 funkcí, dealokaci proměnných na konci bloku apod. může ve spolupráci s krokováním procesu usnadnit pochopení toho, jak programy vlastně fungují "na pozadí".
 
-\parspace \textit{Devi} by mohl být v budoucnu rozšířen o další užitečné funkce. Pokud by se do něj přidala jednoduchá správa souborů a možnost kompilace
+\parspace \textit{Devi} by mohl být v budoucnu rozšířen o další užitečné funkce. Pokud by se do něj přidala jednoduchá správa souborů a možnost překladu
 zdrojového kódu, mohl by sloužit jako jednoduché vývojové prostředí pro výuku programování v jazycích C a C++.
-Díky tomu, že obsahuje komunikační knihovnu s abstraktním API pro debuggery je jednoduché přidat k němu podporu pro další debuggery. Určitě by bylo
+Díky tomu, že obsahuje komunikační knihovnu s abstraktním API je jednoduché přidat k němu podporu pro další debuggery. Určitě by bylo
 zajímavé rozšířit tuto vrstvu o komunikaci s jinými debuggery, než je GDB, a srovnat jejich funkcionalitu a stabilitu.
+Komunikační knihovnu by také šlo rozšířit o více funkcí, například o ladění po síti nebo připojování se k již běžícím procesům.
 Vizualizaci objektů by šlo také dále prohlubovat, např. vytvářením odlišných pohledů nad stejnými daty, přidáním diagramů zobrazujících rozsáhlá data nebo
-přidáním podpory pro všechny paměťové kontejny standardní knihovny jazyka C++. Pro alternativu k grafické reprezentaci by také šlo přidat klasické textové
+přidáním podpory pro všechny paměťové kontejnery standardní knihovny jazyka C++. Pro alternativu k grafické reprezentaci by také šlo přidat klasické textové
 zobrazení proměnných ve stromové struktuře.
 \end{section}
 
