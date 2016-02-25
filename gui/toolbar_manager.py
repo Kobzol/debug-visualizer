@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from debugger.enums import ProcessState, DebuggerState
+from debugger.util import EventBroadcaster
 from gui_util import require_gui_thread, run_on_gui
 
 
@@ -28,6 +29,8 @@ class ToolbarManager(object):
 
         self.grp_halt_control = ["stop", "pause"]
         self.grp_step = ["continue", "step_over", "step_in", "step_out"]
+
+        self.on_run_process = EventBroadcaster()
 
     @require_gui_thread
     def _get_items(self):
@@ -78,7 +81,7 @@ class ToolbarManager(object):
         item.set_sensitive(sensitive)
 
     def run(self):
-        self.debugger.launch()
+        self.on_run_process.notify()
 
     def cont(self):
         self.debugger.exec_continue()

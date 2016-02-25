@@ -8,17 +8,51 @@ from gui_util import require_gui_thread
 class FileOpenDialog(object):
     @staticmethod
     @require_gui_thread
-    def open_file(title, parent, initial_path=None):
-        dialog = FileOpenDialog(title, parent, initial_path)
+    def select_file(title, parent, initial_path=None):
+        """
+        @type title: str
+        @type parent: Gtk.Widget
+        @type initial_path: str
+        @rtype: str
+        """
+        dialog = FileOpenDialog(title, parent, False, initial_path)
 
         file = dialog.open()
         dialog.destroy()
 
         return file
 
-    def __init__(self, title, parent, initial_path=None):
+    @staticmethod
+    @require_gui_thread
+    def select_folder(title, parent, initial_path=None):
+        """
+        @type title: str
+        @type parent: Gtk.Widget
+        @type initial_path: str
+        @rtype: str
+        """
+        dialog = FileOpenDialog(title, parent, True, initial_path)
+
+        folder = dialog.open()
+        dialog.destroy()
+
+        return folder
+
+    def __init__(self, title, parent, directory=False, initial_path=None):
+        """
+        Opens a file or folder chooser dialog.
+        @type title: str
+        @type parent: Gtk.Widget
+        @type directory: bool
+        @type initial_path: str
+        """
+        type = Gtk.FileChooserAction.OPEN
+
+        if directory:
+            type = Gtk.FileChooserAction.SELECT_FOLDER
+
         self.dialog = Gtk.FileChooserDialog(title, parent,
-                                            Gtk.FileChooserAction.OPEN,
+                                            type,
                                             (Gtk.STOCK_CANCEL,
                                              Gtk.ResponseType.CANCEL,
                                              Gtk.STOCK_OPEN,

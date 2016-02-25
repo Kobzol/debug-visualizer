@@ -16,6 +16,28 @@ class ProcessStoppedEventData(object):
         self.stop_reason = stop_reason
 
 
+class StartupInfo(object):
+    def __init__(self, cmd_arguments="", working_directory="", env_vars=None):
+        """
+        @type cmd_arguments: str
+        @type working_directory: str
+        @type env_vars: list of tuple of (str, str)
+        """
+        self.cmd_arguments = cmd_arguments
+        self.working_directory = working_directory
+        self.env_vars = env_vars if env_vars is not None else []
+
+    def copy(self):
+        return StartupInfo(self.cmd_arguments,
+                           self.working_directory,
+                           list(self.env_vars))
+
+    def __repr__(self):
+        return "StartupInfo: [{}, {}, {}]".format(
+            self.cmd_arguments, self.working_directory, self.env_vars
+        )
+
+
 class HeapManager(object):
     def __init__(self, debugger):
         """
@@ -304,7 +326,12 @@ class Debugger(object):
     def load_binary(self, binary_path):
         raise NotImplementedError()
 
-    def launch(self):
+    def launch(self, startup_info=None):
+        """
+        Launches the program with the given startup info.
+        @type startup_info: StartupInfo | None
+        @rtype: bool
+        """
         raise NotImplementedError()
 
     def exec_continue(self):

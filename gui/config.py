@@ -13,6 +13,7 @@ class Config(object):
     GUI_MAIN_WINDOW_TOOLBAR = None
     GUI_IO_CONSOLE = None
     GUI_MEMORY_CANVAS_TOOLBAR = None
+    GUI_STARTUP_INFO_DIALOG = None
 
     @staticmethod
     def get_gui_builder(path):
@@ -30,6 +31,9 @@ class Config(object):
             "io_console")
         Config.GUI_MEMORY_CANVAS_TOOLBAR = Config.get_gui_builder(
             "memory_canvas_toolbar")
+        Config.GUI_STARTUP_INFO_DIALOG = Config.get_gui_builder(
+            "startup_info_dialog"
+        )
 
         provider = Gtk.CssProvider.new()
         screen = Gdk.Screen.get_default()

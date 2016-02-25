@@ -4,6 +4,7 @@ import os
 import threading
 
 import debugger.util as util
+from debugger.debugger_api import StartupInfo
 from debugger.enums import ProcessState, DebuggerState
 from debugger.mi.breakpoint_manager import BreakpointManager
 from debugger.mi.communicator import Communicator
@@ -39,6 +40,8 @@ class MiDebugger(debugger_api.Debugger):
         self.heap_manager = HeapManager(self)
 
         self.exit_lock = threading.RLock()
+
+        self.binary_path = None
 
     def _handle_process_state(self, output):
         """
@@ -81,26 +84,45 @@ class MiDebugger(debugger_api.Debugger):
         if result.is_success():
             self.state.set(DebuggerState.BinaryLoaded)
             self.communicator.send("-gdb-set mi-async on")
+            self.binary_path = binary_path
 
             return True
         else:
             return False
 
-    def launch(self):
+    def launch(self, startup_info=None):
+        """
+        @type startup_info: StartupInfo | None
+        @rtype: bool
+        """
+        if startup_info is None:
+            startup_info = StartupInfo()
+
+        if startup_info.working_directory == "":
+            startup_info.working_directory = os.path.dirname(self.binary_path)
+
         self.require_state(DebuggerState.BinaryLoaded)
 
         stdin, stdout, stderr = self.io_manager.handle_io()
         alloc_file = self.heap_manager.watch()
 
-        self.communicator.send("set environment DEVI_ALLOC_FILE_PATH={}"
-                               .format(alloc_file))
-        self.communicator.send("set environment LD_PRELOAD={}"
-                               .format(shlib_path))
+        startup_info.env_vars.append(("DEVI_ALLOC_FILE_PATH", alloc_file))
+        startup_info.env_vars.append(("LD_PRELOAD", shlib_path))
+
+        for env_var in startup_info.env_vars:
+            self.communicator.send("set environment {}={}".format(
+                env_var[0], env_var[1]
+            ))
+
+        self.communicator.send("cd {}".format(startup_info.working_directory))
 
         self.on_process_state_changed.notify(ProcessState.Launching, None)
-        result = self.communicator.send("run 1>{0} 2>{1} <{2}".format(stdout,
-                                                                      stderr,
-                                                                      stdin))
+        result = self.communicator.send("run 1>{0} 2>{1} <{2} {3}".format(
+            stdout,
+            stderr,
+            stdin,
+            startup_info.cmd_arguments
+        ))
 
         util.Logger.debug("Launching program: {0}".format(result))
 

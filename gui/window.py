@@ -8,6 +8,7 @@ import paths
 from config import Config
 
 from drawing.canvas import MemoryCanvas, CanvasToolbarWrapper
+from gui.startup_dialog import StartupDialog
 from gui_util import require_gui_thread, run_on_gui
 from debugger.enums import ProcessState
 from heap_detail import HeapDetail
@@ -37,7 +38,7 @@ class TitleWindow(Gtk.ScrolledWindow):
 class MainWindow(Gtk.Window):
     def __init__(self, app):
         """
-        @type app: app.VisualiserApp
+        @type app: gui.app.VisualiserApp
         """
         Gtk.Window.__init__(self, title="Devi")
 
@@ -53,6 +54,8 @@ class MainWindow(Gtk.Window):
 
         app.debugger.on_process_state_changed.subscribe(
             self._handle_process_state_change)
+
+        self.startup_dialog = StartupDialog(Config.GUI_STARTUP_INFO_DIALOG)
 
         loaded = self.app.debugger.load_binary("../debugger/test")
 
@@ -73,9 +76,11 @@ class MainWindow(Gtk.Window):
 
         # menu
         menu_signals = {
-            "menu-binary-load": lambda *x: self.binary_load_dialog(),
-            "menu-source-open": lambda *x: self.source_open_dialog(),
+            "menu-binary-load": lambda *x: self._show_binary_load_dialog(),
+            "menu-source-open": lambda *x: self._show_source_open_dialog(),
             "menu-quit": lambda *x: self.quit(),
+            "menu-startup-info-dialog":
+                lambda *x: self._show_startup_info_dialog(),
             "menu-about-dialog": lambda *x: self._show_about_dialog()
         }
         Config.GUI_MAIN_WINDOW_MENU.connect_signals(menu_signals)
@@ -85,6 +90,8 @@ class MainWindow(Gtk.Window):
         # toolbar
         self.toolbar_manager = ToolbarManager(Config.GUI_MAIN_WINDOW_TOOLBAR,
                                               app.debugger)
+        self.toolbar_manager.on_run_process.subscribe(
+            lambda: self.app.debugger.launch(self.app.startup_info.copy()))
         self._add_to_row(self.toolbar_manager.toolbar, 1)
 
         # content
@@ -176,6 +183,11 @@ class MainWindow(Gtk.Window):
             run_on_gui(self.add_status_message, "Process is running...")
 
     @require_gui_thread
+    def _show_startup_info_dialog(self):
+        self.app.startup_info = self.startup_dialog.show(
+            self.app.startup_info.copy())
+
+    @require_gui_thread
     def _show_about_dialog(self):
         dialog = Config.GUI_MAIN_WINDOW_MENU.get_object("about_dialog")
         dialog.run()
@@ -190,8 +202,8 @@ class MainWindow(Gtk.Window):
                                  lambda *x: callback())
 
     @require_gui_thread
-    def binary_load_dialog(self):
-        file_path = FileOpenDialog.open_file("Choose a binary file", self,
+    def _show_binary_load_dialog(self):
+        file_path = FileOpenDialog.select_file("Choose a binary file", self,
                                              os.path.abspath("../debugger/"))
 
         if file_path:
@@ -203,7 +215,7 @@ class MainWindow(Gtk.Window):
                     get_main_source_file()
 
                 if main_file:
-                    self.source_manager.open_file(main_file)
+                    self.source_manager.select_file(main_file)
                     self.add_status_message(
                         "Main file \"{0}\" has been loaded.".format(main_file))
                 else:
@@ -218,7 +230,7 @@ class MainWindow(Gtk.Window):
                                 self, Gtk.MessageType.ERROR)
 
     @require_gui_thread
-    def source_open_dialog(self):
+    def _show_source_open_dialog(self):
         file_path = FileOpenDialog.open_file("Choose a source file", self)
 
         if file_path:
