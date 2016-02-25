@@ -38,17 +38,30 @@ class SourceAnalyzer(object):
                                                      offset)
 
     def set_file(self, file_path):
+        """
+        Parses the given file and returns whether the parsing was successful.
+        @type file_path: str
+        @rtype: bool
+        """
         try:
             self.tu = self._create_tu_from_file(file_path)
             self.file = cindex.File.from_name(self.tu, file_path)
+            return True
         except:
-            traceback.print_exc()
+            return False
 
-    def get_symbol_name(self, offset, column=None):
+    def get_symbol_name(self, line, column=None):
+        """
+        Get's name of a symbol defined on the given line and column.
+        Returns None if no symbol was found or if no file is loaded.
+        @type line: int
+        @type column: int
+        @rtype: str | None
+        """
         if self.tu is None or self.file is None:
             return None
 
-        location = self._get_location(offset, column)
+        location = self._get_location(line, column)
         cursor = cindex.Cursor.from_location(self.tu, location)
 
         return cursor.spelling
