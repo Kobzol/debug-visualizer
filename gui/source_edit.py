@@ -332,10 +332,10 @@ class SourceManager(Gtk.Notebook):
         window = SourceWindow(editor)
 
         label = self._create_label(file_path, window)
+        menu_label = Gtk.Label(label=file_path)
+        menu_label.set_alignment(0, 0)
 
-        index = self.append_page_menu(window,
-                                      label,
-                                      Gtk.Label(label=file_path))
+        index = self.append_page_menu(window, label, menu_label)
 
         if index != -1:
             self.select_tab(index)
