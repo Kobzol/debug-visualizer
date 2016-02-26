@@ -14,7 +14,15 @@ class IOManager(debugger_api.IOManager):
         self.file_paths = []
 
     def _open_file(self, attribute, mode, file_path):
-        setattr(self, attribute, open(file_path, mode, buffering=0))
+        if mode == "r":
+            os_mode = os.O_RDONLY | os.O_NONBLOCK
+        else:
+            os_mode = os.O_WRONLY
+
+        setattr(self,
+                attribute,
+                os.fdopen(os.open(file_path, os_mode),
+                          mode, 0))
 
     def _close_file(self, attribute):
         try:
@@ -32,9 +40,10 @@ class IOManager(debugger_api.IOManager):
 
         self.file_paths += (stdin, stdout, stderr)
 
+        self._open_file("stdout", "r", stdout)
+        self._open_file("stderr", "r", stderr)
+
         self._create_thread(["stdin", "w", stdin])
-        self._create_thread(["stdout", "r", stdout])
-        self._create_thread(["stderr", "r", stderr])
 
         map(lambda thread: thread.start(), self.file_threads)
 
