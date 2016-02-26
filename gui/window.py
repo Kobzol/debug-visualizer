@@ -57,13 +57,13 @@ class MainWindow(Gtk.Window):
 
         self.startup_dialog = StartupDialog(Config.GUI_STARTUP_INFO_DIALOG)
 
-        loaded = self.app.debugger.load_binary("../debugger/test")
+        """loaded = self.app.debugger.load_binary("../debugger/test")
 
         if loaded:
             main_file = self.app.debugger.file_manager.get_main_source_file()
 
             if main_file:
-                self.source_manager.open_file(main_file)
+                self.source_manager.open_file(main_file)"""
 
     def _init_components(self, app):
         """
@@ -231,7 +231,7 @@ class MainWindow(Gtk.Window):
 
     @require_gui_thread
     def _show_source_open_dialog(self):
-        file_path = FileOpenDialog.open_file("Choose a source file", self)
+        file_path = FileOpenDialog.select_file("Choose a source file", self)
 
         if file_path:
             self.source_manager.open_file(file_path)

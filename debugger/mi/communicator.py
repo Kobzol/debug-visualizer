@@ -260,19 +260,22 @@ class Communicator(object):
         return response
 
     def quit_program(self):
-        self.pause_program()
-        self.send("kill")
+        if self.process:
+            self.pause_program()
+            self.send("kill")
 
     def pause_program(self):
         os.kill(self.process.pid, signal.SIGINT)
 
     def finish(self):
-        self.send("-gdb-exit")
-        self.process.wait()
+        if self.process:
+            self.send("-gdb-exit")
+            self.process.wait()
         self._reset()
 
     def kill(self):
-        self.process.kill()
+        if self.process:
+            self.process.kill()
         self._reset()
 
     def _timer_read_output(self):

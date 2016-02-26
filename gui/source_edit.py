@@ -11,7 +11,7 @@ from enum import Enum
 import paths
 from debugger.analysis.source_analyser import SourceAnalyzer
 from debugger.util import EventBroadcaster, Logger
-from debugger.enums import ProcessState
+from debugger.enums import ProcessState, DebuggerState
 from gui_util import run_on_gui, require_gui_thread
 
 
@@ -126,7 +126,8 @@ class SourceEditor(GtkSource.View):
     def _refresh_breakpoints(self):
         lines = []
 
-        if self.file:
+        if (self.file and
+            self.debugger.state.is_set(DebuggerState.BinaryLoaded)):
             for bp in self.debugger.breakpoint_manager.get_breakpoints():
                 if os.path.abspath(bp.location) == os.path.abspath(self.file):
                     lines.append(bp.line - 1)
@@ -152,7 +153,9 @@ class SourceEditor(GtkSource.View):
                                                 event.x,
                                                 event.y)
             iter = self.get_iter_at_location(x, y)
-            self.toggle_breakpoint(iter.get_line())
+
+            if self.debugger.state.is_set(DebuggerState.BinaryLoaded):
+                self.toggle_breakpoint(iter.get_line())
 
     def get_buffer(self):
         return self.buffer
