@@ -122,7 +122,7 @@ class HeapDetail(Gtk.Box):
         self.total_deallocation_tracker.set_label(
             "Total deallocations: {}".format(
                 self.debugger.heap_manager.get_total_deallocations()))
-        self.total_memory_tracker.set_label("Heap size: {}".format(
+        self.total_memory_tracker.set_label("Heap size: {} b".format(
             sum([block.size for block in heap])))
 
     def _create_stat_label(self):
