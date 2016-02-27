@@ -77,6 +77,15 @@ class Type(object):
         return "Type {0}: {1}".format(self.type_category, self.name)
 
 
+class ArrayType(Type):
+    def __init__(self, name, type_category, basic_type_category, size,
+                 modificators=(), count=0):
+        super(ArrayType, self).__init__(name, type_category,
+                                        basic_type_category, size,
+                                        modificators)
+        self.count = count
+
+
 class Variable(object):
     """
     Represents a variable with type.

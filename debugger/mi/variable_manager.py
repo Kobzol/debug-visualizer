@@ -4,7 +4,8 @@ import re
 
 from debugger.enums import BasicTypeCategory, TypeCategory
 from debugger.mi.parser import Parser
-from debugger.debugee import Type, Variable, Register, PointerVariable
+from debugger.debugee import Type, Variable, Register, PointerVariable,\
+    ArrayType
 from debugger import debugger_api
 
 basic_type_map = {
@@ -162,12 +163,18 @@ class VariableManager(debugger_api.VariableManager):
             if size_output:
                 size = int(self.parser.parse_print_expression(size_output.
                                                               cli_data[0]))
+            if type_category == TypeCategory.Array:
+                right_bracket_end = type_name.rfind("]")
+                right_bracket_start = type_name.rfind("[")
+                count = int(type_name[
+                            right_bracket_start + 1:right_bracket_end])
+                type = ArrayType(type_name, type_category, basic_type_category,
+                                 size, tuple(modificators), count)
+            else:
+                type = Type(type_name, type_category, basic_type_category,
+                        size, tuple(modificators))
 
-            return Type(type_name,
-                        type_category,
-                        basic_type_category,
-                        size,
-                        tuple(modificators))
+            return type
         else:
             return None
 
@@ -197,7 +204,11 @@ class VariableManager(debugger_api.VariableManager):
             variable = None
             children = []
 
-            if type.type_category == TypeCategory.Builtin:
+            if type.type_category == TypeCategory.Array:
+                pass
+
+            if type.type_category in (TypeCategory.Builtin,
+                                      TypeCategory.Array):
                 value = data
                 variable = Variable(address, name, value, type, expression)
 
@@ -261,7 +272,7 @@ class VariableManager(debugger_api.VariableManager):
                 variable = Variable(address, name, value, type, expression)
 
             else:
-                pass  # TODO
+                raise NotImplementedError() # TODO
 
             if variable:
                 variable.on_value_changed.subscribe(self.update_variable)
