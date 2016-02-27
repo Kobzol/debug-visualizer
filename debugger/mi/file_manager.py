@@ -63,7 +63,7 @@ class FileManager(debugger_api.FileManager):
         Returns the current file and line of the debugged process.
         @rtype: tuple of basestring, int | None
         """
-        frame = self.debugger.thread_manager.get_current_frame()
+        frame = self.debugger.thread_manager.get_current_frame(False)
 
         if not frame:
             return None

@@ -501,11 +501,15 @@ class Drawable(object):
         if height < 0:
             height = content_size.height
 
-        width = max((width, self.min_size.width))
-        height = max((height, self.min_size.height))
+        if self.min_size.width >= 0:
+            width = max((width, self.min_size.width))
+        if self.min_size.height >= 0:
+            height = max((height, self.min_size.height))
 
-        width = min((width, self.max_size.width))
-        height = min((height, self.max_size.height))
+        if self.max_size.width >= 0:
+            width = min((width, self.max_size.width))
+        if self.max_size.height >= 0:
+            height = min((height, self.max_size.height))
 
         return Size(width, height)
 
@@ -846,8 +850,9 @@ class VariableDrawable(Label, VariableContainer):
         @type variable: debugee.Variable
         """
         self.variable = variable
-        super(VariableDrawable, self).__init__(canvas, self.get_variable_value,
-                                               size=Size(-1, 20), **properties)
+        super(VariableDrawable, self).__init__(canvas,
+                                               self.get_variable_value,
+                                               **properties)
 
         value_entry = ValueEntry("Edit value of {}"
                                  .format(self.variable.name), "")
@@ -911,7 +916,7 @@ class CompositeLabel(LinearLayout):
         wrapper = LabelWrapper(self.canvas,
                                Label(self.canvas,
                                      "{} {}".format(
-                                         variable.type.name,
+                                         variable.type.get_full_name(),
                                          variable.name),
                                      min_size=Size(20, 20),
                                      max_size=Size(40, 20),
@@ -961,7 +966,7 @@ class StackFrameDrawable(CompositeLabel, VariableContainer):
         return self.composite.variables
 
     def draw(self):
-        frame = self.canvas.debugger.thread_manager.get_current_frame()
+        frame = self.canvas.debugger.thread_manager.get_current_frame(False)
 
         if frame:
             if frame.level == self.composite.level:
@@ -1022,12 +1027,12 @@ class PointerDrawable(VariableDrawable):
             int_value = int(self.variable.value, 16)
 
             if int_value == 0:  # NULL pointer
-                self._draw_label("Null")
+                self._draw_label("NULL")
             else:
                 self._draw_label("")
                 self._draw_arrow()
         except:
-            self._draw_label("Invalid")
+            self._draw_label(str(self.variable.value))
 
     def _draw_arrow(self):
         drawable = self.canvas.memory_model.get_drawable_by_pointer(
@@ -1093,6 +1098,13 @@ class VectorDrawable(LinearLayout, VariableContainer):
         @rtype: int
         """
         return self.max_elements
+
+
+class CStringDrawable(Label):
+    def __init__(self, canvas, variable, **properties):
+        super(CStringDrawable, self).__init__(canvas,
+                                              variable.value,
+                                              **properties)
 
 
 class WidgetDrawable(Drawable):

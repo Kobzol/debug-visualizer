@@ -53,24 +53,28 @@ class ThreadManager(debugger_api.ThreadManager):
         else:
             return False
 
-    def get_current_frame(self):
+    def get_current_frame(self, with_variables):
         """
+        Returns the current stack frame, optionally with it's parameters.
+        @type with_variables: bool
         @rtype: debugee.Frame | None
         """
         output = self.debugger.communicator.send("-stack-info-frame")
 
         if output:
             frame = self.parser.parse_stack_frame(output.data)
-            variables_info = self.parser.parse_frame_variables(
-                self.debugger.communicator.send(
-                    "-stack-list-variables --skip-unavailable 0").data
-            )
 
-            for variable in variables_info:
-                variable = self.debugger.variable_manager.get_variable(
-                    variable["name"])
-                if variable:
-                    frame.variables.append(variable)
+            if with_variables:
+                variables_info = self.parser.parse_frame_variables(
+                    self.debugger.communicator.send(
+                        "-stack-list-variables --skip-unavailable 0").data
+                )
+
+                for variable in variables_info:
+                    variable = self.debugger.variable_manager.get_variable(
+                        variable["name"])
+                    if variable:
+                        frame.variables.append(variable)
 
             return frame
 
@@ -93,7 +97,7 @@ class ThreadManager(debugger_api.ThreadManager):
         Returns all stack frames with all their local variables and arguments.
         @rtype: list of debugee.Frame
         """
-        current_frame = self.get_current_frame()
+        current_frame = self.get_current_frame(False)
 
         if not current_frame:
             return []
@@ -102,7 +106,7 @@ class ThreadManager(debugger_api.ThreadManager):
         try:
             for i, fr in enumerate(self.get_frames()):
                 self.change_frame(i, False)
-                frames.append(self.get_current_frame())
+                frames.append(self.get_current_frame(True))
         except:
             traceback.print_exc()
         finally:

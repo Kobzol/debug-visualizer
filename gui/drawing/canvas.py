@@ -390,7 +390,7 @@ class MemoryCanvas(Canvas):
         if state == ProcessState.Stopped:
             location = self.debugger.file_manager.get_current_location()
             if location and len(location[0]) > 0 and location[1] > 0:
-                frame = self.debugger.thread_manager.get_current_frame()
+                frame = self.debugger.thread_manager.get_current_frame(False)
                 self._rebuild(frame)
 
     def get_drawables(self):

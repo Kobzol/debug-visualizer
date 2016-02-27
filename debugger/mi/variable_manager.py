@@ -121,6 +121,16 @@ class VariableManager(debugger_api.VariableManager):
             basic_type_category = BasicTypeCategory.Invalid
             type_category = TypeCategory.Any
 
+            modificators = []
+
+            while type.startswith("volatile") or type.startswith("const"):
+                modificator = type[:type.find(" ")]
+                type = type[len(modificator) + 1:]
+                modificators.append(modificator)
+
+                if type_name.startswith(modificator):
+                    type_name = type_name[len(modificator) + 1:]
+
             if type in basic_type_map:
                 basic_type_category = basic_type_map[type]
                 type_category = TypeCategory.Builtin
@@ -153,7 +163,11 @@ class VariableManager(debugger_api.VariableManager):
                 size = int(self.parser.parse_print_expression(size_output.
                                                               cli_data[0]))
 
-            return Type(type_name, type_category, basic_type_category, size)
+            return Type(type_name,
+                        type_category,
+                        basic_type_category,
+                        size,
+                        tuple(modificators))
         else:
             return None
 
@@ -165,6 +179,9 @@ class VariableManager(debugger_api.VariableManager):
         """
         type = self.get_type(expression)
         output = self.debugger.communicator.send("p {0}".format(expression))
+
+        if "c" in expression:
+            pass
 
         if output and type:
             data = self.parser.parse_print_expression(output.cli_data)
@@ -187,6 +204,10 @@ class VariableManager(debugger_api.VariableManager):
             elif type.type_category == TypeCategory.Pointer:
                 value = data[data.rfind(" ") + 1:].lower()
                 target_type = self.get_type("*{0}".format(expression))
+
+                if BasicTypeCategory.is_char(target_type.basic_type_category):
+                    type.type_category = TypeCategory.CString
+                    value = value[1:-1]  # strip quotes
                 variable = PointerVariable(target_type, address, name, value,
                                            type, expression)
 

@@ -129,7 +129,7 @@ class FrameSelector(Selector):
     def _load_frames(self):
         self.clear_children()
         frames = self.debugger.thread_manager.get_frames()
-        selected_frame = self.debugger.thread_manager.get_current_frame()
+        selected_frame = self.debugger.thread_manager.get_current_frame(False)
 
         if frames and selected_frame:
             for frame in frames:

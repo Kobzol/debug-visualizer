@@ -35,17 +35,20 @@ class Type(object):
                     BasicTypeCategory(lldb_type.GetBasicType()),
                     lldb_type.size)
 
-    def __init__(self, name, type_category, basic_type_category, size):
+    def __init__(self, name, type_category, basic_type_category, size,
+                 modificators=()):
         """
         @type name: str
         @type type_category: enums.TypeCategory
         @type basic_type_category: enums.BasicTypeCategory
         @type size: int
+        @type modificators: tuple of str
         """
         self.name = name
         self.type_category = type_category
         self.basic_type_category = basic_type_category
         self.size = size
+        self.modificators = modificators
 
     def is_composite(self):
         """
@@ -62,6 +65,13 @@ class Type(object):
         @rtype: bool
         """
         return self.type_category != TypeCategory.Invalid
+
+    def get_full_name(self):
+        name = ""
+        for modificator in self.modificators:
+            name += modificator + " "
+
+        return name + self.name
 
     def __repr__(self):
         return "Type {0}: {1}".format(self.type_category, self.name)

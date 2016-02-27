@@ -73,6 +73,7 @@ class TypeCategory(Enum):
     ObjCObjectPointer = 2048
     Other = -2147483648
     Pointer = 4096
+    CString = 4097
     Reference = 8192
     Struct = 16384
     Typedef = 32768
@@ -125,3 +126,14 @@ class BasicTypeCategory(Enum):
     UnsignedWChar = 7
     Void = 1
     WChar = 5
+
+    @staticmethod
+    def is_char(type):
+        return type in (BasicTypeCategory.Char,
+                        BasicTypeCategory.Char16,
+                        BasicTypeCategory.Char32,
+                        BasicTypeCategory.SignedChar,
+                        BasicTypeCategory.UnsignedChar,
+                        BasicTypeCategory.SignedWChar,
+                        BasicTypeCategory.UnsignedWChar,
+                        BasicTypeCategory.WChar)
