@@ -4,6 +4,7 @@ import cairo
 
 from enum import Enum
 
+from debugger.debugee import Variable
 from geometry import Margin, RectangleBBox, Padding
 from mouse import ClickHandler
 from size import Size
@@ -514,9 +515,22 @@ class Drawable(object):
         return Size(width, height)
 
     def add_child(self, child):
+        """
+        @type child: Drawable
+        """
         self.children.append(child)
         child.parent = self
         self.click_handler.propagate_handler(child.click_handler)
+        self.invalidate()
+
+    def add_children(self, children):
+        """
+        @type children: list of Drawable | tuple of Drawable
+        """
+        self.children += children
+        for child in children:
+            child.parent = self
+            self.click_handler.propagate_handler(child.click_handler)
         self.invalidate()
 
     def handle_mouse_event(self, mouse_data):
@@ -865,6 +879,7 @@ class VariableDrawable(Label, VariableContainer):
 
     def _handle_value_change(self, value):
         self.variable.value = value
+        self.canvas.redraw()
 
     def get_tooltip(self):
         return "Value: {}\nAddress: {}".format(self.variable.value,
@@ -963,7 +978,8 @@ class StackFrameDrawable(CompositeLabel, VariableContainer):
         return "Frame {0}".format(self.composite.func)
 
     def get_composite_children(self):
-        return self.composite.variables
+        return sorted(self.composite.variables,
+                      lambda x, y: cmp(x.name, y.name))
 
     def draw(self):
         frame = self.canvas.debugger.thread_manager.get_current_frame(False)
@@ -1084,27 +1100,65 @@ class VectorDrawable(LinearLayout, VariableContainer):
         super(VectorDrawable, self).__init__(canvas,
                                              LinearLayoutDirection.Horizontal)
         self.variable = vector
-        self.max_elements = 3
+        self.variable.size = min(15, self.variable.max_size)
 
-        for i in xrange(0, min((self.max_elements, len(vector.children)))):
-            self.add_child(VectorValueDrawable(self.canvas,
-                                               vector.children[i]))
+        self.start_variable = Variable(value=str(self.variable.start),
+                                       name="start index of {}".format(
+                                           self.variable.name
+                                       ))
+        self.start_variable.set_constraint(self._check_count)
+        self.start_variable.on_value_changed.subscribe(
+            lambda *x: self._reload())
+        self.start_variable_draw = VariableDrawable(self.canvas,
+                                                    self.start_variable,
+                                                    size=Size(-1, 20),
+                                                    padding=Padding.all(5))
 
-        if len(vector.children) > self.max_elements:
-            self.add_child(Label(self.canvas, "..."))
+        self.count_variable = Variable(value=str(self.variable.size),
+                                       name="size of {}".format(
+                                           self.variable.name
+                                       ))
+        self.count_variable.set_constraint(self._check_count)
+        self.count_variable.on_value_changed.subscribe(
+            lambda *x: self._reload())
+        self.count_variable_draw = VariableDrawable(self.canvas,
+                                                    self.count_variable,
+                                                    size=Size(-1, 20),
+                                                    padding=Padding.all(5))
 
-    def get_max_elements(self):
-        """
-        @rtype: int
-        """
-        return self.max_elements
+        self.add_children((self.start_variable_draw, self.count_variable_draw))
 
+        self._reload()
 
-class CStringDrawable(Label):
-    def __init__(self, canvas, variable, **properties):
-        super(CStringDrawable, self).__init__(canvas,
-                                              variable.value,
-                                              **properties)
+    # TODO: make the check more robust
+    def _check_count(self, variable, new_value):
+        try:
+            value = int(new_value)
+            return 0 <= value < self.variable.max_size
+        except:
+            return False
+
+    def _reload(self):
+        self.children = self.children[:2]
+        children = []
+
+        self.variable.start = int(self.start_variable.value)
+        self.variable.size = int(self.count_variable.value)
+
+        items = self.canvas.debugger.variable_manager.get_vector_items(
+            self.variable
+        )
+        for item in items:
+            if item:
+                drawable = self.canvas.memtoview.transform_var(item)
+                if drawable:
+                    drawable.margin.left = 1
+                    children.append(drawable)
+
+        if len(children) > 0:
+            self.add_children(children)
+        else:
+            self.invalidate()
 
 
 class WidgetDrawable(Drawable):

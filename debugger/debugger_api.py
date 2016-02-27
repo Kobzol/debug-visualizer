@@ -293,6 +293,13 @@ class VariableManager(object):
         """
         raise NotImplementedError()
 
+    def get_vector_items(self, vector):
+        """
+        @type vector: debugger.debugee.VectorVariable
+        @rtype: list of debugger.debugee.Variable
+        """
+        raise NotImplementedError()
+
 
 class Debugger(object):
     def __init__(self):

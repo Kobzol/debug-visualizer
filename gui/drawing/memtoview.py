@@ -20,7 +20,7 @@ class MemToViewTransformer(object):
             TypeCategory.Class: self.create_struct,
             TypeCategory.Array: self.create_vector,
             TypeCategory.Vector: self.create_vector,
-            TypeCategory.CString: self.create_cstring
+            TypeCategory.CString: self.create_basic
         }
         self.canvas = canvas
 

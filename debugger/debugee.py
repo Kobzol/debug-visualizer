@@ -133,6 +133,8 @@ class Variable(object):
 
         self.on_value_changed = EventBroadcaster()
 
+        self.constraint = None
+
     def add_child(self, child):
         """
         Adds a child variable to this variable.
@@ -141,12 +143,21 @@ class Variable(object):
         self.children.append(child)
         child.on_value_changed.redirect(self.on_value_changed)
 
+    def set_constraint(self, constraint):
+        """
+        @type constraint: callable
+        """
+        self.constraint = constraint
+
     @property
     def value(self):
         return self._value
 
     @value.setter
     def value(self, value):
+        if self.constraint and not self.constraint(self, value):
+            return
+
         self._value = value
         self.on_value_changed.notify(self)
 
@@ -165,6 +176,18 @@ class PointerVariable(Variable):
         """
         super(PointerVariable, self).__init__(*args, **kwargs)
         self.target_type = target_type
+
+
+class VectorVariable(Variable):
+    def __init__(self, max_size, *args, **kwargs):
+        super(VectorVariable, self).__init__(*args, **kwargs)
+        self.max_size = max_size
+        self.start = 0
+        self.size = 0
+
+    def __repr__(self):
+        repr = super(VectorVariable, self).__repr__()
+        return repr + " (max size: {})".format(self.max_size)
 
 
 class Frame(object):

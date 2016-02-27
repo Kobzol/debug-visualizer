@@ -5,7 +5,7 @@ import re
 from debugger.enums import BasicTypeCategory, TypeCategory
 from debugger.mi.parser import Parser
 from debugger.debugee import Type, Variable, Register, PointerVariable,\
-    ArrayType
+    ArrayType, VectorVariable
 from debugger import debugger_api
 
 basic_type_map = {
@@ -187,9 +187,6 @@ class VariableManager(debugger_api.VariableManager):
         type = self.get_type(expression)
         output = self.debugger.communicator.send("p {0}".format(expression))
 
-        if "c" in expression:
-            pass
-
         if output and type:
             data = self.parser.parse_print_expression(output.cli_data)
             address = None
@@ -204,11 +201,7 @@ class VariableManager(debugger_api.VariableManager):
             variable = None
             children = []
 
-            if type.type_category == TypeCategory.Array:
-                pass
-
-            if type.type_category in (TypeCategory.Builtin,
-                                      TypeCategory.Array):
+            if type.type_category == TypeCategory.Builtin:
                 value = data
                 variable = Variable(address, name, value, type, expression)
 
@@ -216,7 +209,8 @@ class VariableManager(debugger_api.VariableManager):
                 value = data[data.rfind(" ") + 1:].lower()
                 target_type = self.get_type("*{0}".format(expression))
 
-                if BasicTypeCategory.is_char(target_type.basic_type_category):
+                if (target_type and BasicTypeCategory.is_char(
+                        target_type.basic_type_category)):
                     type.type_category = TypeCategory.CString
                     value = value[1:-1]  # strip quotes
                 variable = PointerVariable(target_type, address, name, value,
@@ -259,20 +253,22 @@ class VariableManager(debugger_api.VariableManager):
                 variable = Variable(address, name, value, type, expression)
 
             elif type.type_category == TypeCategory.Vector:  # TODO
-                length = self.debugger.communicator.send("call {0}.size()".
-                                                         format(expression))
+                length = self.get_variable(
+                    "({0}._M_impl._M_finish - {0}._M_impl._M_start)"
+                        .format(expression))
 
                 if length:
-                    length = int(self.parser.parse_print_expression(
-                        length.cli_data))
-                    for i in xrange(length):
-                        expr = "*({0}._M_impl._M_start + {1})".format(
-                            expression, i)
-                        children.append(self.get_variable(expr))
-                variable = Variable(address, name, value, type, expression)
+                    length = int(length.value)
+                variable = VectorVariable(length, address, name,
+                                          value, type, expression)
+            elif type.type_category == TypeCategory.Array:
+                length = type.count
+
+                variable = VectorVariable(length, address, name,
+                                    value, type, expression)
 
             else:
-                raise NotImplementedError() # TODO
+                raise NotImplementedError()  # TODO
 
             if variable:
                 variable.on_value_changed.subscribe(self.update_variable)
@@ -351,6 +347,25 @@ class VariableManager(debugger_api.VariableManager):
                                           str(reg["value"])))
 
         return registers
+
+    def get_vector_items(self, vector):
+        """
+        @type vector: debugger.debugee.VectorVariable
+        @rtype: list of debugger.debugee.Variable
+        """
+        items = []
+        for i in xrange(vector.start + vector.size):
+            expression = vector.path
+            if vector.type.type_category == TypeCategory.Array:
+                expression += "[{}]".format(i)
+            elif vector.type.type_category == TypeCategory.Vector:
+                expression = "*({}._M_impl._M_start + {})".format(
+                            expression, i)
+            var = self.get_variable(expression)
+            if var:
+                items.append(var)
+
+        return items
 
     def _get_name(self, expression):
         """
