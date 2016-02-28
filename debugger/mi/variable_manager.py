@@ -268,12 +268,19 @@ class VariableManager(debugger_api.VariableManager):
 
                 if length:
                     length = int(length.value)
-                variable = VectorVariable(length, address, name,
+
+                data_address = self.debugger.communicator.send(
+                    "p {}._M_impl._M_start".format(expression))
+                data_address = " ".join(data_address.cli_data)
+                data_address = data_address[data_address.rfind(" ") + 1:]
+                variable = VectorVariable(length, data_address, address, name,
                                           value, type, expression)
             elif type.type_category == TypeCategory.Array:
                 length = type.count
+                data_address = self.get_variable(
+                    "&{}[0]".format(expression)).value
 
-                variable = VectorVariable(length, address, name,
+                variable = VectorVariable(length, data_address, address, name,
                                           value, type, expression)
 
             else:

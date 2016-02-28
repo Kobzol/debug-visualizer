@@ -95,7 +95,7 @@ class ThreadManager(debugger_api.ThreadManager):
     def get_frames_with_variables(self):
         """
         Returns all stack frames with all their local variables and arguments.
-        @rtype: list of debugee.Frame
+        @rtype: list of debugger.debugee.Frame
         """
         current_frame = self.get_current_frame(False)
 

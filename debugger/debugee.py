@@ -151,6 +151,16 @@ class Variable(object):
         """
         self.constraint = constraint
 
+    def get_index_by_address(self, address):
+        """
+        @type address: str
+        @rtype: int
+        """
+        if address == self.address:
+            return 0
+        else:
+            return None
+
     @property
     def value(self):
         return self._value
@@ -181,14 +191,30 @@ class PointerVariable(Variable):
 
 
 class VectorVariable(Variable):
-    def __init__(self, max_size, *args, **kwargs):
+    def __init__(self, max_size, data_address, *args, **kwargs):
         """
         @type max_size: int
+        @type data_address: str
         """
         super(VectorVariable, self).__init__(*args, **kwargs)
         self.max_size = max_size
+        self.data_address = data_address
         self.start = 0
         self.count = 0
+
+    def get_index_by_address(self, address):
+        """
+        @type address: str
+        @rtype: int
+        """
+        int_addr = int(self.data_address, 16)
+        int_item_addr = int(address, 16)
+        item_size = self.type.child_type.size
+        end_addr = int_addr + item_size * self.max_size
+        if int_addr <= int_item_addr < end_addr:
+            return (int_item_addr - int_addr) / item_size
+        else:
+            return None
 
     def __repr__(self):
         repr = super(VectorVariable, self).__repr__()
@@ -211,6 +237,7 @@ class Frame(object):
         self.file = file
         self.line = line
         self.variables = []
+        """@type variables: debugger.debugee.Variable"""
 
     def __repr__(self):
         return "Frame #{0} ({1} at {2}:{3}".format(self.level, self.func,

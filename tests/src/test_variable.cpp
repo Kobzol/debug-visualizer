@@ -23,6 +23,7 @@ int main()
     float b = 5.5f;
     bool c = true;
     std::string d = "hello";
+    int e[10] = { 1, 2, 3 };
 
     structA strA;
     strA.x = a;
