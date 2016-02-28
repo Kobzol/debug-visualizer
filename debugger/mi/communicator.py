@@ -24,12 +24,16 @@ if not os.path.isfile(GDB_PATH):
 
 gdb_pretty_print_file = os.path.join(os.path.dirname(__file__),
                                      "gdb_pretty_print.py")
-pretty_print_dir = glob.glob("/usr/share/gcc-*/python")
 
-if len(pretty_print_dir) < 1:
-    raise BaseException("C++ pretty printers were not found")
+pp_function = "register_libstdcxx_printers"
+pp_dir = glob.glob("/usr/share/gcc-*/python")
+pp_import = "from libstdcxx.v6.printers import {}".format(pp_function)
+
+if len(pp_dir) < 1:  # use pre-packaged STL printers
+    pp_dir = util.get_root_path("debugger/mi")
+    pp_import = "from stl_printers import {}".format(pp_function)
 else:
-    pretty_print_dir = pretty_print_dir[0]
+    pp_dir = pp_dir[0]
 
 
 class OutputParser(object):
@@ -213,7 +217,10 @@ class Communicator(object):
         self.send("set print elements 0")
         self.send("set print frame-arguments none")
         self.send("set print address on")  # should be default
-        self.send("python sys.path.append('{}')".format(pretty_print_dir))
+        self.send("python sys.path = [\"{}\"] + sys.path"
+                  .format(pp_dir))
+        self.send("python {}".format(pp_import))
+        self.send("python {}(None)".format(pp_function))
         self.send("source {0}".format(gdb_pretty_print_file))
 
         self.read_timer = util.RepeatTimer(0.1, self._timer_read_output)

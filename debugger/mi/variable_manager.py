@@ -365,6 +365,8 @@ class VariableManager(debugger_api.VariableManager):
             if var:
                 items.append(var)
 
+        vector.children = items
+
         return items
 
     def _get_name(self, expression):

@@ -368,3 +368,9 @@ class Debugger(object):
             time.sleep(0.1)
 
         return self.process_state
+
+    def wait_for_exit(self):
+        while self.process_state != ProcessState.Exited:
+            time.sleep(0.1)
+
+        return self.process_state
