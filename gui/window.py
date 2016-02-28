@@ -215,7 +215,7 @@ class MainWindow(Gtk.Window):
                     get_main_source_file()
 
                 if main_file:
-                    self.source_manager.select_file(main_file)
+                    self.source_manager.open_file(main_file)
                     self.add_status_message(
                         "Main file \"{0}\" has been loaded.".format(main_file))
                 else:
