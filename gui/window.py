@@ -6,6 +6,7 @@ import os
 
 import paths
 from config import Config
+from debugger import util
 
 from drawing.canvas import MemoryCanvas, CanvasToolbarWrapper
 from gui.startup_dialog import StartupDialog
@@ -204,7 +205,7 @@ class MainWindow(Gtk.Window):
     @require_gui_thread
     def _show_binary_load_dialog(self):
         file_path = FileOpenDialog.select_file("Choose a binary file", self,
-                                               os.path.abspath("../debugger/"))
+                                               paths.get_root_path(""))
 
         if file_path:
             self.app.debugger.quit_program()

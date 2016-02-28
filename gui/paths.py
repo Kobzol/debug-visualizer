@@ -9,7 +9,7 @@ DIR_DEBUGGER = os.path.join(DIR_ROOT, "debugger")
 DIR_RES = os.path.join(DIR_ROOT, "res")
 
 
-def root_path(path):
+def get_root_path(path):
     return os.path.join(DIR_ROOT, path)
 
 
