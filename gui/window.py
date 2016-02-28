@@ -4,6 +4,8 @@ from gi.repository import Gtk
 
 import os
 
+import sys
+
 import paths
 from config import Config
 from debugger import util
@@ -58,13 +60,22 @@ class MainWindow(Gtk.Window):
 
         self.startup_dialog = StartupDialog(Config.GUI_STARTUP_INFO_DIALOG)
 
-        loaded = self.app.debugger.load_binary("../debugger/test")
+        if len(sys.argv) > 1:
+            binary_path = os.path.abspath(sys.argv[1])
+            loaded = self.app.debugger.load_binary(binary_path)
 
-        if loaded:
-            main_file = self.app.debugger.file_manager.get_main_source_file()
+            if loaded:
+                main_file = self.app.debugger.file_manager\
+                    .get_main_source_file()
 
-            if main_file:
-                self.source_manager.open_file(main_file)
+                if main_file:
+                    self.source_manager.open_file(main_file)
+                else:
+                    MessageBox.show(
+                        "Source for {} couldn't be loaded".format(binary_path))
+            else:
+                MessageBox.show(
+                    "File {} couldn't be loaded".format(binary_path))
 
     def _init_components(self, app):
         """
