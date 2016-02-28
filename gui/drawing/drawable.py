@@ -856,6 +856,13 @@ class VariableContainer(object):
     def __init__(self):
         self.variable = None
 
+    def get_drawable_by_index(self, index):
+        """
+        @type index: int
+        @rtype: Drawable | None
+        """
+        return None
+
 
 class VariableDrawable(Label, VariableContainer):
     def __init__(self, canvas, variable, **properties):
@@ -1129,6 +1136,18 @@ class VectorDrawable(LinearLayout, VariableContainer):
         self.add_children((self.start_variable_draw, self.count_variable_draw))
 
         self._reload()
+
+    def get_drawable_by_index(self, index):
+        """
+        @type index: int
+        @rtype: Drawable | None
+        """
+        start = self.variable.start
+        end = start + self.variable.count
+        if start <= index < end:
+            return self.children[2 + index]
+        else:
+            return None
 
     # TODO: make the check more robust
     def _check_count(self, variable, new_value):

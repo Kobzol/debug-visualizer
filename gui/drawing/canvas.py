@@ -298,15 +298,24 @@ class MemoryModel(object):
         if pointer.value in self.addr_to_drawable_map:
             return self.addr_to_drawable_map[pointer.value]
         else:
-            heap_var = self.canvas.debugger.variable_manager.get_variable(
+            address = pointer.value
+            for addr, drawable in self.addr_to_drawable_map.iteritems():
+                container = self._get_var_container_from_drawable(drawable)
+                index = container.variable.get_index_by_address(address)
+                if index is not None:
+                    item_drawable = container.get_drawable_by_index(index)
+                    if item_drawable:
+                        return item_drawable
+
+            var = self.canvas.debugger.variable_manager.get_variable(
                 "{{{}}}({})".format(
                     pointer.target_type.name,
                     pointer.value
                 ))
 
-            if heap_var:
-                drawable = self.canvas.memtoview.transform_var(heap_var)
-                mv = ModelView(heap_var, drawable)
+            if var:
+                drawable = self.canvas.memtoview.transform_var(var)
+                mv = ModelView(var, drawable)
                 self.addr_to_drawable_map[pointer.value] = drawable
                 self.heap.append(mv)
                 self.heap_wrapper.add_child(drawable)
@@ -323,13 +332,28 @@ class MemoryModel(object):
         return [self.wrapper]
 
     def _get_var_from_drawable(self, drawable):
+        """
+        @type drawable: drawable.Drawable
+        @rtype: debugger.debugee.Variable | None
+        """
+        container = self._get_var_container_from_drawable(drawable)
+        if container:
+            return container.variable
+        else:
+            return None
+
+    def _get_var_container_from_drawable(self, drawable):
+        """
+        @type drawable: drawable:Drawable
+        @rtype: drawable.VariableContainer
+        """
         if isinstance(drawable, VariableContainer):
-            return drawable.variable
+            return drawable
         else:
             for child in drawable.children:
-                var = self._get_var_from_drawable(child)
-                if var:
-                    return var
+                drawable = self._get_var_container_from_drawable(child)
+                if drawable:
+                    return drawable
 
         return None
 
