@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import glob
-import traceback
 
 
 clang_path = glob.glob("/usr/lib/*/*/libclang.so*")

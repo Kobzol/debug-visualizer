@@ -30,7 +30,7 @@ pp_dir = glob.glob("/usr/share/gcc-*/python")
 pp_import = "from libstdcxx.v6.printers import {}".format(pp_function)
 
 if len(pp_dir) < 1:  # use pre-packaged STL printers
-    pp_dir = util.get_root_path("debugger/mi")
+    pp_dir = util.get_root_path("util/")
     pp_import = "from stl_printers import {}".format(pp_function)
 else:
     pp_dir = pp_dir[0]

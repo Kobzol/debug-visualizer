@@ -80,7 +80,7 @@ class MainWindow(Gtk.Window):
             "menu-source-open": lambda *x: self._show_source_open_dialog(),
             "menu-quit": lambda *x: self.quit(),
             "menu-startup-info-dialog":
-                lambda *x: self._show_startup_info_dialog(),
+            lambda *x: self._show_startup_info_dialog(),
             "menu-about-dialog": lambda *x: self._show_about_dialog()
         }
         Config.GUI_MAIN_WINDOW_MENU.connect_signals(menu_signals)
@@ -204,7 +204,7 @@ class MainWindow(Gtk.Window):
     @require_gui_thread
     def _show_binary_load_dialog(self):
         file_path = FileOpenDialog.select_file("Choose a binary file", self,
-                                             os.path.abspath("../debugger/"))
+                                               os.path.abspath("../debugger/"))
 
         if file_path:
             self.app.debugger.quit_program()

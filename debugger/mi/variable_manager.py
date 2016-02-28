@@ -172,7 +172,7 @@ class VariableManager(debugger_api.VariableManager):
                                  size, tuple(modificators), count)
             else:
                 type = Type(type_name, type_category, basic_type_category,
-                        size, tuple(modificators))
+                            size, tuple(modificators))
 
             return type
         else:
@@ -255,7 +255,7 @@ class VariableManager(debugger_api.VariableManager):
             elif type.type_category == TypeCategory.Vector:  # TODO
                 length = self.get_variable(
                     "({0}._M_impl._M_finish - {0}._M_impl._M_start)"
-                        .format(expression))
+                    .format(expression))
 
                 if length:
                     length = int(length.value)
@@ -265,7 +265,7 @@ class VariableManager(debugger_api.VariableManager):
                 length = type.count
 
                 variable = VectorVariable(length, address, name,
-                                    value, type, expression)
+                                          value, type, expression)
 
             else:
                 raise NotImplementedError()  # TODO
@@ -360,7 +360,7 @@ class VariableManager(debugger_api.VariableManager):
                 expression += "[{}]".format(i)
             elif vector.type.type_category == TypeCategory.Vector:
                 expression = "*({}._M_impl._M_start + {})".format(
-                            expression, i)
+                    expression, i)
             var = self.get_variable(expression)
             if var:
                 items.append(var)

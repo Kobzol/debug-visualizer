@@ -35,7 +35,7 @@ class StartupDialog(object):
         """
         signals = {
             "working-directory-choose":
-                lambda *x: self._show_choose_dir_dialog(),
+            lambda *x: self._show_choose_dir_dialog(),
             "startup-cancel": lambda *x: self._cancel_dialog(),
             "startup-confirm": lambda *x: self._confirm_dialog(),
             "env-var-add": lambda *x: self._add_env_var()
