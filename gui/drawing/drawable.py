@@ -880,18 +880,11 @@ class VariableDrawable(Label, VariableContainer):
                                                **properties)
         VariableContainer.__init__(self, variable)
 
-        value_entry = ValueEntry("Edit value of {}"
-                                 .format(self.variable.name), "")
-        value_entry.on_value_entered.subscribe(self._handle_value_change)
-        self.value_entry = WidgetDrawable(self.canvas, value_entry)
-        self.value_entry.hide()
+        self.value_entry = None
+        """@type value_entry: WidgetDrawable"""
 
     def get_variable_value(self):
         return self.variable.value
-
-    def _handle_value_change(self, value):
-        self.variable.value = value
-        self.canvas.redraw()
 
     def get_tooltip(self):
         return "Value: {}\nAddress: {}".format(self.variable.value,
@@ -901,9 +894,23 @@ class VariableDrawable(Label, VariableContainer):
         """
         @type mouse_data: mouse.MouseData
         """
+        self._create_widget()
+
         self.value_entry.widget.set_value(self.get_variable_value())
         self.value_entry.position = mouse_data.position
         self.value_entry.toggle()
+
+    def _handle_value_change(self, value):
+        self.variable.value = value
+        self.canvas.redraw()
+
+    def _create_widget(self):
+        if not self.value_entry:
+            value_entry = ValueEntry("Edit value of {}"
+                                 .format(self.variable.name), "")
+            value_entry.on_value_entered.subscribe(self._handle_value_change)
+            self.value_entry = WidgetDrawable(self.canvas, value_entry)
+            self.value_entry.hide()
 
 
 class CompositeLabel(LinearLayout, VariableContainer):
