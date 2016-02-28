@@ -31,13 +31,16 @@ def test_types(debugger):
         check_type(debugger, "varUnionA", "unionA", TypeCategory.Union)
         check_type(debugger, "varEnumA", "enumA", TypeCategory.Enumeration)
         check_type(debugger, "varEnumB", "enumB", TypeCategory.Enumeration)
-        check_type(debugger, "varVector",
-                   "std::vector<int, std::allocator<int> >",
-                   TypeCategory.Vector)
+        type = check_type(debugger, "varVector",
+                          "std::vector<int, std::allocator<int> >",
+                          TypeCategory.Vector)
+        assert type.child_type.name == "int"
+
         check_type(debugger, "varString", "std::string", TypeCategory.String)
 
         type = check_type(debugger, "varArray", "int [10]", TypeCategory.Array)
         assert type.count == 10
+        assert type.child_type.name == "int"
 
         check_type(debugger, "varPointer", "int *", TypeCategory.Pointer)
         check_type(debugger, "varReference", "int &", TypeCategory.Reference)

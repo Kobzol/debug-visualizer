@@ -163,16 +163,25 @@ class VariableManager(debugger_api.VariableManager):
             if size_output:
                 size = int(self.parser.parse_print_expression(size_output.
                                                               cli_data[0]))
+
+            args = [type_name, type_category, basic_type_category, size,
+                    tuple(modificators)]
+
             if type_category == TypeCategory.Array:
                 right_bracket_end = type_name.rfind("]")
                 right_bracket_start = type_name.rfind("[")
                 count = int(type_name[
                             right_bracket_start + 1:right_bracket_end])
-                type = ArrayType(type_name, type_category, basic_type_category,
-                                 size, tuple(modificators), count)
+                child_type = self.get_type("{}[0]".format(expression))
+                type = ArrayType(count, child_type, *args)
+            elif type_category == TypeCategory.Vector:
+                child_type = self.debugger.communicator.send(
+                    "python print(gdb.lookup_type(\"{}\")"
+                    ".template_argument(0))".format(type_name))
+                child_type = self.get_type(" ".join(child_type.cli_data))
+                type = ArrayType(0, child_type, *args)
             else:
-                type = Type(type_name, type_category, basic_type_category,
-                            size, tuple(modificators))
+                type = Type(*args)
 
             return type
         else:
@@ -354,7 +363,7 @@ class VariableManager(debugger_api.VariableManager):
         @rtype: list of debugger.debugee.Variable
         """
         items = []
-        for i in xrange(vector.start + vector.size):
+        for i in xrange(vector.start + vector.count):
             expression = vector.path
             if vector.type.type_category == TypeCategory.Array:
                 expression += "[{}]".format(i)

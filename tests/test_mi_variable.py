@@ -31,7 +31,7 @@ def test_values(debugger):
         check_variable(debugger, "strA.x", "5", int_size)
 
         vec = debugger.variable_manager.get_variable("vec")
-        vec.size = vec.max_size
+        vec.count = vec.max_size
         debugger.variable_manager.get_vector_items(vec)
         assert map(lambda child: int(child.value), vec.children) == [1, 2, 3]
 
@@ -51,12 +51,12 @@ def test_update_variable(debugger):
         assert debugger.variable_manager.get_variable("d").value == "hi"
 
         vec = debugger.variable_manager.get_variable("vec")
-        vec.size = vec.max_size
+        vec.count = vec.max_size
         debugger.variable_manager.get_vector_items(vec)
         vec.children[0].value = "10"
 
         vec = debugger.variable_manager.get_variable("vec")
-        vec.size = vec.max_size
+        vec.count = vec.max_size
         debugger.variable_manager.get_vector_items(vec)
         assert vec.children[0].value == "10"
 

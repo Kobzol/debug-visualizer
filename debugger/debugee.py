@@ -78,12 +78,14 @@ class Type(object):
 
 
 class ArrayType(Type):
-    def __init__(self, name, type_category, basic_type_category, size,
-                 modificators=(), count=0):
-        super(ArrayType, self).__init__(name, type_category,
-                                        basic_type_category, size,
-                                        modificators)
+    def __init__(self, count, child_type, *args, **kwargs):
+        """
+        @type count: int
+        @type child_type: Type
+        """
+        super(ArrayType, self).__init__(*args, **kwargs)
         self.count = count
+        self.child_type = child_type
 
 
 class Variable(object):
@@ -180,10 +182,13 @@ class PointerVariable(Variable):
 
 class VectorVariable(Variable):
     def __init__(self, max_size, *args, **kwargs):
+        """
+        @type max_size: int
+        """
         super(VectorVariable, self).__init__(*args, **kwargs)
         self.max_size = max_size
         self.start = 0
-        self.size = 0
+        self.count = 0
 
     def __repr__(self):
         repr = super(VectorVariable, self).__repr__()

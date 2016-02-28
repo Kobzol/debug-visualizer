@@ -1100,7 +1100,7 @@ class VectorDrawable(LinearLayout, VariableContainer):
         super(VectorDrawable, self).__init__(canvas,
                                              LinearLayoutDirection.Horizontal)
         self.variable = vector
-        self.variable.size = min(15, self.variable.max_size)
+        self.variable.count = min(15, self.variable.max_size)
 
         self.start_variable = Variable(value=str(self.variable.start),
                                        name="start index of {}".format(
@@ -1114,7 +1114,7 @@ class VectorDrawable(LinearLayout, VariableContainer):
                                                     size=Size(-1, 20),
                                                     padding=Padding.all(5))
 
-        self.count_variable = Variable(value=str(self.variable.size),
+        self.count_variable = Variable(value=str(self.variable.count),
                                        name="size of {}".format(
                                            self.variable.name
                                        ))
@@ -1143,7 +1143,7 @@ class VectorDrawable(LinearLayout, VariableContainer):
         children = []
 
         self.variable.start = int(self.start_variable.value)
-        self.variable.size = int(self.count_variable.value)
+        self.variable.count = int(self.count_variable.value)
 
         items = self.canvas.debugger.variable_manager.get_vector_items(
             self.variable
