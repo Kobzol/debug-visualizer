@@ -10,9 +10,12 @@ from mouse import ClickHandler
 from size import Size
 from vector import Vector
 from widgets import ValueEntry
-from debugger.enums import TypeCategory
 from debugger.util import EventBroadcaster
 from gui.gui_util import require_gui_thread
+
+
+class NoDrawableFound(BaseException):
+    pass
 
 
 class FontStyle(object):
@@ -379,6 +382,8 @@ class Drawable(object):
         self.on_mouse_enter.subscribe(self.handle_tooltip_start)
         self.on_mouse_leave.subscribe(self.handle_mouse_leave)
         self.on_mouse_leave.subscribe(self.handle_tooltip_end)
+
+        self.canvas.register_drawable(self)
 
     @property
     def visible(self):
@@ -853,8 +858,8 @@ class Image(Drawable):
 
 
 class VariableContainer(object):
-    def __init__(self):
-        self.variable = None
+    def __init__(self, variable):
+        self.variable = variable
 
     def get_drawable_by_index(self, index):
         """
@@ -870,10 +875,10 @@ class VariableDrawable(Label, VariableContainer):
         @type canvas: canvas.Canvas
         @type variable: debugee.Variable
         """
-        self.variable = variable
         super(VariableDrawable, self).__init__(canvas,
                                                self.get_variable_value,
                                                **properties)
+        VariableContainer.__init__(self, variable)
 
         value_entry = ValueEntry("Edit value of {}"
                                  .format(self.variable.name), "")
@@ -901,7 +906,7 @@ class VariableDrawable(Label, VariableContainer):
         self.value_entry.toggle()
 
 
-class CompositeLabel(LinearLayout):
+class CompositeLabel(LinearLayout, VariableContainer):
     def __init__(self, canvas, composite, **properties):
         """
         @type canvas: canvas.Canvas
@@ -910,7 +915,7 @@ class CompositeLabel(LinearLayout):
         super(CompositeLabel, self).__init__(canvas,
                                              LinearLayoutDirection.Vertical,
                                              **properties)
-        self.composite = composite
+        VariableContainer.__init__(self, composite)
 
         label = self.get_composite_label()
         if label:
@@ -955,7 +960,7 @@ class CompositeLabel(LinearLayout):
         raise NotImplementedError()
 
 
-class StackFrameDrawable(CompositeLabel, VariableContainer):
+class StackFrameDrawable(CompositeLabel):
     def __init__(self, canvas, frame, **properties):
         """
         @type canvas: canvas.Canvas
@@ -971,9 +976,9 @@ class StackFrameDrawable(CompositeLabel, VariableContainer):
         @type mouse_data: drawing.mouse.MouseData
         """
         frame = self.canvas.debugger.thread_manager.get_current_frame()
-        if frame.level != self.composite.level:
+        if frame.level != self.variable.level:
             self.canvas.debugger.thread_manager.change_frame(
-                self.composite.level)
+                self.variable.level)
 
     def create_composite_value(self, variable):
         drawable = CompositeLabel.create_composite_value(self, variable)
@@ -982,17 +987,17 @@ class StackFrameDrawable(CompositeLabel, VariableContainer):
         return drawable
 
     def get_composite_label(self):
-        return "Frame {0}".format(self.composite.func)
+        return "Frame {0}".format(self.variable.func)
 
     def get_composite_children(self):
-        return sorted(self.composite.variables,
+        return sorted(self.variable.variables,
                       lambda x, y: cmp(x.name, y.name))
 
     def draw(self):
         frame = self.canvas.debugger.thread_manager.get_current_frame(False)
 
         if frame:
-            if frame.level == self.composite.level:
+            if frame.level == self.variable.level:
                 self.label.bg_color = Color(0.8, 0.2, 0.1)
             else:
                 self.label.bg_color = Drawable.get_default_bg_color()
@@ -1000,13 +1005,12 @@ class StackFrameDrawable(CompositeLabel, VariableContainer):
         CompositeLabel.draw(self)
 
 
-class StructDrawable(CompositeLabel, VariableContainer):
+class StructDrawable(CompositeLabel):
     def __init__(self, canvas, struct, **properties):
         """
         @type canvas: canvas.Canvas
         @type struct: debugee.Variable
         """
-        self.variable = struct
         super(StructDrawable, self).__init__(canvas, struct, **properties)
 
     def create_composite_value(self, variable):
@@ -1020,7 +1024,7 @@ class StructDrawable(CompositeLabel, VariableContainer):
         return None
 
     def get_composite_children(self):
-        return self.composite.children
+        return self.variable.children
 
 
 class PointerDrawable(VariableDrawable):
@@ -1054,8 +1058,10 @@ class PointerDrawable(VariableDrawable):
             else:
                 self._draw_label("")
                 self._draw_arrow()
-        except:
+        except NoDrawableFound:
             self._draw_label(str(self.variable.value))
+        except ValueError:
+            self._draw_label("Invalid")
 
     def _draw_arrow(self):
         drawable = self.canvas.memory_model.get_drawable_by_pointer(
@@ -1072,6 +1078,8 @@ class PointerDrawable(VariableDrawable):
             self.canvas.draw_scheduler.register_action(
                 self.canvas.draw_scheduler.last_level,
                 lambda: DrawingUtils.draw_arrow_path(self.canvas, path))
+        else:
+            raise NoDrawableFound()
 
     def _draw_label(self, label):
         """
@@ -1079,23 +1087,6 @@ class PointerDrawable(VariableDrawable):
         """
         self.label = label
         super(PointerDrawable, self).draw()
-
-
-class VectorValueDrawable(Label, VariableContainer):
-    def __init__(self, canvas, variable):
-        """
-        @type canvas: canvas.Canvas
-        @type variable: debugee.Variable
-        """
-        super(VectorValueDrawable, self).__init__(canvas, self.get_name)
-        self.variable = variable
-
-    def get_name(self):
-        if self.variable.type.type_category in (TypeCategory.Builtin,
-                                                TypeCategory.String):
-            return str(self.variable.value)
-        else:
-            return "C"
 
 
 class VectorDrawable(LinearLayout, VariableContainer):
@@ -1106,7 +1097,7 @@ class VectorDrawable(LinearLayout, VariableContainer):
         """
         super(VectorDrawable, self).__init__(canvas,
                                              LinearLayoutDirection.Horizontal)
-        self.variable = vector
+        VariableContainer.__init__(self, vector)
         self.variable.count = min(15, self.variable.max_size)
 
         self.start_variable = Variable(value=str(self.variable.start),

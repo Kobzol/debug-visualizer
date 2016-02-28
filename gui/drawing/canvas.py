@@ -3,6 +3,7 @@
 from gi.repository import Gtk
 from gi.repository import Gdk
 
+from debugger.debugee import Variable
 from drawable import DrawingUtils, Color, LinearLayout,\
     LinearLayoutDirection, VariableContainer
 from memtoview import MemToViewTransformer
@@ -92,6 +93,10 @@ class Canvas(Gtk.EventBox):
         """@type cr: cairo.Context"""
 
         self.drawables = []
+        """@type drawables: list of drawable.Drawable"""
+        self.drawable_registry = []
+        """@type drawable_registry: list of drawable.Drawable"""
+
         self.tooltip_drawable = None
         self.first_draw = True
 
@@ -192,7 +197,15 @@ class Canvas(Gtk.EventBox):
 
     def clear_drawables(self):
         self.drawables = []
+        self.drawable_registry = []
         self.redraw()
+
+    def register_drawable(self, drawable):
+        """
+        Registers the given drawable in the canvas.
+        @type drawable: drawable.Drawable
+        """
+        self.drawable_registry.append(drawable)
 
     def set_cursor(self, cursor):
         """
@@ -256,106 +269,49 @@ class Canvas(Gtk.EventBox):
         self.redraw()
 
 
-class ModelView(object):
-    def __init__(self, model, view):
-        """
-        @type model: debugee.Variable | debugee.Frame
-        @type view: drawable.Drawable
-        """
-        self.model = model
-        self.view = view
-
-
 class MemoryModel(object):
     def __init__(self, canvas):
         """
         @type canvas: MemoryCanvas
         """
         self.canvas = canvas
-        self.frames = []
         self.heap = []
         self.heap_wrapper = None
         self.stack_wrapper = None
         self.wrapper = None
-        self.addr_to_drawable_map = {}
-
-    def add_frame(self, frame):
-        """
-        @type frame: ModelView
-        """
-        self.frames.append(frame)
-
-        for drawable in frame.view.children:
-            var = self._get_var_from_drawable(drawable)
-            if var and var.address:
-                self.addr_to_drawable_map[var.address] = drawable
 
     def get_drawable_by_pointer(self, pointer):
         """
         @type pointer: debugee.PointerVariable
         @rtype: drawing.drawable.Drawable | None
         """
-        if pointer.value in self.addr_to_drawable_map:
-            return self.addr_to_drawable_map[pointer.value]
+        for drawable in self.canvas.drawable_registry:
+            if isinstance(drawable, VariableContainer):
+                var = drawable.variable
+                if isinstance(var, Variable):
+                    if var.address == pointer.value:
+                        return drawable
+
+        var = self.canvas.debugger.variable_manager.get_variable(
+            "{{{}}}({})".format(
+                pointer.target_type.name,
+                pointer.value
+            ))
+
+        if var:
+            drawable = self.canvas.memtoview.transform_var(var)
+            self.heap_wrapper.add_child(drawable)
+            self.canvas.redraw()
+
+            return drawable
         else:
-            address = pointer.value
-            for addr, drawable in self.addr_to_drawable_map.iteritems():
-                container = self._get_var_container_from_drawable(drawable)
-                index = container.variable.get_index_by_address(address)
-                if index is not None:
-                    item_drawable = container.get_drawable_by_index(index)
-                    if item_drawable:
-                        return item_drawable
-
-            var = self.canvas.debugger.variable_manager.get_variable(
-                "{{{}}}({})".format(
-                    pointer.target_type.name,
-                    pointer.value
-                ))
-
-            if var:
-                drawable = self.canvas.memtoview.transform_var(var)
-                mv = ModelView(var, drawable)
-                self.addr_to_drawable_map[pointer.value] = drawable
-                self.heap.append(mv)
-                self.heap_wrapper.add_child(drawable)
-                self.canvas.redraw()
-
-                return drawable
-            else:
-                return None
+            return None
 
     def get_drawables(self):
         """
         @rtype: list of drawing.drawable.Drawable
         """
         return [self.wrapper]
-
-    def _get_var_from_drawable(self, drawable):
-        """
-        @type drawable: drawable.Drawable
-        @rtype: debugger.debugee.Variable | None
-        """
-        container = self._get_var_container_from_drawable(drawable)
-        if container:
-            return container.variable
-        else:
-            return None
-
-    def _get_var_container_from_drawable(self, drawable):
-        """
-        @type drawable: drawable:Drawable
-        @rtype: drawable.VariableContainer
-        """
-        if isinstance(drawable, VariableContainer):
-            return drawable
-        else:
-            for child in drawable.children:
-                drawable = self._get_var_container_from_drawable(child)
-                if drawable:
-                    return drawable
-
-        return None
 
     def prepare_gui(self, selected_frame=None):
         """
@@ -377,11 +333,9 @@ class MemoryModel(object):
         if selected_frame:
             v = self.canvas.debugger.thread_manager.get_frames_with_variables()
             for i, fr in enumerate(v):
-                fr_wrapper = ModelView(fr, self.canvas.memtoview
-                                       .transform_frame(fr))
-                self.add_frame(fr_wrapper)
-                fr_wrapper.view.margin.bottom = 20
-                self.stack_wrapper.add_child(fr_wrapper.view)
+                fr = self.canvas.memtoview.transform_frame(fr)
+                fr.margin.bottom = 20
+                self.stack_wrapper.add_child(fr)
 
             for var in selected_frame.variables:
                 var.on_value_changed.subscribe(self.canvas._handle_var_change)
@@ -425,6 +379,7 @@ class MemoryCanvas(Canvas):
         """
         @type frame: debugee.Frame
         """
+        self.clear_drawables()
         self.fixed_wrapper.remove_all()
 
         self.memory_model = MemoryModel(self)
