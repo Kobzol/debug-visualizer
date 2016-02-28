@@ -57,16 +57,6 @@ class MemToViewTransformer(object):
         """
         return drawable.VectorDrawable(self.canvas, var)
 
-    def create_cstring(self, var):
-        """
-        @type var: debugee.Variable
-        @rtype: drawable.CStringDrawable
-        """
-        return drawable.CStringDrawable(self.canvas, var,
-                                        padding=Padding.all(5),
-                                        size=Size(-1, 20),
-                                        max_size=Size(100, -1))
-
     def transform_var(self, var):
         """
         @type var: debugee.Variable

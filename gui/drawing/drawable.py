@@ -536,7 +536,9 @@ class Drawable(object):
         for child in children:
             child.parent = self
             self.click_handler.propagate_handler(child.click_handler)
-        self.invalidate()
+
+        if len(children) > 0:
+            self.invalidate()
 
     def handle_mouse_event(self, mouse_data):
         """
@@ -933,10 +935,12 @@ class CompositeLabel(LinearLayout, VariableContainer):
                                margin=Margin(0, 0, 5, 0))
             self.add_child(self.label)
 
+        children = []
         for var in self.get_composite_children():
             drawable = self.create_composite_value(var)
             if drawable:
-                self.add_child(drawable)
+                children.append(drawable)
+        self.add_children(children)
 
     def create_composite_value(self, variable):
         """

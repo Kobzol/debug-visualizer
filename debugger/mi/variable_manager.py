@@ -136,14 +136,10 @@ class VariableManager(debugger_api.VariableManager):
                 basic_type_category = basic_type_map[type]
                 type_category = TypeCategory.Builtin
             else:
-                if type_name.startswith("struct"):
-                    type_category = TypeCategory.Struct
-                elif type_name.startswith("class"):
-                    type_category = TypeCategory.Class
-                elif type_name.startswith("union"):
-                    type_category = TypeCategory.Union
-                elif type_name.startswith("enum"):
-                    type_category = TypeCategory.Enumeration
+                if type_name.startswith("std::vector"):
+                    type_category = TypeCategory.Vector
+                elif type_name.startswith("std::string"):
+                    type_category = TypeCategory.String
                 elif type_name.endswith("*"):
                     type_category = TypeCategory.Pointer
                 elif type_name.endswith("&"):
@@ -152,10 +148,14 @@ class VariableManager(debugger_api.VariableManager):
                     type_category = TypeCategory.Array
                 elif type_name.endswith(")"):
                     type_category = TypeCategory.Function
-                elif type_name.startswith("std::vector"):
-                    type_category = TypeCategory.Vector
-                elif type_name.startswith("std::string"):
-                    type_category = TypeCategory.String
+                elif type.startswith("struct"):
+                    type_category = TypeCategory.Struct
+                elif type.startswith("class"):
+                    type_category = TypeCategory.Class
+                elif type.startswith("union"):
+                    type_category = TypeCategory.Union
+                elif type.startswith("enum"):
+                    type_category = TypeCategory.Enumeration
 
             size = None
             size_output = self.debugger.communicator.send("p sizeof({0})".
@@ -249,7 +249,7 @@ class VariableManager(debugger_api.VariableManager):
             elif type.type_category in (TypeCategory.Class,
                                         TypeCategory.Struct):
                 result = self.debugger.communicator.send(
-                    "python print([field.name for field in"
+                    "python print([field.name for field in "
                     "gdb.lookup_type(\"{0}\").fields()])".format(type.name)
                 )
 
@@ -257,11 +257,11 @@ class VariableManager(debugger_api.VariableManager):
                     members = self.parser.parse_struct_member_names(
                         result.cli_data[0])
                     for member in members:
-                        children.append(self.get_variable("{0}.{1}".format(
+                        children.append(self.get_variable("({0}).{1}".format(
                             expression, member)))
                 variable = Variable(address, name, value, type, expression)
 
-            elif type.type_category == TypeCategory.Vector:  # TODO
+            elif type.type_category == TypeCategory.Vector:
                 length = self.get_variable(
                     "({0}._M_impl._M_finish - {0}._M_impl._M_start)"
                     .format(expression))
@@ -283,6 +283,9 @@ class VariableManager(debugger_api.VariableManager):
                 variable = VectorVariable(length, data_address, address, name,
                                           value, type, expression)
 
+            elif type.type_category in (TypeCategory.Union,
+                                        TypeCategory.Enumeration):
+                variable = Variable(address, name, data, type, expression)
             else:
                 raise NotImplementedError()  # TODO
 
