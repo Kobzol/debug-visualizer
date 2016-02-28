@@ -1,22 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from debugger.enums import ProcessState
+from tests.conftest import setup_debugger
 
-THREAD_LINE = 22
-
-
-def prepare_debugger(debugger, on_state_change=None):
-    debugger.load_binary("src/test_thread")
-    debugger.breakpoint_manager.add_breakpoint("src/test_thread.cpp",
-                                               THREAD_LINE)
-    debugger.launch()
-    debugger.wait_for_stop()
-
-    if on_state_change:
-        def on_stop(state, data):
-            if state == ProcessState.Stopped:
-                on_state_change()
-        debugger.on_process_state_changed.subscribe(on_stop)
+TEST_FILE = "test_thread"
+TEST_LINE = 29
 
 
 def select_other_thread(debugger):
@@ -38,7 +25,10 @@ def test_thread_info(debugger):
         assert len(thread_info.threads) == 2
         assert thread_info.selected_thread.id == 1
 
-    prepare_debugger(debugger, test_thread_info_cb)
+        debugger.quit_program()
+
+    setup_debugger(debugger, TEST_FILE, TEST_LINE, test_thread_info_cb,
+                   cont=False)
 
 
 def test_thread_switch(debugger):
@@ -48,7 +38,10 @@ def test_thread_switch(debugger):
         thread_info = debugger.thread_manager.get_thread_info()
         assert thread_info.selected_thread.id == selected.id
 
-    prepare_debugger(debugger, test_thread_switch_cb)
+        debugger.quit_program()
+
+    setup_debugger(debugger, TEST_FILE, TEST_LINE, test_thread_switch_cb,
+                   cont=False)
 
 
 def test_thread_location(debugger):
@@ -59,22 +52,28 @@ def test_thread_location(debugger):
 
         assert debugger.file_manager.get_current_location()[1] in range(9, 18)
 
-    prepare_debugger(debugger, test_thread_location_cb)
+        debugger.quit_program()
+
+    setup_debugger(debugger, TEST_FILE, TEST_LINE,
+                   test_thread_location_cb, cont=False)
 
 
 def test_thread_frame(debugger):
     def test_thread_frame_cb():
         thread_info = debugger.thread_manager.get_thread_info()
-        frame = debugger.thread_manager.get_current_frame()
+        frame = debugger.thread_manager.get_current_frame(True)
 
         assert thread_info.selected_thread.frame.func == frame.func
-        assert "b" in [var.name for var in frame.variables]
+        vars = [var.name for var in frame.variables]
+        assert "thread" in vars
+        assert "result" in vars
 
         select_other_thread(debugger)
 
-        frame = debugger.thread_manager.get_current_frame()
-        assert "a" in [var.name
-                       for var
-                       in frame.variables]
+        frame = debugger.thread_manager.get_current_frame(True)
+        assert "param" in [var.name for var in frame.variables]
 
-    prepare_debugger(debugger, test_thread_frame_cb)
+        debugger.quit_program()
+
+    setup_debugger(debugger, TEST_FILE, TEST_LINE, test_thread_frame_cb,
+                   cont=False)

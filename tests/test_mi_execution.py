@@ -3,76 +3,91 @@
 import os
 import time
 
-EXECUTION_FILE = "src/test_execution.cpp"
+from tests.conftest import AsyncState, setup_debugger
+
+TEST_FILE = "test_execution"
 
 
 def make_location(line):
-    return (os.path.abspath(EXECUTION_FILE), line)
-
-
-def prepare_execution_program(debugger, line=None):
-    debugger.load_binary("src/test_execution")
-
-    if line:
-        debugger.breakpoint_manager.add_breakpoint(EXECUTION_FILE, line)
-
-    debugger.launch()
-
-    if line:
-        debugger.wait_for_stop()
+    return (os.path.abspath("src/{}.cpp".format(TEST_FILE)), line)
 
 
 def test_step_over(debugger):
-    prepare_execution_program(debugger, 11)
+    state = AsyncState()
 
-    debugger.exec_step_over()
-    debugger.wait_for_stop()
+    def test_step_over_cb():
+        if state.state == 0:
+            state.inc()
+            debugger.exec_step_over()
+        else:
+            assert debugger.file_manager.get_current_location() ==\
+                make_location(12)
+            debugger.quit_program()
 
-    assert debugger.file_manager.get_current_location() == make_location(12)
+    setup_debugger(debugger, TEST_FILE, 11, test_step_over_cb, cont=False)
 
 
 def test_step_in(debugger):
-    prepare_execution_program(debugger, 11)
+    state = AsyncState()
 
-    debugger.exec_step_in()
-    debugger.wait_for_stop()
+    def test_step_in_cb():
+        if state.state == 0:
+            state.inc()
+            debugger.exec_step_in()
+        else:
+            assert debugger.file_manager.get_current_location() ==\
+                make_location(5)
+            debugger.quit_program()
 
-    assert debugger.file_manager.get_current_location() == make_location(5)
+    setup_debugger(debugger, TEST_FILE, 11, test_step_in_cb, cont=False)
 
 
 def test_step_out(debugger):
-    prepare_execution_program(debugger, 5)
+    state = AsyncState()
 
-    debugger.exec_step_out()
-    debugger.wait_for_stop()
+    def test_step_out_cb():
+        if state.state == 0:
+            state.inc()
+            debugger.exec_step_out()
+        else:
+            location = debugger.file_manager.get_current_location()
+            assert location[0] == make_location(11)[0]
+            assert location[1] in (11, 12)
+            debugger.quit_program()
 
-    location = debugger.file_manager.get_current_location()
-    assert location[0] == make_location(11)[0]
-    assert location[1] in (11, 12)
+    setup_debugger(debugger, TEST_FILE, 5, test_step_out_cb, cont=False)
 
 
 def test_continue(debugger):
-    prepare_execution_program(debugger, 11)
+    state = AsyncState()
 
-    debugger.breakpoint_manager.add_breakpoint(EXECUTION_FILE, 13)
+    def test_continue_cb():
+        if state.state == 0:
+            state.inc()
+            debugger.exec_continue()
+        else:
+            assert debugger.file_manager.get_current_location() ==\
+                make_location(13)
+            debugger.quit_program()
 
-    debugger.exec_continue()
-    debugger.wait_for_stop()
-
-    assert debugger.file_manager.get_current_location() == make_location(13)
+    setup_debugger(debugger, TEST_FILE, (11, 13), test_continue_cb,
+                   cont=False)
 
 
 def test_pause(debugger):
-    prepare_execution_program(debugger)
+    def test_pause_cb():
+        debugger.quit_program()
+
+    setup_debugger(debugger, TEST_FILE, [], test_pause_cb,
+                   cont=False, wait=False)
 
     time.sleep(0.5)
     debugger.exec_pause()
-    debugger.wait_for_stop()
 
 
 def test_stop(debugger):
-    prepare_execution_program(debugger)
+    setup_debugger(debugger, TEST_FILE, [], None,
+                   cont=False, wait=False)
 
     time.sleep(0.5)
     debugger.quit_program()
-    debugger.wait_for_stop()

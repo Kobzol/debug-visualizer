@@ -2,49 +2,51 @@
 
 import os
 
-FRAME_FILE = "src/test_frame.cpp"
-FRAME_LINE = 6
+from tests.conftest import setup_debugger
 
-
-def prepare_frame_program(debugger):
-    debugger.load_binary("src/test_frame")
-    debugger.breakpoint_manager.add_breakpoint(FRAME_FILE, FRAME_LINE)
-    debugger.launch()
-    debugger.wait_for_stop()
+TEST_FILE = "test_frame"
+TEST_LINE = 6
 
 
 def test_frame_list(debugger):
-    prepare_frame_program(debugger)
+    def test_frame_list_cb():
+        assert len(debugger.thread_manager.get_frames()) == 2
 
-    assert len(debugger.thread_manager.get_frames()) == 2
+    setup_debugger(debugger, TEST_FILE, TEST_LINE, test_frame_list_cb)
 
 
 def test_frame_properties(debugger):
-    prepare_frame_program(debugger)
+    def test_frame_properties_cb():
+        frame = debugger.thread_manager.get_current_frame(False)
 
-    frame = debugger.thread_manager.get_current_frame()
+        assert frame.file == os.path.abspath("src/{}.cpp".format(TEST_FILE))
+        assert frame.line == TEST_LINE
+        assert frame.func == "test"
+        assert frame.level == 0
+        assert len(frame.variables) == 0
 
-    assert frame.file == os.path.abspath(FRAME_FILE)
-    assert frame.line == FRAME_LINE
-    assert frame.func == "test"
-    assert frame.level == 0
+    setup_debugger(debugger, TEST_FILE, TEST_LINE,
+                   test_frame_properties_cb)
 
 
 def test_frame_select(debugger):
-    prepare_frame_program(debugger)
+    def test_frame_select_cb():
+        assert debugger.thread_manager.change_frame(1)
 
-    assert debugger.thread_manager.change_frame(1)
+        frame = debugger.thread_manager.get_current_frame(False)
 
-    frame = debugger.thread_manager.get_current_frame()
+        assert frame.func == "main"
 
-    assert frame.func == "main"
+    setup_debugger(debugger, TEST_FILE, TEST_LINE, test_frame_select_cb)
 
 
 def test_frame_locals(debugger):
-    prepare_frame_program(debugger)
-    frame = debugger.thread_manager.get_current_frame()
+    def test_frame_locals_cb():
+        frame = debugger.thread_manager.get_current_frame(True)
 
-    assert len(frame.variables) == 4
+        assert len(frame.variables) == 4
 
-    var_names = [var.name for var in frame.variables]
-    assert set(var_names) == {"a", "b", "c", "d"}
+        var_names = [var.name for var in frame.variables]
+        assert set(var_names) == {"a", "b", "c", "d"}
+
+    setup_debugger(debugger, TEST_FILE, TEST_LINE, test_frame_locals_cb)

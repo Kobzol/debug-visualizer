@@ -1,19 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from debugger.enums import TypeCategory, BasicTypeCategory, ProcessState
+from debugger.enums import TypeCategory, BasicTypeCategory
+from tests.conftest import setup_debugger
 
-
-def prepare_debugger(debugger, on_state_change=None):
-    debugger.load_binary("src/test_type")
-    debugger.breakpoint_manager.add_breakpoint("src/test_type.cpp", 51)
-    debugger.launch()
-    debugger.wait_for_stop()
-
-    if on_state_change:
-        def on_stop(state, data):
-            if state == ProcessState.Stopped:
-                on_state_change()
-        debugger.on_process_state_changed.subscribe(on_stop)
+TEST_FILE = "test_type"
+TEST_LINE = 51
 
 
 def check_type(debugger, variable_name, type_name, type_category,
@@ -23,6 +14,8 @@ def check_type(debugger, variable_name, type_name, type_category,
     assert type.name == type_name
     assert type.type_category == type_category
     assert type.basic_type_category == basic_type_category
+
+    return type
 
 
 def test_types(debugger):
@@ -42,10 +35,13 @@ def test_types(debugger):
                    "std::vector<int, std::allocator<int> >",
                    TypeCategory.Vector)
         check_type(debugger, "varString", "std::string", TypeCategory.String)
-        check_type(debugger, "varArray", "int [10]", TypeCategory.Array)
+
+        type = check_type(debugger, "varArray", "int [10]", TypeCategory.Array)
+        assert type.count == 10
+
         check_type(debugger, "varPointer", "int *", TypeCategory.Pointer)
         check_type(debugger, "varReference", "int &", TypeCategory.Reference)
         check_type(debugger, "varFunctionPointer", "void (*)(void)",
                    TypeCategory.Function)
 
-    prepare_debugger(debugger, test_types_cb)
+    setup_debugger(debugger, TEST_FILE, TEST_LINE, test_types_cb)

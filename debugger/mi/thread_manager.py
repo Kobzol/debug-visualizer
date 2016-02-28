@@ -53,7 +53,7 @@ class ThreadManager(debugger_api.ThreadManager):
         else:
             return False
 
-    def get_current_frame(self, with_variables):
+    def get_current_frame(self, with_variables=False):
         """
         Returns the current stack frame, optionally with it's parameters.
         @type with_variables: bool

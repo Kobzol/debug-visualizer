@@ -7,17 +7,11 @@ so it may not work elsewhere.
 """
 
 import copy
-import time
 
-FRAME_FILE = "src/test_alloc.cpp"
-FRAME_LINE = 8
+from tests.conftest import setup_debugger
 
-
-def prepare_frame_program(debugger):
-    debugger.load_binary("src/test_alloc")
-    debugger.breakpoint_manager.add_breakpoint(FRAME_FILE, FRAME_LINE)
-    debugger.launch()
-    debugger.wait_for_stop()
+TEST_FILE = "test_alloc"
+TEST_LINE = 8
 
 
 def test_alloc(debugger):
@@ -26,10 +20,9 @@ def test_alloc(debugger):
                                                    heap.append(
                                                        copy.copy(new_heap)))
 
-    prepare_frame_program(debugger)
+    def test_alloc_cb():
+        assert len(heap[0]) == 1
+        assert heap[0][0].size == 1024
+        assert len(heap[1]) == 0
 
-    time.sleep(1)
-
-    assert len(heap[0]) == 1
-    assert heap[0][0].size == 1024
-    assert len(heap[1]) == 0
+    setup_debugger(debugger, TEST_FILE, TEST_LINE, test_alloc_cb)

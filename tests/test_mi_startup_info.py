@@ -1,39 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
-
 import os
-import time
-import pytest
 
 from debugger.debugger_api import StartupInfo
-from debugger.enums import ProcessState, DebuggerState
+from tests.conftest import setup_debugger
 
-STARTUP_FILE = "src/test_startup_info.cpp"
-STARTUP_EXECUTABLE_FILE = "src/test_startup_info"
-LINE = 15
-
-
-def prepare_debugger(debugger, startup_info, on_state_change=None):
-    debugger.load_binary(STARTUP_EXECUTABLE_FILE)
-    debugger.breakpoint_manager.add_breakpoint(STARTUP_FILE, LINE)
-
-    if on_state_change:
-        def on_stop(state, data):
-            if state == ProcessState.Stopped:
-                try:
-                    on_state_change()
-                except Exception as exc:
-                    pytest.fail(exc, pytrace=True)
-                finally:
-                    debugger.quit_program()
-
-        debugger.on_process_state_changed.subscribe(on_stop)
-
-    debugger.launch(startup_info)
-
-    while debugger.state.is_set(DebuggerState.Running):
-        time.sleep(0.1)
+TEST_FILE = "test_startup_info"
+TEST_LINE = 15
 
 
 def test_startup_info(debugger):
@@ -52,10 +25,11 @@ def test_startup_info(debugger):
 
         assert lines == [
             "3",
-            os.path.abspath(STARTUP_EXECUTABLE_FILE),
+            os.path.abspath("src/{}".format(TEST_FILE)),
             "test1",
             "test2",
             env_value
         ]
 
-    prepare_debugger(debugger, startup_info, test_startup_info_cb)
+    setup_debugger(debugger, TEST_FILE, TEST_LINE,
+                   test_startup_info_cb, startup_info)

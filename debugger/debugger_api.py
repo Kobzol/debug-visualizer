@@ -216,8 +216,9 @@ class ThreadManager(object):
         """
         raise NotImplementedError()
 
-    def get_current_frame(self):
+    def get_current_frame(self, with_variables=False):
         """
+        @type with_variables: bool
         @rtype: debugee.Frame | None
         """
         raise NotImplementedError()

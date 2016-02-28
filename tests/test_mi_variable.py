@@ -1,24 +1,12 @@
 # -*- coding: utf-8 -*-
 
-import ctypes
+from collections import Iterable
 
-from debugger.enums import ProcessState
+from tests.conftest import setup_debugger
 
-int_size = ctypes.sizeof(ctypes.c_voidp)
-
-
-def prepare_debugger(debugger, on_state_change=None):
-    assert debugger.load_binary("src/test_variable")
-    assert debugger.breakpoint_manager.add_breakpoint("src/test_variable.cpp",
-                                                      36)
-    assert debugger.launch()
-    debugger.wait_for_stop()
-
-    if on_state_change:
-        def on_stop(state, data):
-            if state == ProcessState.Stopped:
-                on_state_change()
-        debugger.on_process_state_changed.subscribe(on_stop)
+int_size = (4, 8)
+TEST_FILE = "test_variable"
+TEST_LINE = 36
 
 
 def check_variable(debugger, expression, value, size=None):
@@ -28,7 +16,10 @@ def check_variable(debugger, expression, value, size=None):
     assert variable.value == value
 
     if size:
-        assert variable.type.size == size
+        if isinstance(size, Iterable):
+            assert variable.type.size in size
+        else:
+            assert variable.type.size == size
 
 
 def test_values(debugger):
@@ -40,9 +31,11 @@ def test_values(debugger):
         check_variable(debugger, "strA.x", "5", int_size)
 
         vec = debugger.variable_manager.get_variable("vec")
+        vec.size = vec.max_size
+        debugger.variable_manager.get_vector_items(vec)
         assert map(lambda child: int(child.value), vec.children) == [1, 2, 3]
 
-    prepare_debugger(debugger, test_values_cb)
+    setup_debugger(debugger, TEST_FILE, TEST_LINE, test_values_cb)
 
 
 def test_update_variable(debugger):
@@ -58,12 +51,17 @@ def test_update_variable(debugger):
         assert debugger.variable_manager.get_variable("d").value == "hi"
 
         vec = debugger.variable_manager.get_variable("vec")
+        vec.size = vec.max_size
+        debugger.variable_manager.get_vector_items(vec)
         vec.children[0].value = "10"
 
         vec = debugger.variable_manager.get_variable("vec")
+        vec.size = vec.max_size
+        debugger.variable_manager.get_vector_items(vec)
         assert vec.children[0].value == "10"
 
-    prepare_debugger(debugger, test_update_variable_cb)
+    setup_debugger(debugger, TEST_FILE, TEST_LINE,
+                   test_update_variable_cb)
 
 
 def test_get_memory(debugger):
@@ -75,4 +73,4 @@ def test_get_memory(debugger):
         assert len(debugger.variable_manager.get_memory(
             var.address, 128)) == 128
 
-    prepare_debugger(debugger, test_get_memory_cb)
+    setup_debugger(debugger, TEST_FILE, TEST_LINE, test_get_memory_cb)

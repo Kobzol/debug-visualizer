@@ -5,19 +5,10 @@ This test is made towards a specific version of GDB and operating system
 (i686), so it may not work elsewhere.
 """
 
-SRC_FILE = "src/test_disassemble.cpp"
+from tests.conftest import setup_debugger
 
-
-def prepare_program(debugger, line=None):
-    debugger.load_binary("src/test_disassemble")
-
-    if line:
-        debugger.breakpoint_manager.add_breakpoint(SRC_FILE, line)
-
-    debugger.launch()
-
-    if line:
-        debugger.wait_for_stop()
+TEST_FILE = "test_disassemble"
+SRC_FILE = "src/{}.cpp".format(TEST_FILE)
 
 
 def generate_instructions(instruction, reg32bit, reg64bit):
@@ -26,50 +17,55 @@ def generate_instructions(instruction, reg32bit, reg64bit):
 
 
 def test_address_invalid_file(debugger):
-    prepare_program(debugger, 3)
+    def test_address_invalid_file_cb():
+        assert debugger.file_manager.get_line_address("x.cpp", 0) is None
 
-    assert debugger.file_manager.get_line_address("x.cpp", 0) is None
+    setup_debugger(debugger, TEST_FILE, 3, test_address_invalid_file_cb)
 
 
 def test_address_invalid_line(debugger):
-    prepare_program(debugger, 3)
+    def test_address_invalid_line_cb():
+        assert debugger.file_manager.get_line_address(SRC_FILE, 100) is None
 
-    assert debugger.file_manager.get_line_address(SRC_FILE, 100) is None
+    setup_debugger(debugger, TEST_FILE, 3, test_address_invalid_line_cb)
 
 
 def test_address_no_code(debugger):
-    prepare_program(debugger, 3)
+    def test_address_no_code_cb():
+        assert debugger.file_manager.get_line_address(SRC_FILE, 5) is None
 
-    assert debugger.file_manager.get_line_address(SRC_FILE, 5) is None
+    setup_debugger(debugger, TEST_FILE, 3, test_address_no_code_cb)
 
 
 def test_address_with_code(debugger):
-    prepare_program(debugger, 3)
+    def test_address_with_code_cb():
+        assert debugger.file_manager.get_line_address(SRC_FILE, 3) in ((
+            "0x8048471", "0x8048478"
+        ), (
+            "0x4004f8", "0x4004ff"
+        ))
 
-    assert debugger.file_manager.get_line_address(SRC_FILE, 3) in ((
-        "0x8048471", "0x8048478"
-    ), (
-        "0x4004f8", "0x4004ff"
-    ))
+    setup_debugger(debugger, TEST_FILE, 3, test_address_with_code_cb)
 
 
 def test_disassemble(debugger):
-    prepare_program(debugger, 3)
+    def test_disassemble_cb():
+        disas = debugger.file_manager.disassemble(SRC_FILE, 3)
 
-    disas = debugger.file_manager.disassemble(SRC_FILE, 3)
+        assert len(disas) == 6
 
-    assert len(disas) == 6
+        decl_ds = disas[1]
 
-    decl_ds = disas[1]
+        assert decl_ds["line"] == 3
+        assert len(decl_ds["instructions"]) == 1
+        assert decl_ds["instructions"][0] in (
+            generate_instructions("movl   $0x5,-0x4(%{})", "ebp", "rbp"))
 
-    assert decl_ds["line"] == 3
-    assert len(decl_ds["instructions"]) == 1
-    assert decl_ds["instructions"][0] in (
-        generate_instructions("movl   $0x5,-0x4(%{})", "ebp", "rbp"))
+        assign_ds = disas[2]
 
-    assign_ds = disas[2]
+        assert assign_ds["line"] == 4
+        assert len(assign_ds["instructions"]) == 1
+        assert assign_ds["instructions"][0] in (
+            generate_instructions("addl   $0xa,-0x4(%{})", "ebp", "rbp"))
 
-    assert assign_ds["line"] == 4
-    assert len(assign_ds["instructions"]) == 1
-    assert assign_ds["instructions"][0] in (
-        generate_instructions("addl   $0xa,-0x4(%{})", "ebp", "rbp"))
+    setup_debugger(debugger, TEST_FILE, 3, test_disassemble_cb)
