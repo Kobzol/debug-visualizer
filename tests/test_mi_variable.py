@@ -7,7 +7,7 @@ from tests.conftest import setup_debugger
 
 int_size = (4, 8)
 TEST_FILE = "test_variable"
-TEST_LINE = 43
+TEST_LINE = 53
 
 
 def check_variable(debugger, expression, value=None, size=None):
@@ -78,8 +78,6 @@ def test_composite(debugger):
     setup_debugger(debugger, TEST_FILE, TEST_LINE, test_composite_cb)
 
 
-# TODO: test unions
-
 def test_enum(debugger):
     def test_enum_cb():
         enumA = debugger.variable_manager.get_variable("enumA")
@@ -89,6 +87,16 @@ def test_enum(debugger):
         assert enumB.value == "EnumB::B"
 
     setup_debugger(debugger, TEST_FILE, TEST_LINE, test_enum_cb)
+
+
+def test_union(debugger):
+    def test_union_cb():
+        uniA = debugger.variable_manager.get_variable("uniA")
+        assert uniA.children[0].value == "5"
+        assert uniA.children[0].value == uniA.children[1].value
+        assert uniA.children[0].address == uniA.children[1].address
+
+    setup_debugger(debugger, TEST_FILE, TEST_LINE, test_union_cb)
 
 
 def test_update_variable(debugger):

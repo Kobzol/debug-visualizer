@@ -14,14 +14,15 @@ class MemToViewTransformer(object):
         self.function_map = {
             TypeCategory.Builtin: self.create_basic,
             TypeCategory.String: self.create_basic,
+            TypeCategory.CString: self.create_basic,
+            TypeCategory.Enumeration: self.create_basic,
             TypeCategory.Pointer: self.create_pointer,
             TypeCategory.Reference: self.create_pointer,
             TypeCategory.Struct: self.create_struct,
             TypeCategory.Class: self.create_struct,
+            TypeCategory.Union: self.create_struct,
             TypeCategory.Array: self.create_vector,
-            TypeCategory.Vector: self.create_vector,
-            TypeCategory.CString: self.create_basic,
-            TypeCategory.Enumeration: self.create_basic
+            TypeCategory.Vector: self.create_vector
         }
         self.canvas = canvas
 

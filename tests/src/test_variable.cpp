@@ -16,6 +16,13 @@ public:
     void test() { }
 };
 
+union unionA
+{
+public:
+    int a;
+    int b;
+};
+
 enum EnumA { A, B };
 enum class EnumB { A, B };
 
@@ -39,6 +46,9 @@ int main()
 
     EnumA enumA = EnumA::A;
     EnumB enumB = EnumB::B;
+
+    unionA uniA;
+    uniA.a = 5;
 
     return 0;
 }
