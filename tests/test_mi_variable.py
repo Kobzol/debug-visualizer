@@ -6,7 +6,7 @@ from tests.conftest import setup_debugger
 
 int_size = (4, 8)
 TEST_FILE = "test_variable"
-TEST_LINE = 36
+TEST_LINE = 37
 
 
 def check_variable(debugger, expression, value=None, size=None):
@@ -57,6 +57,24 @@ def test_values(debugger):
         assert vec.data_address != vec.address
 
     setup_debugger(debugger, TEST_FILE, TEST_LINE, test_values_cb)
+
+
+def test_composite(debugger):
+    def test_composite_cb():
+        strA = debugger.variable_manager.get_variable("strA")
+        children = strA.children
+        assert children[0].name == "x"
+        assert children[0].value == "5"
+        assert children[1].name == "y"
+        assert children[1].value == "hello"
+
+        clsA = debugger.variable_manager.get_variable("clsA")
+        assert clsA.children[0].children[0].value == strA.children[0].value
+
+    setup_debugger(debugger, TEST_FILE, TEST_LINE, test_composite_cb)
+
+
+# TODO: test enums and unions
 
 
 def test_update_variable(debugger):
