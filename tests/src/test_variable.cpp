@@ -16,6 +16,9 @@ public:
     void test() { }
 };
 
+enum EnumA { A, B };
+enum class EnumB { A, B };
+
 int main()
 {
     std::vector<int> vec = { 1, 2, 3 };
@@ -33,6 +36,9 @@ int main()
     clsA.str = strA;
     clsA.vec = std::vector<int>();
     clsA.vec.push_back(a);
+
+    EnumA enumA = EnumA::A;
+    EnumB enumB = EnumB::B;
 
     return 0;
 }

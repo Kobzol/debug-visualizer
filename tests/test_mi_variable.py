@@ -2,11 +2,12 @@
 
 from collections import Iterable
 
+from debugger.enums import TypeCategory
 from tests.conftest import setup_debugger
 
 int_size = (4, 8)
 TEST_FILE = "test_variable"
-TEST_LINE = 37
+TEST_LINE = 43
 
 
 def check_variable(debugger, expression, value=None, size=None):
@@ -62,6 +63,8 @@ def test_values(debugger):
 def test_composite(debugger):
     def test_composite_cb():
         strA = debugger.variable_manager.get_variable("strA")
+        assert strA.type.type_category == TypeCategory.Struct
+
         children = strA.children
         assert children[0].name == "x"
         assert children[0].value == "5"
@@ -69,12 +72,23 @@ def test_composite(debugger):
         assert children[1].value == "hello"
 
         clsA = debugger.variable_manager.get_variable("clsA")
+        assert clsA.type.type_category == TypeCategory.Class
         assert clsA.children[0].children[0].value == strA.children[0].value
 
     setup_debugger(debugger, TEST_FILE, TEST_LINE, test_composite_cb)
 
 
-# TODO: test enums and unions
+# TODO: test unions
+
+def test_enum(debugger):
+    def test_enum_cb():
+        enumA = debugger.variable_manager.get_variable("enumA")
+        assert enumA.value == "A"
+
+        enumB = debugger.variable_manager.get_variable("enumB")
+        assert enumB.value == "EnumB::B"
+
+    setup_debugger(debugger, TEST_FILE, TEST_LINE, test_enum_cb)
 
 
 def test_update_variable(debugger):

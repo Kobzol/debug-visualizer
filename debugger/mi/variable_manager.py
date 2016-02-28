@@ -247,7 +247,8 @@ class VariableManager(debugger_api.VariableManager):
                 variable = Variable(address, name, value, type, expression)
 
             elif type.type_category in (TypeCategory.Class,
-                                        TypeCategory.Struct):
+                                        TypeCategory.Struct,
+                                        TypeCategory.Union):
                 result = self.debugger.communicator.send(
                     "python print([field.name for field in "
                     "gdb.lookup_type(\"{0}\").fields()])".format(type.name)
@@ -283,8 +284,7 @@ class VariableManager(debugger_api.VariableManager):
                 variable = VectorVariable(length, data_address, address, name,
                                           value, type, expression)
 
-            elif type.type_category in (TypeCategory.Union,
-                                        TypeCategory.Enumeration):
+            elif type.type_category == TypeCategory.Enumeration:
                 variable = Variable(address, name, data, type, expression)
             else:
                 raise NotImplementedError()  # TODO
