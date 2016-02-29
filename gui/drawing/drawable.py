@@ -427,6 +427,8 @@ class Drawable(object):
 
         self.canvas.register_drawable(self)
 
+        self.cached_rect = None
+
     @property
     def visible(self):
         return self._visible
@@ -524,6 +526,7 @@ class Drawable(object):
         @type value: drawing.vector.Vector
         """
         self._position = value.copy()
+        self.cached_rect = None
         self.place_children()
 
     def toggle(self):
@@ -634,11 +637,15 @@ class Drawable(object):
         return None
 
     def get_rect(self):
+        if self.cached_rect:
+            return self.cached_rect
+
         if not self.visible:
             return RectangleBBox(self.position)
 
-        return RectangleBBox(self.position,
+        self.cached_rect = RectangleBBox(self.position,
                              self.get_computed_size() + self.padding.to_size())
+        return self.cached_rect
 
     def get_center(self):
         """
@@ -663,6 +670,7 @@ class Drawable(object):
         Invalidates this drawable, placing it's children and sending it's
         parent a message that it has changd.
         """
+        self.cached_rect = None
         if self.parent:
             self.parent.on_child_changed(self)
         self.place_children()
@@ -725,44 +733,6 @@ class LinearLayout(Drawable):
         return (rectangle + self.padding).size
 
 
-class ToggleDrawable(Drawable):
-    def __init__(self, canvas, drawables):
-        """
-        Represents a drawable that toggles several drawables on a mouse click.
-        @type canvas: canvas.Canvas
-        @type drawables: list of Drawable
-        """
-        super(ToggleDrawable, self).__init__(canvas)
-
-        self.drawables = list(drawables)
-        self.current_drawable = 0
-
-    @Drawable.position.setter
-    def position(self, value):
-        """
-        @type value: drawing.vector.Vector
-        """
-        Drawable.position.fset(self, value)
-        for drawable in self.drawables:
-            drawable.position = value
-
-    def get_active_drawable(self):
-        return self.drawables[self.current_drawable]
-
-    def get_rect(self):
-        return self.get_active_drawable().get_rect()
-
-    def handle_mouse_click(self, mouse_data):
-        """
-        @type mouse_data: drawing.mouse.MouseData
-        """
-        self.current_drawable = (self.current_drawable + 1) % len(
-            self.drawables)
-
-    def draw(self):
-        self.get_active_drawable().draw()
-
-
 class Label(Drawable):
     def __init__(self, canvas, label, font_style=None, **properties):
         """
@@ -777,7 +747,16 @@ class Label(Drawable):
             font_style = FontStyle()
 
         self.font_style = font_style
-        self.label = label if label is not None else ""
+        self._label = label if label is not None else ""
+
+    @property
+    def label(self):
+        return self._label
+
+    @label.setter
+    def label(self, value):
+        self._label = value
+        self.cached_rect = None
 
     def get_label(self):
         if isinstance(self.label, basestring):
@@ -817,12 +796,6 @@ class Label(Drawable):
     def get_content_size(self):
         return DrawingUtils.get_text_size(self.canvas, self.get_label(),
                                           font_style=self.font_style)
-
-    def get_rect(self):
-        if not self.visible:
-            return RectangleBBox(self.position)
-
-        return Drawable.get_rect(self)
 
     def get_tooltip(self):
         return self.get_label()
