@@ -1120,17 +1120,22 @@ class PointerDrawable(VariableDrawable):
         drawable = self.canvas.memory_model.get_drawable_by_pointer(
             self.variable)
         if drawable:
+            scale = 50.0
             start = self.get_center()
-            target_rect = drawable.get_rect()
-            target = drawable.get_center()
-            target.x += target_rect.width / 2.0
-            path = [start,
-                    Vector(start.x, target.y),
-                    target]
+
+            target_size = drawable.get_rect()
+            end = drawable.position + Vector(0, target_size.height / 2.0)
+
+            direction = end - start
+            segments = (start + direction * 0.33,
+                        start + direction * 0.66)
+            rotated_dir = direction.rotate(-90, start).normalized()
+            segments = map(lambda point: point + rotated_dir * scale, segments)
 
             self.canvas.draw_scheduler.register_action(
                 self.canvas.draw_scheduler.last_level,
-                lambda: DrawingUtils.draw_arrow_path(self.canvas, path))
+                lambda: DrawingUtils.draw_arrow_curve(
+                    self.canvas, (start, segments[0], segments[1], end)))
         else:
             raise NoDrawableFound()
 

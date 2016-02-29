@@ -198,7 +198,6 @@ class Canvas(Gtk.EventBox):
     def clear_drawables(self):
         self.drawables = []
         self.drawable_registry = []
-        self.redraw()
 
     def register_drawable(self, drawable):
         """
