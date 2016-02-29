@@ -376,7 +376,7 @@ class Drawable(object):
     def get_default_bg_color():
         return Color(0.5, 0.5, 0.5, 1.0)
 
-    @require_gui_thread
+    #@require_gui_thread
     def __init__(self, canvas, **properties):
         """
         @type canvas: drawing.canvas.Canvas
@@ -991,7 +991,10 @@ class CompositeLabel(LinearLayout, VariableContainer):
         """
         drawable = self.canvas.memtoview.transform_var(variable)
         if not drawable:
-            drawable = Label(self.canvas, "Invalid")
+            drawable = Label(self.canvas,
+                             "Invalid",
+                             size=Size(-1, 20),
+                             padding=Padding.all(5))
 
         wrapper = LabelWrapper(self.canvas,
                                Label(self.canvas,
@@ -1230,6 +1233,7 @@ class VectorDrawable(LinearLayout, VariableContainer):
 
 
 class WidgetDrawable(Drawable):
+    @require_gui_thread
     def __init__(self, canvas, widget, **properties):
         """
         @type canvas: canvas.Canvas
@@ -1239,6 +1243,7 @@ class WidgetDrawable(Drawable):
         self.widget = widget
         self.canvas.fixed_wrapper.put(self.widget, 0, 0)
 
+    @require_gui_thread
     @Drawable.visible.setter
     def visible(self, value):
         """
@@ -1247,6 +1252,7 @@ class WidgetDrawable(Drawable):
         self.widget.props.visible = value
         Drawable.visible.fset(self, value)
 
+    @require_gui_thread
     @Drawable.position.setter
     def position(self, value):
         """

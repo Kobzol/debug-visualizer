@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import re
 from collections import Iterable
 
 from debugger.enums import TypeCategory
@@ -7,7 +7,7 @@ from tests.conftest import setup_debugger
 
 int_size = (4, 8)
 TEST_FILE = "test_variable"
-TEST_LINE = 53
+TEST_LINE = 60
 
 
 def check_variable(debugger, expression, value=None, size=None):
@@ -97,6 +97,15 @@ def test_union(debugger):
         assert uniA.children[0].address == uniA.children[1].address
 
     setup_debugger(debugger, TEST_FILE, TEST_LINE, test_union_cb)
+
+
+def test_function_pointer(debugger):
+    def test_function_pointer_cb():
+        fn_pointer = debugger.variable_manager.get_variable("fn_pointer")
+        assert fn_pointer.type.name == "int (*)(int, float)"
+        assert re.match("0x(\w)+ <test\(int, float\)>", fn_pointer.value)
+
+    setup_debugger(debugger, TEST_FILE, TEST_LINE, test_function_pointer_cb)
 
 
 def test_update_variable(debugger):

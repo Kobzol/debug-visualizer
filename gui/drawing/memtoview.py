@@ -16,6 +16,7 @@ class MemToViewTransformer(object):
             TypeCategory.String: self.create_basic,
             TypeCategory.CString: self.create_basic,
             TypeCategory.Enumeration: self.create_basic,
+            TypeCategory.Function: self.create_basic,
             TypeCategory.Pointer: self.create_pointer,
             TypeCategory.Reference: self.create_pointer,
             TypeCategory.Struct: self.create_struct,

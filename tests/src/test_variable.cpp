@@ -26,6 +26,11 @@ public:
 enum EnumA { A, B };
 enum class EnumB { A, B };
 
+int test(int a, float b)
+{
+
+}
+
 int main()
 {
     std::vector<int> vec = { 1, 2, 3 };
@@ -49,6 +54,8 @@ int main()
 
     unionA uniA;
     uniA.a = 5;
+
+    int (*fn_pointer)(int, float) = test;
 
     return 0;
 }

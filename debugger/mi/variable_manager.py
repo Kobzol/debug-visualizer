@@ -239,8 +239,11 @@ class VariableManager(debugger_api.VariableManager):
                                            type, expression)
 
             elif type.type_category == TypeCategory.Function:
-                variable = Variable(address, name, value, type, expression)
-                # TODO
+                # skip function pointer type
+                if data.startswith("({}) ".format(type.name)):
+                    data = data[(3 + len(type.name)):]
+
+                variable = Variable(address, name, data, type, expression)
 
             elif type.type_category == TypeCategory.String:
                 value = data.strip("\"")
@@ -293,7 +296,8 @@ class VariableManager(debugger_api.VariableManager):
             elif type.type_category == TypeCategory.Enumeration:
                 variable = Variable(address, name, data, type, expression)
             else:
-                raise NotImplementedError()  # TODO
+                raise NotImplementedError("{} {}".format(
+                    expression, type.name))  # TODO
 
             if variable:
                 variable.on_value_changed.subscribe(self.update_variable)
