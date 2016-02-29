@@ -199,7 +199,33 @@ class DrawingUtils(object):
         cr.restore()
 
     @staticmethod
-    def draw_arrow(canvas, point_from, point_to, color=Color(), width=1):
+    def draw_curve(canvas, points, color=Color(), width=1.0):
+        """
+        Draws a cubic Bézier spline. Start is given by points[0], end by
+        points[3], points[1] and [2] are control points.
+        @type canvas: drawing.canvas.Canvas
+        @type points: list or tuple of drawing.vector.Vector
+        @type color: Color
+        @type width: float
+        """
+        if len(points) != 4:
+            raise ValueError("Bad number of points given")
+
+        cr = canvas.cr
+        cr.save()
+
+        DrawingUtils.set_color(canvas, color)
+        cr.set_line_width(width)
+
+        cr.move_to(points[0].x, points[0].y)
+        cr.curve_to(points[1].x, points[1].y, points[2].x, points[2].y,
+                    points[3].x, points[3].y)
+        cr.stroke()
+
+        cr.restore()
+
+    @staticmethod
+    def draw_arrow(canvas, point_from, point_to, color=Color(), width=1.0):
         """
         @type canvas: drawing.canvas.Canvas
         @type point_from: vector.Vector
@@ -215,21 +241,21 @@ class DrawingUtils(object):
         vec_arrow = point_to.sub(point_from)
 
         wing = vec_arrow.inverse().normalized().scaled(10)
-        wing_right = wing.copy().rotate(45)
-        wing_left = wing.copy().rotate(-45)
+        wing_right = wing.rotate(45)
+        wing_left = wing.rotate(-45)
 
         DrawingUtils.draw_line(canvas, point_to,
-                               wing_right.add(point_to).to_point(), color,
+                               wing_right.add(point_to), color,
                                width)
         DrawingUtils.draw_line(canvas, point_to,
-                               wing_left.add(point_to).to_point(), color,
+                               wing_left.add(point_to), color,
                                width)
 
     @staticmethod
-    def draw_arrow_path(canvas, path, color=Color(), width=1):
+    def draw_arrow_path(canvas, path, color=Color(), width=1.0):
         """
         @type canvas: drawing.canvas.Canvas
-        @type path: list of (drawing.vector.Vector)
+        @type path: list or tuple of drawing.vector.Vector
         @type color: Color
         @type width: float
         """
@@ -251,7 +277,23 @@ class DrawingUtils(object):
             point_from = point_to
 
     @staticmethod
-    def draw_rectangle(canvas, position, size, color=Color(), width=1,
+    def draw_arrow_curve(canvas, points, color=Color(), width=1.0):
+        """
+        Draws an arrow with a Bézier curve path.
+        @type canvas: drawing.canvas.Canvas
+        @type points: list or tuple of drawing.vector.Vector
+        @type color: Color
+        @type width: float
+        """
+        DrawingUtils.draw_curve(canvas, points, color, width)
+
+        direction = (points[2] - points[3]).normalized()
+        point_from = points[3] + direction
+
+        DrawingUtils.draw_arrow(canvas, point_from, points[3], color, width)
+
+    @staticmethod
+    def draw_rectangle(canvas, position, size, color=Color(), width=1.0,
                        center=False, stroke=True):
         cr = canvas.cr
         cr.save()
