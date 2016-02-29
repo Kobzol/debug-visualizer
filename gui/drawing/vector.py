@@ -60,19 +60,28 @@ class Vector(object):
         return math.degrees(math.atan2(self.x, -self.y))
 
     def rotate(self, angle, point=(0, 0)):
+        """
+        Returns a copy of this vector rotated by the given angle in degrees
+        around the given point.
+        @type angle: float
+        @type point: Vector
+        @rtype: Vector
+        """
+        point = Vector.vectorize(point)
+
         theta = math.radians(angle)
 
         sin = math.sin(theta)
         cos = math.cos(theta)
 
-        px = self.x - point[0]
-        py = self.y - point[1]
+        px = self.x - point.x
+        py = self.y - point.y
 
         rot_x = px * cos - py * sin
         rot_y = px * sin + py * cos
 
-        rot_x += point[0]
-        rot_y += point[1]
+        rot_x += point.x
+        rot_y += point.y
 
         return Vector(rot_x, rot_y)
 
