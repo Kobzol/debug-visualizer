@@ -72,10 +72,16 @@ class MainWindow(Gtk.Window):
                     self.source_manager.open_file(main_file)
                 else:
                     MessageBox.show(
-                        "Source for {} couldn't be loaded".format(binary_path))
+                        "Source for {} couldn't be loaded".format(binary_path),
+                        "Main source file load error",
+                        self
+                    )
             else:
                 MessageBox.show(
-                    "File {} couldn't be loaded".format(binary_path))
+                    "File {} couldn't be loaded".format(binary_path),
+                    "Binary file load error",
+                    self
+                )
 
     def _init_components(self, app):
         """
