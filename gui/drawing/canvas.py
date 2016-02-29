@@ -172,7 +172,8 @@ class Canvas(Gtk.EventBox):
         self.draw_scheduler.reset()
 
         for drawable in self.get_drawables():
-            drawable.draw()
+            if drawable:
+                drawable.draw()
 
         self.draw_scheduler.invoke_actions()
 
@@ -310,7 +311,10 @@ class MemoryModel(object):
         """
         @rtype: list of drawing.drawable.Drawable
         """
-        return [self.wrapper]
+        if self.wrapper:
+            return [self.wrapper]
+        else:
+            return []
 
     def prepare_gui(self, selected_frame=None):
         """
@@ -343,7 +347,7 @@ class MemoryModel(object):
 class MemoryCanvas(Canvas):
     def __init__(self, debugger):
         """
-        @type debugger: lldbc.lldb_debugger.LldbDebugger
+        @type debugger: debugger.debugger_api.Debugger
         """
         super(MemoryCanvas, self).__init__()
 
@@ -353,7 +357,7 @@ class MemoryCanvas(Canvas):
         self.debugger.on_frame_changed.subscribe(self._handle_frame_change)
 
         self.memtoview = MemToViewTransformer(self)
-        self.memory_model = None
+        self.memory_model = MemoryModel(self)
 
         self._rebuild(None)
 
