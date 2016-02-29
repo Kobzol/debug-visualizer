@@ -258,8 +258,10 @@ class VariableManager(debugger_api.VariableManager):
                     members = self.parser.parse_struct_member_names(
                         result.cli_data[0])
                     for member in members:
-                        children.append(self.get_variable("({0}).{1}".format(
-                            expression, member)))
+                        child = self.get_variable("({0}).{1}".format(
+                            expression, member))
+                        if child:
+                            children.append(child)
                 variable = Variable(address, name, value, type, expression)
 
             elif type.type_category == TypeCategory.Vector:
@@ -278,8 +280,12 @@ class VariableManager(debugger_api.VariableManager):
                                           value, type, expression)
             elif type.type_category == TypeCategory.Array:
                 length = type.count
-                data_address = self.get_variable(
-                    "&{}[0]".format(expression)).value
+                data_address = self.get_variable("&({}[0])".format(expression))
+
+                if data_address:
+                    data_address = data_address.value
+                else:
+                    data_address = ""
 
                 variable = VectorVariable(length, data_address, address, name,
                                           value, type, expression)
