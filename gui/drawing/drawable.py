@@ -376,7 +376,6 @@ class Drawable(object):
     def get_default_bg_color():
         return Color(0.5, 0.5, 0.5, 1.0)
 
-    #@require_gui_thread
     def __init__(self, canvas, **properties):
         """
         @type canvas: drawing.canvas.Canvas
@@ -824,14 +823,15 @@ class Label(Drawable):
 
 
 class LabelWrapper(LinearLayout):
-    def __init__(self, canvas, label, inner_drawable):
+    def __init__(self, canvas, label, inner_drawable, **properties):
         """
         @type canvas: canvas.Canvas
         @type label: Label
         @type inner_drawable: Drawable
         """
         super(LabelWrapper, self).__init__(canvas,
-                                           LinearLayoutDirection.Horizontal)
+                                           LinearLayoutDirection.Horizontal,
+                                           **properties)
         self.label = label
         self.inner_drawable = inner_drawable
 
@@ -978,8 +978,8 @@ class CompositeLabel(LinearLayout, VariableContainer):
                                      max_size=Size(40, 20),
                                      padding=Padding.all(5),
                                      margin=Margin(0, 1, 0, 0)),
-                               drawable)
-        wrapper.margin.bottom = 4
+                               drawable,
+                               margin=Margin(0, 0, 4, 0))
         return wrapper
 
     def get_composite_label(self):
@@ -1124,6 +1124,8 @@ class PointerDrawable(VariableDrawable):
 
 
 class VectorDrawable(LinearLayout, VariableContainer):
+    MAX_INITIAL_SHOW_COUNT = 10
+
     def __init__(self, canvas, vector):
         """
         @type canvas: drawing.canvas.Canvas
@@ -1132,7 +1134,8 @@ class VectorDrawable(LinearLayout, VariableContainer):
         super(VectorDrawable, self).__init__(canvas,
                                              LinearLayoutDirection.Horizontal)
         VariableContainer.__init__(self, vector)
-        self.variable.count = min(15, self.variable.max_size)
+        self.variable.count = min(VectorDrawable.MAX_INITIAL_SHOW_COUNT,
+                                  self.variable.max_size)
 
         self.start_variable = Variable(value=str(self.variable.start),
                                        name="start index of {}".format(
