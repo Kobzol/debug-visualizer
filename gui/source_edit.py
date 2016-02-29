@@ -369,6 +369,8 @@ class SourceManager(Gtk.Notebook):
 
     @require_gui_thread
     def set_exec_line(self, file_path, line_number):
+        self.unset_exec_line()
+
         tab = self.open_file(file_path)
         tab.set_exec_line(line_number - 1)
 
