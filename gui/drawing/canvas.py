@@ -298,7 +298,7 @@ class MemoryModel(object):
                 pointer.value
             ))
 
-        if var:
+        if var and var.address == pointer.value:
             drawable = self.canvas.memtoview.transform_var(var)
             self.heap_wrapper.add_child(drawable)
             self.canvas.redraw()
