@@ -32,7 +32,7 @@ def build_gdb():
 
         with open(gdb_src_zip, 'wb') as archive:
             while True:
-                data = gdb.read(1024)
+                data = gdb.read(4096)
                 if len(data) < 1:
                     break
                 else:
@@ -41,38 +41,40 @@ def build_gdb():
                     print("\r{:0.2f} %".format((total_read / float(length)) *
                                                100.0), end="")
         print("\n")
-    print("Extracting GDB...")
 
-    with tarfile.open(gdb_src_zip) as archive:
-        archive.extractall(gdb_extract_dir)
+    if not os.path.isfile(os.path.join(gdb_build_dir, "gdb")):
+        print("Extracting GDB...")
 
-    cwd = os.getcwd()
-    os.chdir(gdb_src_dir)
+        with tarfile.open(gdb_src_zip) as archive:
+            archive.extractall(gdb_extract_dir)
 
-    print("Compiling and installing GDB...")
+        cwd = os.getcwd()
+        os.chdir(gdb_src_dir)
 
-    result = subprocess.call("./configure --prefix={0} --bindir={0}"
+        print("Compiling and installing GDB...")
+
+        result = subprocess.call("./configure --prefix={0} --bindir={0}"
                              " --with-python"
                              .format(gdb_build_dir), shell=True)
-    try:
-        if result == 0:
-            result == subprocess.call("make -j4", shell=True)
-
-            if result != 0:
-                raise BaseException("GDB could no be compiled")
-            else:
-                result == subprocess.call("make install", shell=True)
+        try:
+            if result == 0:
+                result == subprocess.call("make -j4", shell=True)
 
                 if result != 0:
-                    raise BaseException("GDB could not be installed")
-        else:
-            raise BaseException("GDB could not be configured")
-    except Exception as exc:
-        print(exc.message)
-        shutil.rmtree(gdb_extract_dir, ignore_errors=True)
-        shutil.rmtree(gdb_build_dir, ignore_errors=True)
+                    raise BaseException("GDB could no be compiled")
+                else:
+                    result == subprocess.call("make install", shell=True)
 
-    os.chdir(cwd)
+                    if result != 0:
+                        raise BaseException("GDB could not be installed")
+            else:
+                raise BaseException("GDB could not be configured")
+        except Exception as exc:
+            print(exc.message)
+            shutil.rmtree(gdb_extract_dir, ignore_errors=True)
+            shutil.rmtree(gdb_build_dir, ignore_errors=True)
+
+        os.chdir(cwd)
 
 
 def patch_lldb(conf):
@@ -111,6 +113,7 @@ def configure(conf):
 
 def build(ctx):
     ctx.recurse("debugger")
+    ctx.recurse("examples")
     build_gdb()
 
 
@@ -120,7 +123,7 @@ def download(ctx):
     subprocess.check_call(["sudo", "apt-get", "install"] + apt_args)
 
 
-def cleanall(ctx):
+def clean(ctx):
     import shutil
     shutil.rmtree("./docs", True)
     shutil.rmtree("./build", True)

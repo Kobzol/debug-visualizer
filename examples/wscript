@@ -1,0 +1,11 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+
+def build(ctx):
+    ctx.env.append_value("CXXFLAGS", "-g")
+    ctx.env.append_value("CXXFLAGS", "-O0")
+    ctx.env.append_value("CXXFLAGS", "-pthread")
+    ctx.env.append_value("CXXFLAGS", "-std=c++11")
+
+    ctx.recurse("sort")

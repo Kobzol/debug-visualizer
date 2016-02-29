@@ -1,0 +1,6 @@
+def build(ctx):
+    ctx.program(
+        source="sort.cpp",
+        target="sort",
+        linkflags=ctx.env.CXXFLAGS
+    )
