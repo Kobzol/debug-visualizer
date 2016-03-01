@@ -7,6 +7,7 @@ import tempfile
 
 from threading import Event, Thread
 
+import time
 
 root_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -256,5 +257,25 @@ class EventBroadcaster(object):
 
     def __call__(self, *args, **kwargs):
         self.notify(*args, **kwargs)
+
+
+class Profiler(object):
+    def __init__(self, name=""):
+        self.name = name
+        self.start = 0
+        self.fn_info = None
+
+    def __enter__(self):
+        func = inspect.currentframe().f_back.f_code
+        self.fn_info = "{}:{}".format(func.co_filename, func.co_firstlineno)
+        self.start = time.clock()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        elapsed_time = time.clock() - self.start
+        if self.name:
+            print("Profiler {} took {} s".format(self.name, elapsed_time))
+        else:
+            print(
+                "Profiler at {} took {} s".format(self.fn_info, elapsed_time))
 
 Logger.init_logger(logging.DEBUG)
