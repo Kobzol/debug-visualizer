@@ -21,5 +21,5 @@ class VisualiserApp(object):
         Gtk.main_quit()
 
     def start(self):
-        self.main_window.show_all()
+        self.main_window.show()
         Gtk.main()

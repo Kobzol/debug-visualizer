@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 
+import Queue
 import logging
 import inspect
 import os
 import tempfile
+import threading
 
 from threading import Event, Thread
 
@@ -71,6 +73,7 @@ class RepeatTimer(Thread):
         self.wait_time = time
         self.callback = callback
         self.daemon = True
+        self.name = "RepeatTimer with period {}".format(time)
 
     def _callback(self):
         while self.stop_event and not self.stop_event.wait(self.wait_time):
@@ -277,5 +280,38 @@ class Profiler(object):
         else:
             print(
                 "Profiler at {} took {} s".format(self.fn_info, elapsed_time))
+
+
+class Worker(Thread):
+    WORKER_ID = 0
+
+    def __init__(self):
+        super(Worker, self).__init__(target=self._do_work)
+        self.jobs = Queue.Queue()
+        self.lock = threading.Lock()
+        self.stop = False
+        self.daemon = True
+        self.name = "Worker {}".format(Worker.WORKER_ID)
+        Worker.WORKER_ID += 1
+
+    def stop(self):
+        self.stop = True
+        self.jobs.put((lambda: 0, [], None))
+
+    def add_job(self, fn, args, callback):
+        """
+        @type fn: callable
+        @type args: list of object
+        @type callback: callable
+        """
+        self.jobs.put((fn, args, callback))
+
+    def _do_work(self):
+        while not self.stop:
+            job = self.jobs.get()
+            job[0](*job[1])
+            if job[2]:
+                job[2]()
+
 
 Logger.init_logger(logging.DEBUG)

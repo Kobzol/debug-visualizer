@@ -3,12 +3,10 @@
 from gi.repository import Gtk
 
 import os
-
 import sys
 
 import paths
 from config import Config
-from debugger import util
 
 from drawing.canvas import MemoryCanvas, CanvasToolbarWrapper
 from gui.startup_dialog import StartupDialog
@@ -90,6 +88,7 @@ class MainWindow(Gtk.Window):
         # wrapper
         self.wrapper = Gtk.Grid.new()
         self.wrapper.set_row_homogeneous(False)
+        self.wrapper.show()
         self.add(self.wrapper)
 
         # menu
@@ -121,6 +120,7 @@ class MainWindow(Gtk.Window):
         self.content.add1(self.source_manager)
 
         canvas = MemoryCanvas(app.debugger)
+        canvas.show_all()
         Config.GUI_MEMORY_CANVAS_TOOLBAR.connect_signals({
             "zoom-in": lambda *x: canvas.zoom_in(),
             "zoom-out": lambda *x: canvas.zoom_out(),
@@ -128,7 +128,10 @@ class MainWindow(Gtk.Window):
             "translation-reset": lambda *x: canvas.reset_translation()
         })
         canvas_toolbar = Config.GUI_MEMORY_CANVAS_TOOLBAR.get_object("toolbar")
-        self.content.add2(CanvasToolbarWrapper(canvas, canvas_toolbar))
+        self.content.show_all()
+        toolbar_wrapper = CanvasToolbarWrapper(canvas, canvas_toolbar)
+        toolbar_wrapper.show()
+        self.content.add2(toolbar_wrapper)
 
         self.content.set_position(400)
 
@@ -172,10 +175,12 @@ class MainWindow(Gtk.Window):
                                    TitleWindow("Heap detail",
                                                self.heap_detail))
 
+        self.tool_manager.show_all()
         self._add_to_row(self.tool_manager, 3)
 
         # status bar
         self.status_bar = Gtk.Statusbar.new()
+        self.status_bar.show()
         self._add_to_row(self.status_bar, 4)
 
     def _add_to_row(self, widget, row_index):

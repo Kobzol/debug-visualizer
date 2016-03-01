@@ -643,7 +643,8 @@ class Drawable(object):
             return RectangleBBox(self.position)
 
         self.cached_rect = RectangleBBox(self.position,
-                             self.get_computed_size() + self.padding.to_size())
+                                         self.get_computed_size() +
+                                         self.padding.to_size())
         return self.cached_rect
 
     def get_center(self):
@@ -923,8 +924,8 @@ class VariableDrawable(Label, VariableContainer):
 
     def _create_widget(self):
         if not self.value_entry:
-            value_entry = ValueEntry("Edit value of {}"
-                                 .format(self.variable.name), "")
+            value_entry = ValueEntry(
+                "Edit value of {}".format(self.variable.name), "")
             value_entry.on_value_entered.subscribe(self._handle_value_change)
             self.value_entry = WidgetDrawable(self.canvas, value_entry)
             self.value_entry.hide()

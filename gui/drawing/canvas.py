@@ -2,10 +2,13 @@
 
 from gi.repository import Gtk
 from gi.repository import Gdk
+from gi.repository import GdkPixbuf
 
 from debugger.debugee import Variable
+from debugger.util import Worker, EventBroadcaster
 from drawable import DrawingUtils, Color, LinearLayout,\
     LinearLayoutDirection, VariableContainer
+from gui import paths
 from memtoview import MemToViewTransformer
 from mouse import MouseButtonState, MouseData, TranslationHandler
 from vector import Vector
@@ -101,6 +104,9 @@ class Canvas(Gtk.EventBox):
         self.first_draw = True
 
         self.draw_scheduler = LayeredDrawScheduler(3)
+
+        self.on_load_start = EventBroadcaster()
+        self.on_load_end = EventBroadcaster()
 
     def _notify_handlers(self):
         mouse_data = self.get_mouse_data()
@@ -359,7 +365,8 @@ class MemoryCanvas(Canvas):
         self.memtoview = MemToViewTransformer(self)
         self.memory_model = MemoryModel(self)
 
-        self._rebuild(None)
+        self.drawable_worker = Worker()
+        self.drawable_worker.start()
 
     def _handle_var_change(self, variable):
         self.redraw()
@@ -385,26 +392,47 @@ class MemoryCanvas(Canvas):
         self.clear_drawables()
         self.fixed_wrapper.remove_all()
 
+        self.on_load_start.notify()
+        self.drawable_worker.add_job(self._rebuild_job, [frame],
+                                     self._rebuild_job_callback)
+
+    def _rebuild_job(self, frame):
         self.memory_model = MemoryModel(self)
         self.memory_model.prepare_gui(frame)
 
+    def _rebuild_job_callback(self):
+        self.on_load_end.notify()
         self.redraw()
 
     def _rebuild(self, frame):
         run_on_gui(self._rebuild_gui, frame)
 
 
-class CanvasToolbarWrapper(Gtk.VBox):
+class CanvasToolbarWrapper(Gtk.Box):
     def __init__(self, canvas, toolbar):
         """
         Wrapper for a canvas with it's toolbar.
         @type canvas: Canvas
         @type toolbar: Gtk.Toolbar
         """
-        super(CanvasToolbarWrapper, self).__init__()
+        Gtk.Box.__init__(self)
+        self.set_orientation(Gtk.Orientation.VERTICAL)
 
         self.canvas = canvas
         self.toolbar = toolbar
 
-        self.pack_start(self.toolbar, False, False, 0)
+        loading_anim = GdkPixbuf.PixbufAnimation.new_from_file(
+            paths.get_resource("img/reload.gif")
+        )
+        self.loading_img = Gtk.Image.new_from_animation(loading_anim)
+
+        self.toolbar_box = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
+        self.toolbar_box.show()
+        self.toolbar_box.pack_start(self.toolbar, True, True, 0)
+        self.toolbar_box.pack_end(self.loading_img, False, False, 5)
+
+        self.pack_start(self.toolbar_box, False, False, 0)
         self.pack_start(self.canvas, True, True, 0)
+
+        self.canvas.on_load_start.subscribe(lambda *x: self.loading_img.show())
+        self.canvas.on_load_end.subscribe(lambda *x: self.loading_img.hide())

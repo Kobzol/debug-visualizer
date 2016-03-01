@@ -128,7 +128,7 @@ class SourceEditor(GtkSource.View):
 
         if (self.file and
                 self.debugger.state.is_set(DebuggerState.BinaryLoaded) and
-                    self.debugger.process_state != ProcessState.Running):
+                self.debugger.process_state != ProcessState.Running):
             for bp in self.debugger.breakpoint_manager.get_breakpoints():
                 if os.path.abspath(bp.location) == os.path.abspath(self.file):
                     lines.append(bp.line - 1)
