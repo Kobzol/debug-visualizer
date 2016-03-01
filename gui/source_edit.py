@@ -318,7 +318,13 @@ class SourceManager(Gtk.Notebook):
         button.set_focus_on_click(False)
         button.connect("clicked", lambda *x: self._close_tab(widget))
 
-        content.pack_start(label, True, True, 0)
+        event_box = Gtk.EventBox.new()
+        event_box.add(label)
+        event_box.connect("button-press-event",
+                          lambda source, event: self._handle_tab_label_press(
+                              event, widget))
+
+        content.pack_start(event_box, True, True, 0)
         content.pack_start(button, False, False, 0)
         content.show_all()
 
@@ -341,6 +347,7 @@ class SourceManager(Gtk.Notebook):
         window = SourceWindow(editor)
 
         label = self._create_label(file_path, window)
+
         menu_label = Gtk.Label(label=file_path)
         menu_label.set_alignment(0, 0)
 
@@ -354,6 +361,16 @@ class SourceManager(Gtk.Notebook):
             return editor
         else:
             return None
+
+    @require_gui_thread
+    def _handle_tab_label_press(self, event, window):
+        """
+        @type event: Gdk.EventButton
+        @type window: SourceWindow
+        """
+        if (event.type == Gdk.EventType.BUTTON_PRESS and
+                event.button == 2):
+            self._close_tab(window)
 
     @require_gui_thread
     def get_tabs(self):
