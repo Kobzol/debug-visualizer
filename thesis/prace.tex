@@ -556,7 +556,7 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 				a umožňuje jiným komponentám reagovat na alokace v reálném čase pomocí událostí.
 				
 				\parspace Nevýhodou tohoto řešení je, že nebude fungovat, pokud bude laděný program používat staticky přilinkovanou systémovou knihovnu
-				\footnote{Linker \textit{ld} linkuje knihovny staticky při použití přepínače \textbf{-static}}.
+				\footnote{Linker \textit{ld} připojuje knihovny k spustitelnému souboru staticky při použití přepínače \textbf{-static}}.
 				Tato situace ale není obvyklá a v případě potřeby může tvůrce laděného programu pro účely ladění systémovou knihovnu linkovat dynamicky.
 				Otevření souboru pro komunikaci a získávání adresy původních funkcí dále musí být synchronizováno, aby nedošlo k souběhu u vícevláknových aplikací.
 				Toto řešení však nevyžaduje zastavení procesu při každé alokaci a poskytuje zachytávání alokačních funkcí nezávislé na použitém debuggeru, proto
@@ -576,7 +576,7 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 	Komunikační vrstva předpokládá spolupráci s GDB ve verzi 7.10.1 (ta je v současnosti nejaktuálnější). Při kompilaci projektu se tato verze GDB stáhne a
 	nainstaluje do složky projektu (podrobnější informace jsou uvedeny v příloze \ref{appendix:manual}).
 	
-	\remark{Přibalení konkrétní verze debuggeru k jeho uživatelské nádstavbě používají i jiné programy, například CLion.}
+	\remark{Přibalení konkrétní verze debuggeru používají i jiné uživatelské rozhraní nebo vývojové prostředí, například CLion.}
 	
 	\parspace \textit{Devi} při svém spuštění vytvoří instanci komunikačního rozhraní pro ovládání debuggeru. Komunikační mezivrstva je asynchronní,
 	nelze například dopředu předvídat, v který okamžik se proces zastaví, kdy se vytvoří nové vlákno atd. Pro obsluhu těchto událostí jsem použil návrhový vzor
@@ -591,14 +591,75 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 	funkcí manipulujících s uživatelským rozhraním lze spolehlivě odchytit veškeré modifikace GUI z jiných vláken.
 	
 	\subsubsection{Vykreslovací komponenta}
-	% TODO: canvas, drawable, UML, Clang
+	Pro vykreslování paměti procesu jsem vytvořil komponentu, která se stará o vykreslování a rozložení jednoduchých dvojrozměrných objektů
+	(čtyřúhelníky, Bézierovy křivky, obrázky, text atd.). Pro nízkoúrovňové kreslící operace používá Cairo\footnote{http://cairographics.org}, univerzální
+	open-source 2D grafickou knihovnu, která je kompatibilní s nástrojem GTK+. Třídní diagram této komponenty si lze prohlédnout na obrázku
+	\ref{fig:DeviCanvasUML}. % TODO: obrázek
+	
+	\begin{tikzpicture}
+			%\umlclass{Canvas}{scale : float \\}{}
+			\umlclass{Drawable}{margin : Margin \\
+													padding : Padding}{}
+			\umlassoc[arg2=children, mult2=*, pos2=1]{Drawable}{Drawable}
+
+%\umlassoc[geometry=-|-, arg1=tata, mult1=*, pos1=0.3, arg2=toto, mult2=1, pos2=2.9, align2=left]{C}{B}
+%\umlunicompo[geometry=-|, arg=titi, mult=*, pos=1.7, stereo=vector]{D}{C}
+%\umlimport[geometry=|-, anchors=90 and 50, name=import]{sp2}{sp1}
+%\umlaggreg[arg=tutu, mult=1, pos=0.8, angle1=30, angle2=60, loopsize=2cm]{D}{D}
+%\umlinherit[geometry=-|]{D}{B}
+%\umlnote[x=2.5,y=-6, width=3cm]{B}{Kommentar zu classe B}
+%\umlnote[x=7.5,y=-2]{import-2}{blubber die blub}
+
+	\end{tikzpicture}
+
+	
+	Třída \textbf{Canvas} slouží jako plátno; udržuje hierarchii vykreslovaných objektů, deleguje na ně události myši a klávesnice a aplikuje globální transformace
+	(translace a změnu měřítka). Sama o sobě je grafickou komponentou GTK, takže ji lze transparentně použít jako součást GUI.
+	Obsahuje několik kreslících vrstev, do kterých lze uložit kreslící příkazy, které se provedou v určeném pořadí, jakmile jsou ostatní kreslící operace dokončeny.
+	To umožňuje vykreslovat objekty do různých vrstev v na sobě nezávislém pořadí.
+	Vykreslovatelné objekty reprezentuje třída \textbf{Drawable}, která je uspořádána do stromové struktury dle návrhového vzoru
+	\textit{Composite}\cite[183]{gof}. Každá její instance může tvořit buď list stromu, který se umí sám vykreslit, anebo obsahuje potomky, na které deleguje
+	uživatelský vstup a určuje jejich rozvržení v prostoru. Ke změně rozvržení jednotlivých prvků je k dispozici určení pozice, vnější a vnitřní mezery
+	a určení minimálních, maximálních a požadovaných rozměrů. Podle těchto omezení se vypočte rozměr a ohraničující obdélník objektu a objekty poté mohou být
+	svými rodiči vyskládány na plátno.
+	Tato sada vlastností umožňuje vykreslit jednoduché struktury objektů, které stačí pro základní zobrazení stavu paměti běžícího procesu.
+	Dále je ještě k dispozici několik vlastností pro změnu stylu (například barva pozadí nebo rámeček). Abych do této komponenty
+	nemusel reimplementovat komplexní uživatelské prvky, jako je zadávání vstupu, tak v ní lze vytvořit prvek, který obaluje libovolný GTK grafický prvek,
+	který je poté absolutně pozicován na plátno.
+	Takto obalené komponenty ale nefungují správně při posunutém nebo škálovaném plátně. % TODO: relax scale/translate constraint?
+	
+	\parspace Pomocí této komponenty jsem vytvořil několik tříd specializovaných na vykreslování datových typů jazyka C a C++. Aplikace při zastavení laděného
+	procesu načte z debuggeru zásobníkové rámce spolu s jejich proměnnými a dále také všechny objekty, na které ukazují ukazatele ze zásobníku.
+	Všechny proměnné jsou rekurzivním průchodem namapovány na odpovídající vykreslovací komponentu, která je předána plátnu k vykreslení.
+	Následuje seznam kreslících prvků specializovaných na jednotlivé datové typy programů. Jejich přehled je na obrázku \ref{fig:DeviDrawableOverview}.
+	
+	\begin{description}
+		\item[Jednoduché datové typy] Primitivní datové typy (čísla, znaky atd.), řetězce, výčtové typy (enumerace) a typy, které nelze plně vizualizovat
+		(funkce), jsou zobrazeny klasickým textovým popisem. Při kliknutí na ně se zobrazí textový vstup, pomocí kterého lze změnit jejich hodnota.
+		\item[Ukazatele] Ukazatele a reference jsou vizualizovány šipkou (její dráha je určena kubickou Bézierovou křivkou), která ukazuje na objekt na adrese
+		dané ukazatelem či referencí. % TODO: drag and drop?
+		\item[Složené datové typy] Struktury, třídy a svazy (typ \textbf{union}) jsou reprezentovány hierarchicky. U každého atributu struktury je zobrazen jeho
+		název a hodnota, jejíž podoba závisí na jeho datovém typu. Jelikož mapování proměnných na kreslitelné objekty probíhá rekurzivně, lze takto zobrazit
+		libovolně zanořené hierarchické struktury.
+		\item[Kolekce] Pole a dynamické vektory (typ \texttt{std::vector} ze standardní šablonové knihovny C++) jsou reprezentované horizontálním výčtem svých prvků.
+		Jelikož takovéto kolekce můžou obsahovat obrovský počet prvků, tak je vždy načtena a zobrazena vždy pouze jejich část. Pomocí dvou přepínačů lze u každé
+		kolekce zvolit, kolik prvků se z ní má zobrazit a na které pozici v kolekci má zobrazený výčet začínat. Aby se krátké kolekce nemusely zdlouhavě rozklikávat,
+		tak se implicitně pro každou kolekci zobrazuje prvních deset prvků.
+	\end{description}
+	
+	Ze standardní šablonové knihovny jazyka C++ obsahuje \textit{Devi} speciální zobrazení pro kontejner typu \texttt{std::vector}. Ten je často používanou
+	reprezentací pole s dynamickou velikostí a proto se v \textit{Devi} zobrazuje stejně jako klasické pole. Ostatní kontejnery a třídy ze standardní knihovny
+	nemají speciální vykreslovací třídu a jsou tak zobrazeny jako třídy (výčtem svých atributů).
+	% TODO: přidat vykreslení pro více STL tříd?
 	
 	\subsubsection{Používání aplikace}
-	Na obrázku \ref{fig:DeviGui} je zobrazeno rozhraní aplikce a jsou na něm označeny její jednotlivé části. Následuje popis funkcí a možností použití
-	jednotlivých částí rozhraní.
+	Na obrázku \ref{fig:DeviGui} je zobrazeno rozhraní aplikace. Následuje popis funkcí a popis použití jednotlivých částí rozhraní.
+	% TODO: obrázek panelu nástrojů
 	
 	\remark{Většina oken a panelů v \textit{Devi} popisuje nebo modifikuje stav laděného procesu a z toho důvodu s nimi lze pracovat pouze když je proces
-	zastavený. Dnešní počítače zvládnou provádět miliardy operací za vteřinu a takto častá aktualizace informací o stavu procesu by byla nepraktická.}
+	zastavený. Dnešní počítače zvládnou provádět miliardy operací za vteřinu a tak častá aktualizace informací o stavu procesu by postrádala smysl.}
+	
+	\InsertFigure{Figures/devi_gui}{\textwidth}{Uživatelské rozhraní Devi}{fig:DeviGui}
 	
 	\begin{description}
 		\item[Hlavní menu] V menu lze načíst spustitelný soubor aplikace, což je nutný první krok, pokud tuto aplikaci chceme v \textit{Devi} ladit.
@@ -609,7 +670,6 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 			proces, když už běží, anebo ho krokovat, když není zastavený.
 		\item[Zdrojový kód] \textit{Devi} obsahuje okno, které zobrazuje obsah zdrojového kódu souboru v textovém editoru. Zobrazeno může být několik souborů naráz,
 			lze mezi nimi přepínat pomocí záložek. Při načtení spustitelného souboru se automaticky načte a zobrazí soubor, který obsahuje vstupní bod daného programu
-			% TODO: Je to vážně soubor s mainem?
 			(funkci \textit{main}). Pokud se laděný proces zastaví na breakpointu v nějakém zdrojovém souboru, tak je tento soubor automaticky otevřen a zobrazen
 			v editoru a ten se posune tak, aby byl daný breakpoint vidět a uživatel ho nemusel hledat. Pokud chce uživatel manuálně přidat breakpoint v jiném, než
 			hlavním zdrojovém souboru, může využít funkce načtení libovolného zdrojového souboru z hlavního menu. Samotný textový editor nepovoluje změny zdrojového
@@ -617,7 +677,7 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 			čtení, aby náhodou nedošlo k jeho nechtěné změně. Ve sloupci vedle zdrojového kódu lze přidávat a odebírat breakpointy. Zároveň se v něm při běhu procesu
 			ukazuje, na kterém řádku v daném souboru je proces zastavený. Pokud je laděný proces zastavený, tak při přesunutí kurzoru myši nad proměnnou ve zdrojovém
 			kódu se zobrazí její současná hodnota v procesu. Tuto funkcionalitu zajišťuje knihovna Clang\footnote{http://clang.llvm.org}, což je parser a překladač
-			jazyků C, C++ a Objective C, který kód dále překládá do formátu překladače LLVM, a ten z něj poté generuje strojový kód.
+			jazyků C, C++ a Objective C, který kód dále překládá do formátu překladače LLVM.
 		\item[Konzole] Pomocí konzole lze komunikovat s laděným procesem. Zobrazuje se v ní obsah jeho standardního (\textit{stdout}) i chybového (\textit{stderr})
 			výstupu. Lze do ní také psát text, který se po odřádkování odešle laděnému procesu. Výstup, chybový výstup i vstup lze jednotlivě skrýt pomocí
 			zaškrtávacích tlačítek.
@@ -643,9 +703,10 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 			aj.), lze po kliknutí změnit jejich hodnotu pomocí textového pole. Aktivní zásobníkový rámec lze změnit kliknutím na hlavičku některého z vykreslených
 			rámců, současný aktivní rámec je zvýrazněn červenou barvou.		
 	\end{description}
-	
-	\InsertFigure{Figures/devi_gui}{\textwidth}{Uživatelské rozhraní Devi}{fig:DeviGui}
 
+\end{section}
+\begin{section}{Testování dosažených výsledků}
+% TODO: ukázat sort, paměťové a CPU nároky
 \end{section}
 \begin{section}{Závěr}
 \label{sec:Conclusion}
@@ -662,7 +723,8 @@ zajímavé rozšířit tuto vrstvu o komunikaci s jinými debuggery, než je GDB
 Komunikační knihovnu by také šlo rozšířit o více funkcí, například o ladění po síti nebo připojování se k již běžícím procesům.
 Vizualizaci objektů by šlo také dále prohlubovat, např. vytvářením odlišných pohledů nad stejnými daty, přidáním diagramů zobrazujících rozsáhlá data nebo
 přidáním podpory pro všechny paměťové kontejnery standardní knihovny jazyka C++. Pro alternativu k grafické reprezentaci by také šlo přidat klasické textové
-zobrazení proměnných ve stromové struktuře.
+zobrazení proměnných ve stromové struktuře. Pro velké programy může načítání vizualizace paměti trvat dlouhou dobu, pro omezení tohoto problému by se dalo
+použít například načítání na požádání (lazy loading).
 \end{section}
 
 \bigskip
@@ -717,6 +779,7 @@ Jakub Beránek
 	\parspace Pro rychlou instalaci lze použít přiložený skript \texttt{install.sh}, který provede \textit{waf} příkazy \texttt{download}, \texttt{configure}
 	a \texttt{build} (v tomto pořadí).
 	Pro otestování aplikace lze použít příkaz \texttt{py.test} ve složce tests.
+	Program lze spustit pomocí skriptu \texttt{start.sh} v kořenovém adresáři projektu anebo spuštěním Python skriptu \texttt{initialize.py} ve složce \texttt{gui}.
 	
 	\vspace{5mm}
 	
