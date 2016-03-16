@@ -1220,8 +1220,8 @@ class WidgetDrawable(Drawable):
         self.widget = widget
         self.canvas.fixed_wrapper.put(self.widget, 0, 0)
 
-    @require_gui_thread
     @Drawable.visible.setter
+    @require_gui_thread
     def visible(self, value):
         """
         @type value: bool
@@ -1229,8 +1229,8 @@ class WidgetDrawable(Drawable):
         self.widget.props.visible = value
         Drawable.visible.fset(self, value)
 
-    @require_gui_thread
     @Drawable.position.setter
+    @require_gui_thread
     def position(self, value):
         """
         @type value: drawing.vector.Vector
