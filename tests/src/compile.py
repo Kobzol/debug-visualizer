@@ -15,6 +15,7 @@ def compile_tests():
                                    "-O0",
                                    "-pthread",
                                    "-std=c++11",
+                                   "-m32",
                                    "{}".format(os.path.join(src_path, file)),
                                    "-o{}".format(
                                        os.path.join(src_path, basename))])

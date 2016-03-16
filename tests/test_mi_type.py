@@ -32,7 +32,7 @@ def test_types(debugger):
         check_type(debugger, "varEnumA", "enumA", TypeCategory.Enumeration)
         check_type(debugger, "varEnumB", "enumB", TypeCategory.Enumeration)
         type = check_type(debugger, "varVector",
-                          "std::vector<int, std::allocator<int> >",
+                          "std::vector<int>",
                           TypeCategory.Vector)
         assert type.child_type.name == "int"
 

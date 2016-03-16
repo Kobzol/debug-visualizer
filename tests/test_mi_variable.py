@@ -48,7 +48,7 @@ def test_values(debugger):
         assert map(lambda child: int(child.value), vec.children) == [1, 2, 3]
 
         vec_item = debugger.variable_manager.get_variable(
-            "*((({}*){}) + 2)".format(
+            "*((({}){}) + 2)".format(
                 vec.type.child_type.name,
                 vec.data_address))
 
