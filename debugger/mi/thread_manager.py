@@ -71,10 +71,13 @@ class ThreadManager(debugger_api.ThreadManager):
                 )
 
                 for variable in variables_info:
-                    variable = self.debugger.variable_manager.get_variable(
-                        variable["name"])
-                    if variable:
-                        frame.variables.append(variable)
+                    try:
+                        variable = self.debugger.variable_manager.get_variable(
+                            variable["name"])
+                        if variable:
+                            frame.variables.append(variable)
+                    except:
+                        traceback.print_exc()  # TODO
 
             return frame
 
@@ -108,7 +111,7 @@ class ThreadManager(debugger_api.ThreadManager):
                 self.change_frame(i, False)
                 frames.append(self.get_current_frame(True))
         except:
-            traceback.print_exc()
+            traceback.print_exc()  # TODO
         finally:
             self.change_frame(current_frame.level, False)
 

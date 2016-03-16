@@ -120,7 +120,7 @@ class VariableManager(debugger_api.VariableManager):
             type_name = self.parser.parse_variable_type(
                 short_output.cli_data[0])
             basic_type_category = BasicTypeCategory.Invalid
-            type_category = TypeCategory.Any
+            type_category = TypeCategory.Class
 
             modificators = []
 
@@ -296,8 +296,7 @@ class VariableManager(debugger_api.VariableManager):
             elif type.type_category == TypeCategory.Enumeration:
                 variable = Variable(address, name, data, type, expression)
             else:
-                raise NotImplementedError("{} {}".format(
-                    expression, type.name))  # TODO
+                return None
 
             if variable:
                 variable.on_value_changed.subscribe(self.update_variable)
@@ -417,7 +416,8 @@ class VariableManager(debugger_api.VariableManager):
         @rtype: str | None
         """
         address = self.parser.parse_print_expression(expression)
-        if address[0] == "(":
+
+        if len(address) > 0 and address[0] == "(":
             return address[address.rfind(" ") + 1:]
         elif address[:2] == "0x":
             return address[:address.find(" ")]
