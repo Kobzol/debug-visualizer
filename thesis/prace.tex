@@ -12,10 +12,7 @@
 \usepackage[bottom]{footmisc}
 \usepackage{xifthen}
 \usepackage{float}
-\usepackage{tikz-uml}
 \usepackage{dirtree}
-
-\tikzumlset{fill class=white!20, fill template=white!20}
 
 \renewcommand\multinamedelim{\addcomma\space}	%  redefinice oddělování jmén autorů dle ISO690:2011
 \renewcommand\finalnamedelim{\addspace\mainsstring{and}\space}
@@ -156,7 +153,8 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 \label{sec:DebuggingPrinciples}
 	Tato kapitola popisuje obecné principy fungování ladících nástrojů, způsob mapování binárních instrukcí programu zpět do jeho zdrojového kódu,
 	krokování běžícího procesu a běžné konstrukce používané při ladění. Konkrétně je popis zaměřen na programy napsané v jazycích C a C++
-	v prostředí Linuxových systémů používající procesory z rodiny Intel x86. %TODO: důvod?%
+	v prostředí Linuxových systémů používající procesory z rodiny Intel x86. Tato platforma je běžně používaná pro vývoj programů v těchto jazycích a
+	je i cílovou platformou programu tvořeného v této bakalářské práci.
 	Popsané principy jsou ale obecné a lze je aplikovat na libovolný operační systém.
 		
 	\subsection{Signály}
@@ -573,8 +571,8 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 	Z popsaných implementací komunikace s debuggerem jsem zvolil GDB/MI protokol, protože byl nejstabilnější. Nicméně uživatelské rozhraní používá výhradně
 	mnou navržené API popsané v sekci \ref{sec:DebuggerApi}, takže implementaci komunikační vrstvy lze v případě potřeby jednoduše zaměnit za jinou.
 	Jelikož se chování a výstupy příkazů GDB v různých verzích značně liší, tak se nelze spoléhat na verzi GDB nainstalovanou v systému.
-	Komunikační vrstva předpokládá spolupráci s GDB ve verzi 7.10.1 (ta je v současnosti nejaktuálnější). Při kompilaci projektu se tato verze GDB stáhne a
-	nainstaluje do složky projektu (podrobnější informace jsou uvedeny v příloze \ref{appendix:manual}).
+	Komunikační vrstva předpokládá spolupráci s GDB ve verzi 7.11\footnote{Nejaktuálnější verze k 16. 3. 2016}.
+	Při kompilaci projektu se tato verze GDB stáhne a nainstaluje do složky projektu\footnote{podrobnější informace jsou uvedeny v příloze \ref{appendix:manual}}.
 	
 	\remark{Přibalení konkrétní verze debuggeru používají i jiné uživatelské rozhraní nebo vývojové prostředí, například CLion.}
 	
@@ -594,24 +592,9 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 	Pro vykreslování paměti procesu jsem vytvořil komponentu, která se stará o vykreslování a rozložení jednoduchých dvojrozměrných objektů
 	(čtyřúhelníky, Bézierovy křivky, obrázky, text atd.). Pro nízkoúrovňové kreslící operace používá Cairo\footnote{http://cairographics.org}, univerzální
 	open-source 2D grafickou knihovnu, která je kompatibilní s nástrojem GTK+. Třídní diagram této komponenty si lze prohlédnout na obrázku
-	\ref{fig:DeviCanvasUML}. % TODO: obrázek
+	\ref{fig:DeviCanvasUML}.
 	
-	\begin{tikzpicture}
-			%\umlclass{Canvas}{scale : float \\}{}
-			\umlclass{Drawable}{margin : Margin \\
-													padding : Padding}{}
-			\umlassoc[arg2=children, mult2=*, pos2=1]{Drawable}{Drawable}
-
-%\umlassoc[geometry=-|-, arg1=tata, mult1=*, pos1=0.3, arg2=toto, mult2=1, pos2=2.9, align2=left]{C}{B}
-%\umlunicompo[geometry=-|, arg=titi, mult=*, pos=1.7, stereo=vector]{D}{C}
-%\umlimport[geometry=|-, anchors=90 and 50, name=import]{sp2}{sp1}
-%\umlaggreg[arg=tutu, mult=1, pos=0.8, angle1=30, angle2=60, loopsize=2cm]{D}{D}
-%\umlinherit[geometry=-|]{D}{B}
-%\umlnote[x=2.5,y=-6, width=3cm]{B}{Kommentar zu classe B}
-%\umlnote[x=7.5,y=-2]{import-2}{blubber die blub}
-
-	\end{tikzpicture}
-
+	\InsertFigure{Figures/canvas_uml}{\textwidth}{Třídní diagram části vykreslovací komponenty}{fig:DeviCanvasUML}
 	
 	Třída \textbf{Canvas} slouží jako plátno; udržuje hierarchii vykreslovaných objektů, deleguje na ně události myši a klávesnice a aplikuje globální transformace
 	(translace a změnu měřítka). Sama o sobě je grafickou komponentou GTK, takže ji lze transparentně použít jako součást GUI.
@@ -701,12 +684,29 @@ Třetí část se zabývá implementací grafického nástroje, který vizualizu
 			vykreslen seznam lokálních proměnných a parametrů dané funkce. U každé proměnné je zobrazen její název a současná hodnota, při podržení myši nad ní se dále
 			zobrazí dodatečné informace, jako je její adresa v paměti. Na jednoduché typy proměnných, jako jsou primitivní datové typy (\textit{int}, \textit{bool}
 			aj.), lze po kliknutí změnit jejich hodnotu pomocí textového pole. Aktivní zásobníkový rámec lze změnit kliknutím na hlavičku některého z vykreslených
-			rámců, současný aktivní rámec je zvýrazněn červenou barvou.		
+			rámců, současný aktivní rámec je zvýrazněn červenou barvou. Po zastavení procesu se zobrazí načítání a spustí se načítání zásobníkových
+			rámců a jejich proměnných. Toto načítání může trvat pro velký počet dat až několik vteřin, proto je prováděno na vedlejším vlákně, aby aplikace
+			zůstala responzivní.
 	\end{description}
 
 \end{section}
 \begin{section}{Testování dosažených výsledků}
+	Načítání a vizualizace proměnných po zastavení procesu může trvat až několik vteřin. Tento čas je z velké části stráven vyhledáváním uvnitř GDB,
+	a nelze jej tedy v mém programu ovlivnit. Délka načítání je srovnatelná s dobou načítání proměnných u komplexních zásobníkových rámců v programu CLion.
+
+	Abych zajistil co největší kompatibilitu \textit{Devi} s debuggerem, tak jsem jej odladil nad konkrétní verzí GDB. Nicméně údaje o laděném procesu kromě
+	debuggeru závisí také na kódu laděného programu, verzi standardních a sdílených knihoven, DWARF formátu a dalších proměnných.
+	Může se tedy stát, že pro stejný program přeložený jiným překladačem anebo jinou verzí stejného překladače bude GDB vracet odlišné ladící informace.
+	V tomto případě zobrazené informace o stavu procesu nemusí být přesné ani kompletní. Nutno říci, že s tímto problémem
+	se potýkají i ostatní rozhraní pro debuggery, které nejsou vždy schopné poskytnout přesné informace o procesu. Vychází to z toho, že jazyky C a
+	C++ zkompilované do binární podoby neobsahují zdaleka tolik informací potřebných pro ladění, jako například skriptovací jazyky anebo jazyky běžící
+	ve virtuálním běhovém prostředí (např. Java nebo C\#). Pro programy napsané v jazyce C je situace snazší, jelikož v něm nejsou šablony, které do ladících
+	informací přinášejí značnou komplexitu. Názvy datových typů se šablonovými parametry se můžou pro různé verze překladačů lišit, což způsobuje v \textit{Devi}
+	problémy při identifikaci typů, pro které existuje speciální vizualizátor (jako je např. \texttt{std::vector}).
+
 % TODO: ukázat sort, paměťové a CPU nároky
+
+
 \end{section}
 \begin{section}{Závěr}
 \label{sec:Conclusion}
@@ -770,7 +770,7 @@ Jakub Beránek
 	
 	\begin{description}
 		\item[configure] nakonfiguruje projekt, tento příkaz musí být zavolán před příkazem \texttt{build}
-		\item[build] přeloží sdílenou knihovnu pro zachytávání alokací a stáhne a přeloží GDB 7.10.1
+		\item[build] přeloží sdílenou knihovnu pro zachytávání alokací a stáhne a přeloží GDB 7.11
 		\item[docs] vygeneruje dokumentaci programu do složky docs
 		\item[download] stáhne všechny potřebné programy a balíčky pro běh aplikace pomocí balíčkového manažeru \textit{Aptitude}
 		\item[cleanall] vymaže dokumentaci, zkompilované soubory sdílené knihovny a GDB a soubory s byte kódem Pythonu
@@ -778,7 +778,8 @@ Jakub Beránek
 	
 	\parspace Pro rychlou instalaci lze použít přiložený skript \texttt{install.sh}, který provede \textit{waf} příkazy \texttt{download}, \texttt{configure}
 	a \texttt{build} (v tomto pořadí).
-	Pro otestování aplikace lze použít příkaz \texttt{py.test} ve složce tests.
+	Pro otestování aplikace lze použít příkaz \texttt{py.test} ve složce tests. Pro kompilaci testovacích programů v jazyce C++ je na 64-bitových systémech
+	potřeba nainstalovat balíček \texttt{g++-multilib}.
 	Program lze spustit pomocí skriptu \texttt{start.sh} v kořenovém adresáři projektu anebo spuštěním Python skriptu \texttt{initialize.py} ve složce \texttt{gui}.
 	
 	\vspace{5mm}
