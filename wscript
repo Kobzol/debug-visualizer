@@ -11,14 +11,14 @@ import tarfile
 import hashlib
 
 
-gdb_url = "http://ftp.gnu.org/gnu/gdb/gdb-7.10.1.tar.gz"
+gdb_url = "http://ftp.gnu.org/gnu/gdb/gdb-7.11.tar.gz"
 gdb_build_dir = os.path.abspath("./build/gdb-build")
 gdb_extract_dir = os.path.abspath("./build/gdb-source")
-gdb_src_dir = os.path.join(gdb_extract_dir, "gdb-7.10.1")
-gdb_src_zip = os.path.abspath("./build/gdb-7.10.1.tar.gz")
+gdb_src_dir = os.path.join(gdb_extract_dir, "gdb-7.11")
+gdb_src_zip = os.path.abspath("./build/gdb-7.11.tar.gz")
 gdb_archive_length = 34526368
-gdb_archive_sha256 = "ff14f8050e6484508c73cbfa63731e57901478490ca1672dc0b5e2" \
-                     "b03f6af622"
+gdb_archive_sha256 = "9382f5534aa0754169e1e09b5f1a3b77d1fa8c59c1e57617e0" \
+                     "6af37cb29c669a"
 
 
 def hash(path):
@@ -34,7 +34,7 @@ def hash(path):
 def build_gdb():
     if (not os.path.isfile(gdb_src_zip) or
             hash(gdb_src_zip) != gdb_archive_sha256):
-        print("Downloading GDB 7.10.1...")
+        print("Downloading GDB 7.11...")
 
         gdb = urllib2.urlopen(gdb_url)
         if gdb.getcode() != 200:
@@ -47,7 +47,7 @@ def build_gdb():
 
         with open(gdb_src_zip, 'wb') as archive:
             while True:
-                data = gdb.read(4096)
+                data = gdb.read(16384)
                 if len(data) < 1:
                     break
                 else:
