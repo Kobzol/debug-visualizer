@@ -382,7 +382,7 @@ class VariableManager(debugger_api.VariableManager):
         @rtype: list of debugger.debugee.Variable
         """
         items = []
-        for i in xrange(vector.start + vector.count):
+        for i in xrange(vector.start, vector.start + vector.count):
             expression = vector.path
             if vector.type.type_category == TypeCategory.Array:
                 expression += "[{}]".format(i)
