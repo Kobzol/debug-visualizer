@@ -281,7 +281,6 @@ class MemoryModel(object):
         @type canvas: MemoryCanvas
         """
         self.canvas = canvas
-        self.heap = []
         self.heap_wrapper = None
         self.stack_wrapper = None
         self.wrapper = None
@@ -321,6 +320,11 @@ class MemoryModel(object):
             return [self.wrapper]
         else:
             return []
+
+    def clear_drawables(self):
+        self.wrapper = None
+        self.heap_wrapper = None
+        self.stack_wrapper = None
 
     def prepare_gui(self, selected_frame=None):
         """
@@ -409,9 +413,20 @@ class MemoryCanvas(Canvas):
             if location and len(location[0]) > 0 and location[1] > 0:
                 frame = self.debugger.thread_manager.get_current_frame(False)
                 self._rebuild(frame)
+        elif state == ProcessState.Exited:
+            run_on_gui(self._on_process_exited)
 
     def get_drawables(self):
         return self.memory_model.get_drawables()
+
+    def clear_drawables(self):
+        super(MemoryCanvas, self).clear_drawables()
+        self.memory_model.clear_drawables()
+
+    @require_gui_thread
+    def _on_process_exited(self):
+        self.clear_drawables()
+        self.redraw()
 
     @require_gui_thread
     def _rebuild_gui(self, frame):
