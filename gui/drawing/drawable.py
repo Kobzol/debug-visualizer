@@ -1135,8 +1135,19 @@ class VectorDrawable(LinearLayout, VariableContainer):
         super(VectorDrawable, self).__init__(canvas,
                                              LinearLayoutDirection.Horizontal)
         VariableContainer.__init__(self, vector)
-        self.variable.count = min(VectorDrawable.MAX_INITIAL_SHOW_COUNT,
-                                  self.variable.max_size)
+
+        self.range = (0, min(VectorDrawable.MAX_INITIAL_SHOW_COUNT,
+                             self.variable.max_size))
+        saved_range = self.canvas.vector_range_cache.get_range(
+            self.variable.address)
+        if saved_range:
+            self.range = saved_range
+
+        self.range = (self.range[0],
+                      min(self.range[1], self.variable.max_size))
+
+        self.variable.start = self.range[0]
+        self.variable.count = self.range[1]
 
         self.start_variable = Variable(value=str(self.variable.start),
                                        name="start index of {}".format(
@@ -1144,7 +1155,7 @@ class VectorDrawable(LinearLayout, VariableContainer):
                                        ))
         self.start_variable.set_constraint(self._check_count)
         self.start_variable.on_value_changed.subscribe(
-            lambda *x: self._reload())
+            lambda *x: self._reload(True))
         self.start_variable_draw = VariableDrawable(self.canvas,
                                                     self.start_variable,
                                                     size=Size(-1, 20),
@@ -1156,7 +1167,7 @@ class VectorDrawable(LinearLayout, VariableContainer):
                                        ))
         self.count_variable.set_constraint(self._check_count)
         self.count_variable.on_value_changed.subscribe(
-            lambda *x: self._reload())
+            lambda *x: self._reload(True))
         self.count_variable_draw = VariableDrawable(self.canvas,
                                                     self.count_variable,
                                                     size=Size(-1, 20),
@@ -1164,7 +1175,7 @@ class VectorDrawable(LinearLayout, VariableContainer):
 
         self.add_children((self.start_variable_draw, self.count_variable_draw))
 
-        self._reload()
+        self._reload(False)
 
     def get_drawable_by_index(self, index):
         """
@@ -1186,12 +1197,20 @@ class VectorDrawable(LinearLayout, VariableContainer):
         except:
             return False
 
-    def _reload(self):
+    def _reload(self, cache_range):
+        """
+        @type cache_range: bool
+        """
         self.children = self.children[:2]
         children = []
 
         self.variable.start = int(self.start_variable.value)
         self.variable.count = int(self.count_variable.value)
+
+        if cache_range:
+            self.canvas.vector_range_cache.set_range(self.variable.address,
+                                                     self.variable.start,
+                                                     self.variable.count)
 
         items = self.canvas.debugger.variable_manager.get_vector_items(
             self.variable

@@ -350,6 +350,32 @@ class MemoryModel(object):
                 var.on_value_changed.subscribe(self.canvas._handle_var_change)
 
 
+class VectorRangeCache(object):
+    def __init__(self):
+        self.cache = {}
+
+    def set_range(self, address, index, length):
+        """
+        @type address: str
+        @type index: int
+        @type length: int
+        """
+        self.cache[address] = (index, length)
+
+    def clear(self):
+        self.cache = {}
+
+    def get_range(self, address):
+        """
+        @type address: str
+        @rtype: tuple of (int, int) or None
+        """
+        if address in self.cache:
+            return self.cache[address]
+        else:
+            return None
+
+
 class MemoryCanvas(Canvas):
     def __init__(self, debugger):
         """
@@ -365,6 +391,8 @@ class MemoryCanvas(Canvas):
         self.memtoview = MemToViewTransformer(self)
         self.memory_model = MemoryModel(self)
 
+        self.vector_range_cache = VectorRangeCache()
+
         self.drawable_worker = Worker()
         self.drawable_worker.start()
 
@@ -372,6 +400,7 @@ class MemoryCanvas(Canvas):
         self.redraw()
 
     def _handle_frame_change(self, frame):
+        self.vector_range_cache.clear()
         self._rebuild(frame)
 
     def _handle_process_state_change(self, state, event_data):
