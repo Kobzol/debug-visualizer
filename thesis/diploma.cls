@@ -31,9 +31,9 @@
 %% original source files, as listed above, are part of the
 %% same distribution. (The sources need not necessarily be
 %% in the same archive or directory.)
-\def\fileversion{3.915}
-\def\filedate{2016/03/29}
-\def\docdate{29. března 2016}
+\def\fileversion{3.92}
+\def\filedate{2016/04/3}
+\def\docdate{3. dubna 2016}
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesClass{diploma}[\filedate\space \fileversion\space diploma LaTeX document class]
 \RequirePackage[utf8]{inputenc}
@@ -103,16 +103,17 @@
 \RequirePackage[T1]{fontenc}
 \RequirePackage{lmodern}
 \RequirePackage[a4paper,includefoot,nohead,marginparwidth=0mm,marginparsep=0mm,left=30mm,right=20mm,top=30mm,bottom=30mm]{geometry}
-\RequirePackage{xcolor}
+\RequirePackage{booktabs}
 \RequirePackage{graphicx}
 \RequirePackage[final]{listings}
-\RequirePackage{rotating}
 \RequirePackage{longtable}
+\RequirePackage{rotating}
 \RequirePackage{setspace}
 \RequirePackage{theorem}
 \RequirePackage{titlesec}
 \RequirePackage[nottoc,notindex,section]{tocbibind}
 \RequirePackage{totcount}
+\RequirePackage{xcolor}
 \RequirePackage[a-1b]{pdfx}
 \DeclareOption{czech}
 {
@@ -272,7 +273,7 @@
 }
 \newcommand{\InsertFigure}[4]
 {
-\begin{figure}[H]
+\begin{figure}
 \centering
 \includegraphics[width=#2]{#1}
 \caption{#3}
@@ -310,7 +311,6 @@
 \Dipl@IfEnglish{This page will be replaced by official thesis assignment in printed and electronic version of the submitted thesis.}%
 {Tuto stránku nahradíte v tištěné verzi práce oficiálním zadáním Vaší diplomové či bakalářské práce.}
 \end{center}
-\cleardoublepage
 }
 {
 \setcounter{Dipl@ThesisAssignmentImageCounter}{1}
@@ -325,8 +325,8 @@
 \setcounter{Dipl@ThesisAssignmentImageCounter}{-1}
 }
 }
-\cleardoublepage
 }
+\cleardoublepage
 }
 \newcommand{\Dipl@AuthorDeclarationPage}
 {
@@ -339,11 +339,11 @@
 \par
 \vspace{15mm}
 \noindent\Dipl@IfEnglish{Ostrava,}{V Ostravě}~\the\Dipl@SubmissionDate\hfill\hbox to50mm{\dotfill}
-\cleardoublepage
 }
 {
 \Dipl@InsertFullPageImage{\the\Dipl@AuthorDeclarationImageFile}
 }
+\cleardoublepage
 }
 \newcommand{\Dipl@CooperatingPersonsDeclarationPage}
 {
@@ -361,18 +361,18 @@
 \par
 \vspace{15mm}
 \noindent\Dipl@IfEnglish{Ostrava,}{V Ostravě}~\the\Dipl@SubmissionDate\hfill\hbox to50mm{\dotfill}
-\cleardoublepage
 }
 {
 \Dipl@InsertFullPageImage{\the\Dipl@CooperatingPersonsDeclarationImageFile}
 }
+\cleardoublepage
 }
 {\relax}
 }
 \newcommand{\Dipl@WriteThanksPage}
 {
 \ifthenelse{\equal{\the\Dipl@Thanks}{\empty}}
-{}
+{\relax}
 {
 \mbox{}
 \vfill

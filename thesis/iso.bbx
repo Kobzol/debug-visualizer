@@ -82,7 +82,7 @@
 \renewcommand\multinamedelim{\addsemicolon\addspace}
 \renewcommand\finalnamedelim{\multinamedelim}
 \renewcommand\andothersdelim{\addspace}
-\renewcommand\intitlepunct{\addspace}
+%\renewcommand\intitlepunct{\addspace}
 
 % Thanks Moewew for sugesting this. Make uppercase names only in biblipgraphy.
 % Default name format is ALL-CAPS
@@ -90,9 +90,11 @@
 % \let\lastnameformat=\textsc
 % to change this
 
+\providecommand{\mkbibnamefamily}[1]{#1}
 \newcommand\lastnameformat[1]{\MakeUppercase{#1}}
 \AtBeginBibliography{%
-\renewcommand\mkbibnamelast[1]{\lastnameformat{#1}}%
+  \renewcommand\mkbibnamelast{\lastnameformat}%
+  \renewcommand\mkbibnamefamily{\lastnameformat}%
 }
 
 \defbibenvironment{bibliography}
@@ -116,7 +118,8 @@
 \DeclareFieldFormat*{subtitle}{#1}
 \DeclareFieldFormat*{chapter}{#1}
 \DeclareFieldFormat*{pagetotal}{#1}
-\DeclareFieldFormat*{volume}{\bibsstring{jourvol}\space#1}
+\DeclareFieldFormat{volume}{\bibsstring{volume}~#1}% volume of a book
+\DeclareFieldFormat[article,periodical]{volume}{\bibsstring{jourvol}~#1}% volume of a journal
 \DeclareFieldFormat*{emphatize}{\emph{#1}}
 \DeclareFieldFormat*{edition}{%
   \ifnumeral{#1}%
@@ -151,6 +154,7 @@
 \def\addhyphen{\printtext{-}}%
 \DeclareFieldFormat{urldate}{\printfield{urlyear}\addhyphen\printfield{urlmonth}\addhyphen\printfield{urlday}}%
 
+\DeclareFieldFormat{chapter}{\bibstring{chapter}~#1\isdot}
 
 %\DeclareNameFormat{default}{%
 %\nameprint{#1}{#3}
@@ -390,11 +394,11 @@
 \newunit\newblock%
 \printfield{series}%
 \newunit\newblock%
-\printfield{note}%
+\printfield{isbn}%
 \newunit\newblock%
 \usebibmacro{availability}%
 \newunit\newblock%
-\printfield{isbn}%
+\printfield{note}%
 \newunit\newblock%
 \setunit{\bibpagerefpunct}\newblock%
 \usebibmacro{pageref}%
@@ -407,21 +411,21 @@
 %\usebibmacro{names:primary}%
 \newunit\newblock%
 \usebibmacro{jour:title}%
-%\newunit\newblock
-%\usebibmacro{book:vol}%
+\newunit\newblock
+\usebibmacro{book:vol}%
 \newunit\newblock%
 \usebibmacro{book:pubinfo}%
 %\newunit\newblock
 %\usebibmacro{pagecount}%
-\newunit\newblock%
-\printfield{series}%
-\newunit\newblock%
-\printfield{note}%
-\newunit\newblock%
-\usebibmacro{availability}%
+%\newunit\newblock%
+%\printfield{series}%
 %\usebibmacro{print-online}{\mainlstring{url}}{\printfield{url}}%
 \newunit\newblock%
 \printfield{issn}%
+\newunit\newblock%
+\usebibmacro{availability}%
+\newunit\newblock%
+\printfield{note}%
 \newunit\newblock%
 \setunit{\bibpagerefpunct}\newblock%
 \usebibmacro{pageref}%
@@ -444,22 +448,24 @@
 \usebibmacro{jour:title}%
 %\printfield[emphatize]{journaltitle}%%
 \newunit\newblock%
-\usebibmacro{journal-year}%
+\usebibmacro{book:vol}%
+\newunit\newblock%
+\usebibmacro{book:pubinfo}%
 %\printfield{year}%
 %\usebibmacro{date-urldate}%
 \setunit*{\addcomma\addspace}%
 \printfield{volume}%
 \setunit*{\addcomma\addspace}%
 \printfield{number}%
-\usebibmacro{urldate}%
+%\usebibmacro{urldate}%
 \setunit*{\addcomma\addspace}%
 \printfield{pages}%
 \newunit\newblock%
-\printfield{note}%
+\printfield{issn}%
 \newunit\newblock%
 \usebibmacro{availability}%
 \newunit\newblock%
-\printfield{issn}%
+\printfield{note}%
 \setunit{\bibpagerefpunct}\newblock%
 \usebibmacro{pageref}%%
 \usebibmacro{finentry}%
@@ -469,37 +475,39 @@
 %\printnames{author}%
 \usebibmacro{bibindex}%
 \usebibmacro{begentry}%
-\printnames{bookauthor}%
-\usebibmacro{year-label}%
+\usebibmacro{names:primary}%
+\setunit{\labelnamepunct}\newblock%
+\printfield{title}%
+\setunit{\addspcolon\addspace}%
+\printfield{subtitle}%
+\setunit{\addspace}%
+\printfield{addon}%
 \newunit\newblock%
-% \printfield{booktitle}%
-% \printfield[emph-colon]{booksubtitle}%
+\usebibmacro{in}%
+\printunit{\intitlepunct}%
+\printnames{bookauthor}%
+\newunit\newblock%
 \usebibmacro{pub:title}%
 \newunit\newblock%
 \usebibmacro{book:vol}%
 \newunit\newblock%
-\printnames{author}%
-\newunit\newblock%
 \usebibmacro{book:pubinfo}%
 \newunit\newblock%
 \printfield{chapter}%
-\setunit*{\addcomma\addspace}%
+%\setunit*{\addcomma\addspace}%
 \newunit%
-\printfield{title}%
-\setunit{\addspcolon\addspace}
-\printfield{subtitle}%
-\setunit{\addspace}%
-\printfield{addon}%
 \setunit{\addcomma\addspace}%
 \printfield{pages}%
 \newunit\newblock%
-\printfield{note}%
-\newunit\newblock%
-\usebibmacro{availability}%
+\printfield{series}%
 \newunit\newblock%
 \printfield{isbn}%
 \newunit\newblock%
-\setunit{\bibpagerefpunct}\newblock%                  
+\usebibmacro{availability}%
+\newunit\newblock%
+\printfield{note}%
+\newunit\newblock%
+\setunit{\bibpagerefpunct}\newblock%
 \usebibmacro{pageref}%
 \usebibmacro{finentry}}%
 
@@ -523,9 +531,9 @@
 \newunit\newblock%
 \usebibmacro{book:vol}%
 \newunit\newblock%
-\printfield{number}%
-\newunit\newblock%
 \usebibmacro{book:pubinfo}%
+\newunit\newblock%
+\printfield{number}%
 %\newunit\newblock
 \setunit*{\addcomma\addspace}%
 \printfield{pages}%
@@ -533,11 +541,11 @@
 \newunit\newblock%
 \printfield{series}%
 \newunit\newblock%
-\printfield{note}%
+\printfield{isbn}%
 \newunit\newblock%
 \usebibmacro{availability}%
 \newunit\newblock%
-\printfield{isbn}%
+\printfield{note}%
 \newunit\newblock%
 \setunit{\bibpagerefpunct}\newblock%
 \usebibmacro{pageref}%
@@ -560,12 +568,12 @@
 \newunit\newblock%
 \printfield{series}%
 \newunit\newblock%
-\printfield{note}%
+\printfield{isbn}%
 \newunit\newblock%
 %\usebibmacro{availability}%
 \usebibmacro{comment+link}{\mainlstring{url}}\usebibmacro{print-online}%
 \newunit\newblock%
-\printfield{isbn}%
+\printfield{note}%
 \newunit\newblock%
 \setunit{\bibpagerefpunct}\newblock%
 \usebibmacro{pageref}%%
