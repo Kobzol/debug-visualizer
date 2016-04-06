@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
+
 from gi.repository import Gtk
 from gi.repository import Gdk
 from gi.repository import GdkPixbuf
@@ -9,6 +11,7 @@ from debugger.util import Worker, EventBroadcaster
 from drawable import DrawingUtils, Color, LinearLayout,\
     LinearLayoutDirection, VariableContainer
 from gui import paths
+from gui.drawing.size import Size
 from memtoview import MemToViewTransformer
 from mouse import MouseButtonState, MouseData, TranslationHandler
 from vector import Vector
@@ -17,8 +20,9 @@ from gui.gui_util import run_on_gui, require_gui_thread
 
 
 class FixedGuiWrapper(Gtk.Fixed):
-    def __init__(self):
+    def __init__(self, canvas):
         super(FixedGuiWrapper, self).__init__()
+        self.canvas = canvas
 
     def remove_all(self):
         for child in self.get_children():
@@ -27,6 +31,28 @@ class FixedGuiWrapper(Gtk.Fixed):
     def hide_all(self):
         for widget in self.get_children():
             widget.hide()
+
+    def move(self, widget, x, y):
+        """
+        @type widget: Gtk.Widget
+        @type x: int
+        @type y: int
+        """
+        x += self.canvas.translation.x
+        y += self.canvas.translation.y
+
+        Gtk.Fixed.move(self, widget, x, y)
+
+    def put(self, widget, x, y):
+        """
+        @type widget: Gtk.Widget
+        @type x: int
+        @type y: int
+        """
+        x += self.canvas.translation.x
+        y += self.canvas.translation.y
+
+        Gtk.Fixed.put(self, widget, x, y)
 
 
 class LayeredDrawScheduler(object):
@@ -57,15 +83,34 @@ class LayeredDrawScheduler(object):
                 action[0](*action[1], **action[2])
 
 
+class CanvasWrapper(Gtk.Fixed):
+    def __init__(self, canvas, **properties):
+        super(CanvasWrapper, self).__init__(**properties)
+        self.fixed_wrapper = FixedGuiWrapper(canvas)
+        self.canvas = canvas
+        self.canvas.fixed_wrapper = self.fixed_wrapper
+
+        self.set_hexpand(True)
+        self.set_vexpand(True)
+
+        self.put(self.canvas, 0, 0)
+        self.put(self.fixed_wrapper, 0, 0)
+
+        self.connect("draw", lambda *x: self._adjust_size())
+
+        self.show_all()
+
+    def _adjust_size(self):
+        size = Size(self.get_allocated_width(), self.get_allocated_height())
+        self.canvas.set_size_request(size.width, size.height)
+
+
 class Canvas(Gtk.EventBox):
     def __init__(self):
         super(Canvas, self).__init__()
 
         self.set_hexpand(True)
         self.set_vexpand(True)
-
-        self.fixed_wrapper = FixedGuiWrapper()
-        self.add(self.fixed_wrapper)
 
         self.bg_color = Color(0.8, 0.8, 0.8, 1.0)
 
@@ -107,6 +152,8 @@ class Canvas(Gtk.EventBox):
 
         self.on_load_start = EventBroadcaster()
         self.on_load_end = EventBroadcaster()
+
+        self.redraw()
 
     def _notify_handlers(self):
         mouse_data = self.get_mouse_data()
@@ -182,6 +229,10 @@ class Canvas(Gtk.EventBox):
                 drawable.draw()
 
         self.draw_scheduler.invoke_actions()
+
+    def setup_view(self):
+        self.fixed_wrapper = FixedGuiWrapper()
+        self.get_parent().add(self.fixed_wrapper)
 
     def get_mouse_data(self):
         """
@@ -453,7 +504,7 @@ class MemoryCanvas(Canvas):
 
 
 class CanvasToolbarWrapper(Gtk.Box):
-    def __init__(self, canvas, toolbar):
+    def __init__(self, canvas_wrapper, toolbar):
         """
         Wrapper for a canvas with it's toolbar.
         @type canvas: Canvas
@@ -462,7 +513,8 @@ class CanvasToolbarWrapper(Gtk.Box):
         Gtk.Box.__init__(self)
         self.set_orientation(Gtk.Orientation.VERTICAL)
 
-        self.canvas = canvas
+        self.canvas_wrapper = canvas_wrapper
+        self.canvas = self.canvas_wrapper.canvas
         self.toolbar = toolbar
 
         loading_anim = GdkPixbuf.PixbufAnimation.new_from_file(
@@ -476,7 +528,7 @@ class CanvasToolbarWrapper(Gtk.Box):
         self.toolbar_box.pack_end(self.loading_img, False, False, 5)
 
         self.pack_start(self.toolbar_box, False, False, 0)
-        self.pack_start(self.canvas, True, True, 0)
+        self.pack_start(self.canvas_wrapper, True, True, 0)
 
         self.canvas.on_load_start.subscribe(lambda *x: self.loading_img.show())
         self.canvas.on_load_end.subscribe(lambda *x: self.loading_img.hide())

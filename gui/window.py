@@ -8,7 +8,7 @@ import sys
 import paths
 from config import Config
 
-from drawing.canvas import MemoryCanvas, CanvasToolbarWrapper
+from drawing.canvas import MemoryCanvas, CanvasToolbarWrapper, CanvasWrapper
 from gui.startup_dialog import StartupDialog
 from gui_util import require_gui_thread, run_on_gui
 from debugger.enums import ProcessState
@@ -129,7 +129,9 @@ class MainWindow(Gtk.Window):
         })
         canvas_toolbar = Config.GUI_MEMORY_CANVAS_TOOLBAR.get_object("toolbar")
         self.content.show_all()
-        toolbar_wrapper = CanvasToolbarWrapper(canvas, canvas_toolbar)
+
+        canvas_wrapper = CanvasWrapper(canvas)
+        toolbar_wrapper = CanvasToolbarWrapper(canvas_wrapper, canvas_toolbar)
         toolbar_wrapper.show()
         self.content.add2(toolbar_wrapper)
 
