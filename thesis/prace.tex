@@ -1,4 +1,4 @@
-\documentclass[czech,bachelor,male,python,dept460]{diploma}						% jednostranny dokument
+\documentclass[czech,bachelor,male,python,dept460,hidelinks]{diploma}						% jednostranny dokument
 
 \usepackage[
 	backend=biber,
@@ -12,6 +12,15 @@
 \usepackage{csquotes}
 \usepackage{float}
 \usepackage{dirtree}
+\usepackage{xcolor}
+\usepackage{caption}
+
+\hypersetup{
+    colorlinks = true,
+    linkcolor = black,
+    citecolor = black,
+    urlcolor = black
+}
 
 \renewcommand\multinamedelim{\addcomma\space}	%  redefinice oddělování jmén autorů dle ISO 690:2011
 \renewcommand\finalnamedelim{\addspace\mainsstring{and}\space}
@@ -41,18 +50,21 @@
 
 \Thanks{Chtěl bych poděkovat svému vedoucímu, Ing. Marku Běhálkovi, Ph.D., za pomoc při tvorbě této práce.}
 
-\CzechAbstract{Tato bakalářská práce se zabývá vizualizací paměti programů napsaných v jazycích C a C++ za účelem usnadnění jejich ladění.
-První část uvádí obecné principy ladění programů a popis jejich implementace. Druhá část popisuje a srovnává běžně používané ladící nástroje a jejich
-grafické nádstavby. Třetí část se zabývá implementací knihovny pro komunikaci s debuggery a tvorbou grafického nástroje, který vizualizuje pamět a stav procesu během jeho ladění.}
+\CzechAbstract{Tato bakalářská práce se zabývá vizualizací paměti programů napsaných v jazycích C a C++, která má sloužit k usnadnění jejich ladění a snazšímu
+pochopení jejich průběhu. První část uvádí obecné principy ladění programů a metody jejich implementace. Druhá část popisuje a srovnává běžně používané
+ladící nástroje a jejich grafické nádstavby. Třetí část se zabývá implementací knihovny pro komunikaci s debuggery a tvorbou grafického nástroje,
+který vizualizuje pamět a stav procesu během jeho ladění.}
 
 \CzechKeywords{ladění programů, vizualizace paměti}
 
-%TODO: přeložit
-\EnglishAbstract{This is English abstract. This is English abstract. This is English abstract. This is English abstract. This is English abstract. This is English abstract.}
+\EnglishAbstract{This thesis deals with visualizing memory of programs written in C and C++. This visualization serves to facilitate debugging and understanding
+of program behaviour. The first part introduces general principles of program debugging and some approaches to their implementation.
+The second part describes and compares common debugging tools and their graphical interfaces. The third part discusses an implementation of a library for
+communicating with debuggers and also describes a graphical tool that serves to visualize the state and memory of a debugged process.}
 
-\EnglishKeywords{typography, \LaTeX, master thesis}
+\EnglishKeywords{debugging, memory visualization}
 
-\iffalse
+\AddAcronym{ABI}{Application Binary Interface}
 \AddAcronym{API}{Application Programmable Interface}
 \AddAcronym{GCC}{GNU Compiler Collection}
 \AddAcronym{GDB}{The GNU Project Debugger}
@@ -60,7 +72,6 @@ grafické nádstavby. Třetí část se zabývá implementací knihovny pro komu
 \AddAcronym{GUI}{Graphical user interface}
 \AddAcronym{IPC}{Inter-process communication}
 \AddAcronym{JSON}{JavaScript Object Notation}
-\fi
 
 % Zadame cestu a jmeno souboru ci nekolika souboru s digitalizovanou podobou zadani prace
 % Pri sazbe se pak hledaji soubory Figures/Zadani1.jpg, Figures/Zadani2.jpg atd.
@@ -103,7 +114,7 @@ grafické nádstavby. Třetí část se zabývá implementací knihovny pro komu
 	zobrazit vztahy mezi nimi (např. paměťové ukazatele) a poskytnout snadno pochopitelný pohled na celkový stav paměti.
 	
 	\parspace Grafická vizualizace paměti programů není novým tématem, zabývalo se jí už mnoho programů. Za zmínku stojí \textbf{Python Tutor}, který vizualizuje
-	paměť programu ve formě objektů a odkazů mezi nimi.\cite{GuoSIGCSE2013}.
+	paměť programu ve formě objektů a odkazů mezi nimi. \cite{GuoSIGCSE2013}.
 	Primárně je určen pro jazyk Python, ale obsahuje rozšíření i pro jazyky Java, JavaScript, TypeScript, Ruby, C a C++.
 	Tento nástroj ovšem nezobrazuje stav programů během jejich běhu, ale pouze zpětně přehrává jejich stav, který je během jejich běhu ukládán.
 	Dovoluje tedy ladit program až po jeho skončení (tzv. post-mortem debugging). To je v určitých případech, například u masivně
@@ -111,9 +122,9 @@ grafické nádstavby. Třetí část se zabývá implementací knihovny pro komu
 	tak možnost ovlivňovat jejich průběh. Tento nástroj navíc za běhu programu ukládá po každém příkazu (resp. instrukci) celkový stav paměti
 	a generuje tak velký objem dat. Kvůli toho je obtížné ho použít pro ladění větších a složitějších programů.
 	
-	\parspace Sorva ve své práci o vizuální simulaci programů uvádí a kategorizuje několik desítek programů, které se zabývají zobrazováním stavu běžícího
-	procesu v rozlišných formách\cite[140]{sorva2012visual}. Většina z nich slouží jako nástroje pro výuku programování, dle zjištění Sorvy totiž vizualizace
-	skrytých procesů usnadňuje studentům pochopit, jak programy fungují. \cite[212]{sorva2012visual}
+	\parspace Sorva ve své práci o vizuální simulaci programů \cite[140]{sorva2012visual} uvádí a kategorizuje několik desítek programů,
+	které se zabývají zobrazováním stavu běžícího procesu v rozlišných formách. Většina z nich slouží jako nástroje pro výuku programování,
+	dle zjištění Sorvy totiž vizualizace skrytých procesů usnadňuje studentům pochopit, jak programy fungují. \cite[212]{sorva2012visual}
 	
 	\parspace Cílem této práce je vytvořit jednoduše použitelné grafické rozhraní, které bude umožňovat ladit programy a vizualizovat paměť procesu
 	ve formě diagramu. Mělo by být použitelné jak pro výuku programování a pochopení fungování programů napsaných v jazycích C a C++, tak pro ladění reálných
@@ -160,8 +171,9 @@ grafické nádstavby. Třetí část se zabývá implementací knihovny pro komu
 		který ho sleduje, bude při jeho spuštění vyvolán signál SIGTRAP, který dovolí rodičovi odchytit začátek provádění potomka. Jakmile je proces
 		zastavený, může ho ladící nástroj krokovat, tedy spouštět instrukci po instrukci. K tomu lze použít funkci ptrace s příznakem PTRACE\_SINGLESTEP,
 		která provede přesně jednu instrukci v laděném procesu (proces se také zastaví, pokud se dostane na vstupní nebo výstupní bod systémového volání).
-		Ladící nástroje obvykle nabízí krokování na vyšší úrovni než pouze po jedné instrukci, protože to by bylo zbytečně zdlouhavé (u vyšších programovacích
-		jazyků se jeden řádek zdrojového kódu může mapovat na desítky až stovky instrukcí).
+		
+		\parspace Ladící nástroje obvykle nabízí krokování na vyšší úrovni než pouze po jedné instrukci, protože to by bylo zbytečně zdlouhavé (u vyšších
+		programovacích jazyků se jeden řádek zdrojového kódu může mapovat na desítky až stovky instrukcí).
 		Při krokování se program obnoví a po provedení určitého počtu instrukcí anebo při vyvolání určité události se opět zastaví. Programátor tak může
 		běh programu posouvat po malých částech, sledovat, jak se mění jeho paměť a případně identifikovat místo, kde je v programu chyba.
 		Debuggery obvykle nabízí následující typy krokování.
@@ -182,8 +194,10 @@ grafické nádstavby. Třetí část se zabývá implementací knihovny pro komu
 			Jedná se o označení řádku v zdrojovém kódu programu, na kterém se program za běhu zastaví a umožní tak uživateli prozkoumat paměť procesu a krokovat ho.
 			Nejčastěji je implementován tak, že debugger zjistí z vybraného řádku adresu instrukce ve vygenerovaném spustitelném souboru, kterou tento
 			řádek představuje, uloží si ji a nahradí ji instrukcí přerušení s kódem 3. Toto přerušení je určeno speciálně pro ladění procesů, jelikož generuje
-			instrukci o velikosti jednoho bytu, a lze jím tak nahradit libovolnou instrukci. \cite[306]{intel} Pokud by měla více než jeden byte, mohlo by se
-			stát, že by tato instrukce přetakla do následující instrukce, což by mohlo způsobit nevalidní chování programu. Jakmile program během svého běhu
+			instrukci o velikosti jednoho bytu, a lze jím tak nahradit libovolnou instrukci. \cite[306]{intel} Pokud by tato instrukce měla více než jeden byte,
+			mohlo by se stát, že by přepsala následující instrukci, což by mohlo způsobit nevalidní chování programu.
+			
+			\parspace Jakmile program během svého běhu
 			provede toto přerušení, tak se vyvolá signál SIGTRAP, který ladící nástroj odchytí a laděný proces se tímto zastaví. Pokud se uživatel rozhodne proces
 			opět sputit, ladící nástroj zkopíruje původní instrukci programu (kterou si dříve uložil) na místo, kde vložil přerušení, nastaví na ni ukazatel
 			příští instrukce (registr \textit{instruction pointer}) a proces opět spustí.
@@ -222,19 +236,21 @@ grafické nádstavby. Třetí část se zabývá implementací knihovny pro komu
 		přepínač -Og, který se snaží dosáhnout kompromisu a optimalizovat program co nejvíce bez použití optimalizací, které kolidují s laděním.
 		\footnote{https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html}
 	
-	\subsection{Adresní prostor}
-		Adresní prostor procesů je rozdělen do několika segmentů\cite[53]{tanenbaum}. Jedním z nich je zásobník (\textit{stack}), což je úsek paměti, který
+	\subsection{Adresní prostor procesu}
+		Adresní prostor procesů je rozdělen do několika segmentů \cite[53]{tanenbaum}. Jedním z nich je zásobník (\textit{stack}), což je úsek paměti, který
 		obsahuje lokální proměnné a parametry funkcí a údaje o jejich jednotlivých invokacích. Pokaždé, když proces zavolá funkci, tak se na zásobník uloží tzv.
 		\textit{zásobníkový rámec}. Informace o současném rámci jsou uloženy v procesorových registrech \textit{esp} a \textit{ebp} na 32-bitových systémech
 		a \textit{rsp} a \textit{rbp} na 64-bitových systémech. Registr \textit{ebp} ukazuje na bázi současného rámce a registr \textit{esp} na jeho vrchol, který
 		má ale ve skutečnosti nižší adresu v paměti, jelikož zásobník obvykle roste v paměti směrem dolů. Při zavolání funkce se na zásobník vloží předané parametry,
 		návratová adresa, na kterou se má skočit po dokončení funkce, hodnota báze předchozího rámce a lokální proměnné dané funkce.
 		\footnote{Detaily ukládání parametrů a získávání návratové hodnoty ze zásobníkového rámce jsou silně závislé na konkrétní architektuře
-		a použitém způsobu volání funkcí (\textit{call convention}). Zde je popsána standardní konvence jazyka C, \textit{cdecl} pro 32-bitovou architekturu.}
+		a použitém způsobu volání funkcí (\textit{call convention}). Zde je popsána standardní konvence jazyka C,\textit{cdecl}, pro 32-bitovou architekturu.}
 		Jelikož registr \textit{ebp} ukazuje obvykle doprostřed zásobníkového rámce, tak se kód funkce na lokální proměnné a parametry odkazuje
-		relativně k jeho hodnotě.
+		relativně k jeho hodnotě. Ukázku zásobníkového rámce na platformě x86-64 si lze prohlédnout na obrázku \ref{fig:x64_stack_frame}.
 		
-		\remark{Na architektuře x86-64 je navíc ještě definovaná červená zóna\cite[16]{x64abi}, což je oblast o velikosti 128 bytů,
+		\InsertFigure{Figures/x64_stack_frame}{0.6\textwidth}{Zásobníkový rámec}{fig:x64_stack_frame}
+		
+		\remark{Na architektuře x86-64 je navíc ještě definovaná červená zóna \cite[16]{x64abi}, což je oblast o velikosti 128 bytů,
 		která je umístěná pod ukazatelem vrcholu zásobníku (registr \textit{rsp}). Lze jí použít k libovolným účelům, překladače tento prostor obvykle využívají
 		u listových funkcí (tj. funkcí, které nevolají žádné další funkce).
 		U nich se totiž nemusí nijak měnit hodnota \textit{rsp}, a proto zde můžou libovolně používat paměť bez zbytečné změny hodnoty tohoto registru.
@@ -242,16 +258,16 @@ grafické nádstavby. Třetí část se zabývá implementací knihovny pro komu
 		
 		\parspace Z hlediska ladění je zásobník zajímavý, jelikož jeho stav reprezentuje funkci, ve které je proces zastaven, a zároveň také všechna volání
 		funkcí, které dané situaci předcházely. Lze tak analyzovat, jakou cestou se proces dostal do určitého stavu, což je často jedna z prvních věcí, která
-		programátora při ladění zajímá. Pokud překladač vygeneroval kód, který korektně při volání každé funkce ukládá hodnotu \textit{ebp} a provádí
-		celý prolog i epilog funkce, je pro debugger jednoduché provést zpětný průchod zásobníkem a zjistit informace o všech zásobníkových rámcích.
+		programátora při ladění zajímá. Pokud překladač vygeneroval kód, který při volání každé funkce korektně provádí její prolog (uložení registru \textit{ebp})
+		i epilog (obnovení registru \textit{ebp}), je pro debugger jednoduché provést zpětný průchod zásobníkem a zjistit informace o všech zásobníkových rámcích.
 		Kromě použití při ladění se tyto údaje používají například i pro implementaci výjimek v překladačích jazyka C++.
-		Toto chování nicméně spotřebuje jeden registr procesoru pro ukládání informací o rámcích a vyžaduje provedení celého zmíněného postupu při každém
-		zavolání funkce, a to může proces zpomalovat.
 		
-		\parspace Při návrhu architektury x86-64 bylo rozhodnuto, že toto chování nebude vynucováno\cite[16]{x64abi}, a překladače této skutečnosti
-		obvykle využívají, rámce explicitně nezaznamenávají a adresy lokálních proměnných a parametrů počítají relativně od vrcholu zásobníku,
-		který je uložen v registru \textit{rsp}. Poté je ale někdy nemožné zobrazit zásobník volaných funkcí v debuggeru, a proto je vhodné se ujistit,
-		že se rámce zaznamenávají\footnote{U překladače GCC to lze zajistit pomocí přepínače \textit{-fno-omit-frame-pointer}.
+		\parspace Toto chování nicméně spotřebuje jeden registr procesoru pro ukládání informací o rámcích a vyžaduje provedení celého zmíněného postupu při každém
+		zavolání funkce, a to může proces zpomalovat. Při návrhu binárního programovacího rozhraní (ABI) architektury x86-64 bylo rozhodnuto, že toto chování nebude
+		vynucováno \cite[16]{x64abi}, a překladače této skutečnosti obvykle využívají, rámce explicitně nezaznamenávají a adresy
+		lokálních proměnných a parametrů počítají relativně od vrcholu zásobníku, který je uložen v registru \textit{rsp}.
+		Poté je ale někdy nemožné zobrazit zásobník volaných funkcí v debuggeru, a proto je vhodné se ujistit,
+		že se rámce zaznamenávají \footnote{U překladače GCC to lze zajistit pomocí přepínače \textit{-fno-omit-frame-pointer}.
 		Tato volba je implicitně zapnutá při úrovni optimalizace -\textit{O0}. }.
 		Debuggery můžou informace o volaných funkcí získat i z ladících metadat, pokud je s nimi daný program přeložen,
 		nebo analýzou strojového kódu programu, ale tato řešení nemusí být vždy spolehlivá.
@@ -259,9 +275,9 @@ grafické nádstavby. Třetí část se zabývá implementací knihovny pro komu
 \begin{section}{Existující ladící nástroje}
 \label{sec:ExistingDebuggers}
 	Debuggery jsou komplexní programy, jejichž vývoj vyžaduje detailní znalost programovacího jazyka i platformy, pro kterou je daný debugger určen.
-	Jazyky C a C++ samy o sobě neposkytují téměř žádné prostředky usnadňující ladění, narozdíl od jazyků s běhovým prostředím, jako je například C\# nebo Java,
-	a o to je vývoj debuggeru pro ně obtížnější. Debuggerů pro jazyky C a C++ tedy není mnoho. V této kapitole jsou popsány dva z těch nejpoužívanějších,
-	GDB a LLDB, které byly dále použity při implementaci vizualizačního nástroje. Poté následuje výběr některých grafických nádstaveb pro tyto debuggery.
+	Jazyky C a C++ samy o sobě neposkytují téměř žádné prostředky usnadňující ladění, narozdíl od jazyků s běhovým prostředím, jako je například C\# nebo Java.
+	Proto je vývoj debuggerů pro tyto jazyky obtížnější a není jich mnoho. V této kapitole jsou popsány dva z těch nejpoužívanějších,
+	GDB a LLDB, které byly také použity při implementaci vizualizačního nástroje. Poté následuje výběr některých grafických nádstaveb pro tyto debuggery.
 
 	\subsection{GDB}
 		GDB (The GNU Debugger) je standardním ladícím nástrojem pro Linuxové systémy, často je v Linuxových distribucích už předinstalovaný.
@@ -282,7 +298,7 @@ grafické nádstavby. Třetí část se zabývá implementací knihovny pro komu
 			Vzdálené ladění se dá využít také k ladění jádra (kernelu) operačního systému, čehož je využito například v programu KGDB, který se umí ladit
 			kernely operačních systémů Linux a FreeBSD pomocí sériového připojení.
 		\paragraph*{Ladění vícevláknových aplikací}
-			Pokud GDB ladí program, který využívá více než jedno vlákno, může pracovat v několika rozlišných módech\cite{gdb-multithreading}.
+			Pokud GDB ladí program, který využívá více než jedno vlákno, může pracovat v několika rozlišných módech \cite{gdb-multithreading}.
 			V All-stop módu se při zastavení jednoho vlákna zastaví také všechna ostatní vlákna, aby šlo mezi vlákny přepínat a číst jejich paměť bez toho,
 			aby se paměť mezitím nějak změnila. Pokud je nutné zastavit pouze jedno vlákno, aby ostatní vlákna mezitím pokračovala v běhu, lze použít tzv. Non-stop mód,
 			který vždy zastaví pouze vlákno, které narazí na breakpoint, a zbytek vláken nechá běžet. S tímto módem je vhodné použít asynchronní ovládání GDB,
@@ -407,7 +423,7 @@ grafické nádstavby. Třetí část se zabývá implementací knihovny pro komu
 			\item[ThreadInfo] uchovává seznam všech vláken v procesu a také současně zvolené vlákno
 			\item[Breakpoint] představuje breakpoint, obsahuje jeho identifikátor a zdrojový soubor a řádek, na kterém je umístěn
 			\item[Register] představuje registr procesoru, obsahuje jeho název a hodnotu
-			\item[HeaBlock] představuje blok paměti naalokované na haldě, obsahuje jeho adresu a velikost v bytech
+			\item[HeapBlock] představuje blok paměti naalokované na haldě, obsahuje jeho adresu a velikost v bytech
 		\end{description}
 		
 		\parspace Dále jsou v knihovně třídy, které tvoří obecné API pro přístup k debuggeru. Slouží jako rodičovské třídy pro jednotlivé implementace
@@ -463,11 +479,12 @@ grafické nádstavby. Třetí část se zabývá implementací knihovny pro komu
 			vždy obsahují hlavičku, která určuje, o jaký typ zprávy jde, a tělo, které obsahuje případné další informace o vyvolané události nebo
 			provedeném příkazu. MI má sice definovaný základní formát zpráv, nicméně věci závislé na konkrétním laděném programu, jako jsou hodnoty proměnných,
 			můžou být odesílány v různých formátech (popř. jsou místo nich dosazeny chybové hlášky), a toto chování není nikde zcela zdokumentováno.
-			Může se tedy stát, že GDB vrátí data, která nepůjdou zpracovat a budou ignorována. Struktura MI zpráv je velmi podobná syntaxi formátu
-			JSON\footnote{http://www.json.org}, který je jedním ze standardních formátů pro výměnu dat. Rozhodl jsem se tedy
-			tyto zprávy nejprve předzpracovat a poté je zpracovat JSON parserem. Může se stát, že některé zprávy obsahující výše popsané nezdokumentované
-			hodnoty nebudou správně zpracovány, nicméně stejný problém by existoval, i kdybych si napsal vlastní parser, proto jsem usoudil, že je toto řešení
-			dostatečné. Komunikační knihovna poskytuje funkci pro odeslání příkazu, která jej odešle do GDB, počká, než jí přijde odpověď, která musí po
+			Může se tedy stát, že GDB vrátí data, která nepůjdou zpracovat a budou ignorována.
+			
+			\parspace Struktura MI zpráv je velmi podobná syntaxi formátu JSON\footnote{http://www.json.org}, který je jedním ze standardních formátů pro výměnu dat.
+			Rozhodl jsem se tedy tyto zprávy nejprve předzpracovat a poté je zpracovat JSON parserem. Může se stát, že některé zprávy obsahující výše popsané 
+			nezdokumentované hodnoty nebudou správně zpracovány, nicméně stejný problém by existoval, i kdybych si napsal vlastní parser, proto jsem usoudil, že je
+			toto řešení dostatečné. Komunikační knihovna poskytuje funkci pro odeslání příkazu, která jej odešle do GDB, počká, než jí přijde odpověď, která musí po
 			každém příkazu následovat, a poté vrátí zpracovanou odpověď.
 			
 			\parspace Kromě této synchronní komunikace (zaslání příkazu - přijetí odpovědi) posílá GDB také zprávy o asynchronních událostech, jako je např.
@@ -475,7 +492,7 @@ grafické nádstavby. Třetí část se zabývá implementací knihovny pro komu
 			Kvůli toho se v komunikačním modulu vytváří samostatné vlákno, které v pravidelném časovém intervalu kontroluje výstup z debuggeru a pokud zjistí, že došlo
 			k asynchronní události, tak vyvolá vlastní událost, ke které se může přihlásit libovolný klient. Při tomto periodickém čtení může dojít k souběhu, pokud
 			by během čtení přišel od klienta knihovny požadavek na odeslání příkazu, který se také snaží číst výstup z GDB při čekání na svou odpověď.
-			Z tohoto důvodu je čtení výstupu debuggeru zamknuto mutexem\cite[80]{tanenbaum}, který potenciální souběh (chybu způsobenou nepředvídatelnou
+			Z tohoto důvodu je čtení výstupu debuggeru zamknuto mutexem \cite[80]{tanenbaum}, který potenciální souběh (chybu způsobenou nepředvídatelnou
 			současnou změnou dat) vylučuje.
 			
 			\parspace Některé funkce knihovny jsou naimplementované jinak než zasláním textového příkazu do GDB, například přerušení programu, které
@@ -493,7 +510,8 @@ grafické nádstavby. Třetí část se zabývá implementací knihovny pro komu
 			\parspace Před zapnutím laděného procesu moje knihovna v systémové složce pro dočasná data vytvoří čtyři speciální soubory, jeden pro vstup, dva pro výstup
 			(klasický a chybový) a jeden pro alokace (popsáno dále v textu). Komunikace se soubory je znázorněna na obrázku \ref{fig:DebugeeIO}.
 			Tyto soubory jsou vytvořeny pomocí systémového volání \textit{mkfifo}\footnote{http://linux.die.net/man/3/mkfifo}, které vytváří pojmenovanou rouru.
-			Pojmenované roury jsou prostředky meziprocesní komunikace (IPC), které mohou existovat i po skončení procesu, který je vytvořil, a jsou globálně
+			
+			\parspace Pojmenované roury jsou prostředky meziprocesní komunikace (IPC), které mohou existovat i po skončení procesu, který je vytvořil, a jsou globálně
 			dostupné v celém systému, ne pouze v rámci procesu a jeho potomků, jako je tomu u klasických rour. Pojmenované roury jsou reprezentované (speciálním)
 			souborem na disku, který lze otevřít pro čtení nebo zápis a komunikovat tak v reálném čase mezi procesy. Tato komunikace nicméně neprobíhá 
 			přes souborový systém, ale efektivně přímo v operační paměti\footnote{http://linux.die.net/man/7/fifo}.
@@ -574,9 +592,11 @@ grafické nádstavby. Třetí část se zabývá implementací knihovny pro komu
 	
 	\parspace \textit{Devi} při svém spuštění vytvoří instanci komunikačního rozhraní pro ovládání debuggeru. Komunikační mezivrstva je asynchronní,
 	nelze například dopředu předvídat, v který okamžik se proces zastaví, kdy se vytvoří nové vlákno atd. Pro obsluhu těchto událostí jsem použil návrhový vzor
-	Observer\cite[326]{gof}, který umožňuje jednoduše reagovat na libovolné události v aplikaci. Při vyvolání události v debuggeru (změna stavu procesu,
+	Observer \cite[326]{gof}, který umožňuje jednoduše reagovat na libovolné události v aplikaci. Při vyvolání události v debuggeru (změna stavu procesu,
 	alokace, změna zásobníkového rámce) se aktualizuje uživatelské rozhraní. To je díky tomu udržováno aktuální a konzistentně zobrazuje
-	stav debuggeru. Jelikož události komunikační vrstvy jsou obvykle vyvolané jiným než hlavním vláknem, tak při jejich obsluze nelze přímo modifikovat uživatelské
+	stav debuggeru.
+	
+	\parspace Jelikož události komunikační vrstvy jsou obvykle vyvolané jiným než hlavním vláknem, tak při jejich obsluze nelze přímo modifikovat uživatelské
 	rozhraní. V GTK, stejně jako u většiny ostatních GUI frameworků, lze totiž pracovat s rozhraním pouze z hlavního, tzv. GUI vlákna. Pokud je tedy pro
 	obsluhu události nutná změna uživatelského rozhraní, tak se do fronty hlavního vlákna vloží funkce, která bude hlavním vláknem zavolána,
 	až zpracuje dříve vzniklé události. Protože je velmi lehké zapomenout na zákaz úpravy GUI z jiných vláken (což může nedeterministicky způsobit pád
@@ -596,8 +616,9 @@ grafické nádstavby. Třetí část se zabývá implementací knihovny pro komu
 	(translace a změnu měřítka). Sama o sobě je grafickou komponentou GTK, takže ji lze transparentně použít jako součást GUI.
 	Obsahuje několik kreslících vrstev, do kterých lze uložit kreslící příkazy, které se provedou v určeném pořadí, jakmile jsou ostatní kreslící operace dokončeny.
 	To umožňuje vykreslovat objekty do různých vrstev nezávisle na tom, kdy byl příkaz k jejich vykreslení vyvolán.
-	Vykreslovatelné objekty reprezentuje třída \textbf{Drawable}, která je uspořádána do stromové struktury dle návrhového vzoru
-	\textit{Composite}\cite[183]{gof}. Každá její instance může tvořit buď list stromu, který se umí sám vykreslit, anebo obsahuje potomky, na které deleguje
+	
+	\parspace Vykreslovatelné objekty reprezentuje třída \textbf{Drawable}, která je uspořádána do stromové struktury dle návrhového vzoru
+	\textit{Composite} \cite[183]{gof}. Každá její instance může tvořit buď list stromu, který se umí sám vykreslit, anebo obsahuje potomky, na které deleguje
 	uživatelský vstup a určuje jejich rozvržení v prostoru. Ke změně rozvržení jednotlivých prvků je k dispozici určení pozice, vnější a vnitřní mezery
 	a určení minimálních, maximálních a požadovaných rozměrů. Podle těchto omezení se vypočte rozměr a ohraničující obdélník objektu a objekty poté mohou být
 	svými rodiči vyskládány na plátno.
@@ -647,11 +668,12 @@ grafické nádstavby. Třetí část se zabývá implementací knihovny pro komu
 		lze mezi nimi přepínat pomocí záložek. Při načtení spustitelného souboru se automaticky načte a zobrazí soubor, který obsahuje vstupní bod daného programu
 		(funkci \textit{main}). Pokud se laděný proces zastaví na breakpointu v nějakém zdrojovém souboru, tak je tento soubor automaticky otevřen a zobrazen
 		v editoru a ten se posune tak, aby byl daný breakpoint vidět a uživatel ho nemusel hledat. Pokud chce uživatel manuálně přidat breakpoint v jiném, než
-		hlavním zdrojovém souboru, může využít funkce načtení libovolného zdrojového souboru z hlavního menu. Samotný textový editor nepovoluje změny zdrojového
-		kódu, jelikož k tomu debugger není určen a neobsahuje ani žádnou vestavěnou podporu překladu kódu do spustitelné podoby. Kód je tak zobrazen pouze pro
-		čtení, aby náhodou nedošlo k jeho nechtěné změně. Ve sloupci vedle zdrojového kódu lze přidávat a odebírat breakpointy. Zároveň se v něm při běhu procesu
-		ukazuje, na kterém řádku v daném souboru je proces zastavený. Pokud je laděný proces zastavený, tak při přesunutí kurzoru myši nad proměnnou ve zdrojovém
-		kódu se zobrazí její současná hodnota v procesu. Tuto funkcionalitu zajišťuje knihovna Clang.
+		hlavním zdrojovém souboru, může využít funkce načtení libovolného zdrojového souboru z hlavního menu.
+		
+		\parspace Samotný textový editor nepovoluje změny zdrojového kódu, jelikož k tomu debugger není určen a neobsahuje ani žádnou vestavěnou podporu překlad
+		kódu do spustitelné podoby. Kód je tak zobrazen pouze pro čtení, aby náhodou nedošlo k jeho nechtěné změně. Ve sloupci vedle zdrojového kódu lze přidávat
+		a odebírat breakpointy. Zároveň se v něm při běhu procesu ukazuje, na kterém řádku v daném souboru je proces zastavený. Pokud je laděný proces zastavený,
+		tak při přesunutí kurzoru myši nad proměnnou ve zdrojovém kódu se zobrazí její současná hodnota v procesu. Tuto funkcionalitu zajišťuje knihovna Clang.
 	\paragraph*{Konzole} Pomocí konzole lze komunikovat s laděným procesem. Zobrazuje se v ní obsah jeho standardního (\textit{stdout}) i chybového (\textit{stderr})
 		výstupu. Lze do ní také psát text, který se po odřádkování odešle laděnému procesu. Výstup, chybový výstup i vstup lze filtrovat pomocí
 		zaškrtávacích tlačítek.
@@ -694,8 +716,8 @@ grafické nádstavby. Třetí část se zabývá implementací knihovny pro komu
 	\parspace Vizualizace paměti v \textit{Devi} při ladění umožňuje rychle prozkoumat stav programu a jednoduše ho upravit.
 	Dovoluje také při ladění intuitivně sledovat průběh algoritmů a pochopit jejich fungování, případně odhalit v nich chyby.
 	Nicméně při ladění větších programů se ukázalo, že vizuální reprezentace paměti je problémová u programů obsahujících velký počet dat.
-	Při velkém množství zásobníkových rámců a proměnných je grafická reprezentace paměti méně přehledná a pro programátora může být obtížné se v ní
-	jednoduše vyznat. Z těchto experimentů jsem došel k závěru, že ideální je vizualizaci zkombinovat s klasickým popisem paměti ve formě stromového
+	Při velkém množství zásobníkových rámců a proměnných je grafická reprezentace paměti nepřehledná a pro programátora může být obtížné se v ní
+	jednoduše orientovat. Z těchto experimentů jsem došel k závěru, že ideální je vizualizaci zkombinovat s klasickým popisem paměti ve formě stromového
 	(textového) seznamu proměnných, který je lépe použitelný při velkém objemu dat programu.
 	
 	\parspace Abych zajistil co největší kompatibilitu \textit{Devi} s debuggerem, tak jsem jej odladil nad konkrétní verzí GDB. Nicméně údaje o laděném procesu kromě
@@ -703,10 +725,9 @@ grafické nádstavby. Třetí část se zabývá implementací knihovny pro komu
 	Může se tedy stát, že pro stejný program přeložený jiným překladačem anebo jinou verzí stejného překladače bude GDB vracet odlišné ladící informace.
 	V tomto případě zobrazené informace o stavu procesu nemusí být přesné ani kompletní. Nutno říci, že s tímto problémem
 	se potýkají i ostatní rozhraní pro debuggery, která nejsou vždy schopné poskytnout přesné informace o procesu. Vychází to z toho, že jazyky C a
-	C++ zkompilované do binární podoby neobsahují zdaleka tolik informací potřebných pro ladění, jako například skriptovací jazyky anebo jazyky běžící
-	ve virtuálním běhovém prostředí (např. Java nebo C\#). Pro programy napsané v jazyce C je situace snazší, jelikož v něm nejsou šablony, které do ladících
-	informací přinášejí značnou komplexitu. Názvy datových typů se šablonovými parametry se můžou pro různé verze překladačů lišit, což způsobuje v \textit{Devi}
-	problémy při identifikaci typů, pro které existuje speciální vizualizátor (jako je např. \texttt{std::vector}).
+	C++ zkompilované do binární podoby neobsahují dostatek informací potřebných pro ladění. Pro programy napsané v jazyce C je situace snazší, jelikož v něm
+	nejsou šablony, které do ladících informací přinášejí značnou komplexitu. Názvy datových typů se šablonovými parametry se můžou pro různé verze překladačů
+	lišit, což způsobuje v \textit{Devi} problémy při identifikaci typů, pro které existuje speciální vizualizátor (jako je např. \texttt{std::vector}).
 \end{section}
 \begin{section}{Závěr}
 \label{sec:Conclusion}
@@ -754,7 +775,7 @@ Jakub Beránek
 	.3 pycgdb\DTcomment{experimentální implementace debuggeru v Pythonu}.
 	.2 examples\DTcomment{ukázky jednoduchých programů pro vyzkoušení \textit{Devi}}.
 	.2 gui\DTcomment{zdrojové kódy uživatelského rozhraní}.
-	.3 drawing\DTcomment{kreslící framework a vizualizace paměti}.
+	.3 drawing\DTcomment{vykreslovací framework a vizualizace paměti}.
 	.2 res\DTcomment{vizuální zdroje aplikace}.
 	.3 css\DTcomment{CSS styly pro úpravu vzhledu aplikace}.
 	.3 gui\DTcomment{Glade soubory s nákresy GUI prvků}.
@@ -783,17 +804,13 @@ Jakub Beránek
 	potřeba nainstalovat balíček \texttt{g++-multilib}.
 	\textit{Devi} lze spustit pomocí skriptu \texttt{start.sh} v kořenovém adresáři projektu anebo spuštěním Python skriptu \texttt{initialize.py}
 	ve složce \texttt{gui}. Lze mu předat jeden parametr příkazové řádky, a to cestu ke spustitelnému souboru, který po spuštění aplikace v \textit{Devi} načte.
-	
-	\vspace{5mm}
-	
-	Projekt je verzován pomocí verzovacího systému \textit{git} a je dostupný také online na adrese \url{https://github.com/Kobzol/debug-visualizer}.
 \end{section}
 
 \begin{section}{Ukázky grafických rozhraní debuggerů}
 \label{appendix:gui}
 	\InsertFigure{Figures/appendix_gui_gdb_tui}{\textwidth}{Textové rozhraní GDB (TUI)}{fig:AppendixGuiGdbTui}
 	\InsertFigure{Figures/appendix_gui_ddd}{\textwidth}{Rozhraní programu DDD}{fig:AppendixGuiDDD}
-	\InsertFigure{Figures/appendix_gui_clion}{\textwidth}{Rozhraní programu CLion (zdroj: https://www.jetbrains.com/clion)}{fig:AppendixGuiClion}
+	\InsertFigureSource{Figures/appendix_gui_clion}{\textwidth}{Rozhraní programu CLion}{fig:AppendixGuiClion}{Zdroj: https://www.jetbrains.com/clion}
 \end{section}
 
 \clearpage
