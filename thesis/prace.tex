@@ -12,15 +12,18 @@
 \usepackage{csquotes}
 \usepackage{float}
 \usepackage{dirtree}
-\usepackage{xcolor}
 \usepackage{caption}
 
+\usepackage{xcolor}
 \hypersetup{
     colorlinks = true,
     linkcolor = black,
     citecolor = black,
     urlcolor = black
 }
+
+\usepackage{amsmath}
+\numberwithin{figure}{section}
 
 \renewcommand\multinamedelim{\addcomma\space}	%  redefinice oddělování jmén autorů dle ISO 690:2011
 \renewcommand\finalnamedelim{\addspace\mainsstring{and}\space}
@@ -242,19 +245,27 @@ communicating with debuggers and also describes a graphical tool that serves to 
 		\textit{zásobníkový rámec}. Informace o současném rámci jsou uloženy v procesorových registrech \textit{esp} a \textit{ebp} na 32-bitových systémech
 		a \textit{rsp} a \textit{rbp} na 64-bitových systémech. Registr \textit{ebp} ukazuje na bázi současného rámce a registr \textit{esp} na jeho vrchol, který
 		má ale ve skutečnosti nižší adresu v paměti, jelikož zásobník obvykle roste v paměti směrem dolů. Při zavolání funkce se na zásobník vloží předané parametry,
-		návratová adresa, na kterou se má skočit po dokončení funkce, hodnota báze předchozího rámce a lokální proměnné dané funkce.
-		\footnote{Detaily ukládání parametrů a získávání návratové hodnoty ze zásobníkového rámce jsou silně závislé na konkrétní architektuře
-		a použitém způsobu volání funkcí (\textit{call convention}). Zde je popsána standardní konvence jazyka C,\textit{cdecl}, pro 32-bitovou architekturu.}
-		Jelikož registr \textit{ebp} ukazuje obvykle doprostřed zásobníkového rámce, tak se kód funkce na lokální proměnné a parametry odkazuje
-		relativně k jeho hodnotě. Ukázku zásobníkového rámce na platformě x86-64 si lze prohlédnout na obrázku \ref{fig:x64_stack_frame}.
-		
-		\InsertFigure{Figures/x64_stack_frame}{0.6\textwidth}{Zásobníkový rámec}{fig:x64_stack_frame}
+		návratová adresa, na kterou se má skočit po dokončení funkce, hodnota báze předchozího rámce a lokální proměnné dané funkce (v tomto pořadí).
+		Jelikož registr \textit{ebp} ukazuje na neměnné místo v zásobníkovém rámci, tak se kód funkce na lokální proměnné a parametry odkazuje
+		relativně k jeho hodnotě.
 		
 		\remark{Na architektuře x86-64 je navíc ještě definovaná červená zóna \cite[16]{x64abi}, což je oblast o velikosti 128 bytů,
 		která je umístěná pod ukazatelem vrcholu zásobníku (registr \textit{rsp}). Lze jí použít k libovolným účelům, překladače tento prostor obvykle využívají
 		u listových funkcí (tj. funkcí, které nevolají žádné další funkce).
 		U nich se totiž nemusí nijak měnit hodnota \textit{rsp}, a proto zde můžou libovolně používat paměť bez zbytečné změny hodnoty tohoto registru.
 		Je zaručeno, že tato paměť nebude modifikována žádnými obslužnými procedurami signálů ani přerušení.}
+		
+		\parspace Parametry se na zásobník předávají od nejpravějšího parametru (z hlediska volání funkce ve zdrojovém kódu), parametry nejvíce vlevo tedy skončí nad
+		návratovou adresou a funkce bude vždy znát jejich pozici a bude k nim moct přistoupit. Podle těchto prvních parametrů poté může odvodit celkový
+		počet předaných parametrů\footnote{Například funkci \texttt{printf} se nejprve předá formátovací řetězec, a podle toho, kolik je v něm
+		zástupných symbolů, se poté načte potřebný počet parametrů.}. Pokud by se parametry předávaly zleva, tak začáteční parametry by skončily na dopředu neznámém
+		místě na zásobníku, a volaná funkce by nevěděla, kolik parametrů jí bylo předáno. Ukázku zásobníkového rámce z platformy x86 si lze
+		prohlédnout na obrázku \ref{fig:x86_stack_frame}.
+		
+		\InsertFigure{Figures/x86_stack_frame}{0.6\textwidth}{Zásobníkový rámec platformy x86}{fig:x86_stack_frame}
+		
+		\remark{Detaily ukládání parametrů a získávání návratové hodnoty ze zásobníkového rámce jsou silně závislé na konkrétní architektuře
+		a použitém způsobu volání funkcí (\textit{call convention}). Zde je popsána standardní konvence jazyka C,\textit{cdecl}, pro 32-bitovou architekturu.}
 		
 		\parspace Z hlediska ladění je zásobník zajímavý, jelikož jeho stav reprezentuje funkci, ve které je proces zastaven, a zároveň také všechna volání
 		funkcí, které dané situaci předcházely. Lze tak analyzovat, jakou cestou se proces dostal do určitého stavu, což je často jedna z prvních věcí, která
@@ -509,7 +520,7 @@ communicating with debuggers and also describes a graphical tool that serves to 
 			
 			\parspace Před zapnutím laděného procesu moje knihovna v systémové složce pro dočasná data vytvoří čtyři speciální soubory, jeden pro vstup, dva pro výstup
 			(klasický a chybový) a jeden pro alokace (popsáno dále v textu). Komunikace se soubory je znázorněna na obrázku \ref{fig:DebugeeIO}.
-			Tyto soubory jsou vytvořeny pomocí systémového volání \textit{mkfifo}\footnote{http://linux.die.net/man/3/mkfifo}, které vytváří pojmenovanou rouru.
+			Tyto soubory jsou vytvořeny pomocí systémového volání \texttt{mkfifo}\footnote{http://linux.die.net/man/3/mkfifo}, které vytváří pojmenovanou rouru.
 			
 			\parspace Pojmenované roury jsou prostředky meziprocesní komunikace (IPC), které mohou existovat i po skončení procesu, který je vytvořil, a jsou globálně
 			dostupné v celém systému, ne pouze v rámci procesu a jeho potomků, jako je tomu u klasických rour. Pojmenované roury jsou reprezentované (speciálním)
