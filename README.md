@@ -16,13 +16,29 @@ This software work has been created as a part of a bachelor thesis
 at VŠB-TUO: Technical University of Ostrava. The text of the thesis
 can be found in the folder `thesis`.
 
+Dependencies
+============
+* `Python 2.7.x`
+* `GTK3 3.10.8+`
+* `g++`
+* python packages `enum34`, `matplotlib`, `clang`
+* debian packages `python-dev`, `clang-3.6`, `texinfo`
+* (optional) python package `pytest` (for tests)
+* (optional) python package `epydoc` (for documentation generation)
+* (optional, only on 64-bit OS) debian package `g++-multilib` (for compiling test binaries)
+
+Quick package installation
+`sudo apt-get install python-enum34 python-matplotlib python-clang-3.6
+clang-3.6 g++ texinfo python-dev python-pytest python-epydoc`
+
+
 Build
 =====
-The build will also download and compile a source distribution of GDB 7.11.
+The build will download and compile a source distribution of GDB 7.11.
 
 Use Waf
 ```
-./waf download
+./waf download (this will install necessary packages using Aptitude)
 ./waf configure
 ./waf build
 ```
