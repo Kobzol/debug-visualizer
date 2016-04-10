@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import traceback
 from collections import Iterable
 
 import pytest
@@ -48,6 +49,8 @@ def setup_debugger(debugger, binary, lines, on_state_change=None,
                    startup_info=None, cont=True, wait=True):
     assert debugger.load_binary("src/{}".format(binary))
 
+    test_exception = []
+
     if not isinstance(lines, Iterable):
         lines = [lines]
 
@@ -63,8 +66,8 @@ def setup_debugger(debugger, binary, lines, on_state_change=None,
                     if cont:
                         debugger.exec_continue()
                 except Exception as exc:
+                    test_exception.append(traceback.format_exc(exc))
                     debugger.quit_program()
-                    pytest.fail(exc, pytrace=True)
 
         debugger.on_process_state_changed.subscribe(on_stop)
 
@@ -72,3 +75,6 @@ def setup_debugger(debugger, binary, lines, on_state_change=None,
 
     if wait:
         debugger.wait_for_exit()
+
+    if len(test_exception) > 0:
+        pytest.fail(test_exception[0], pytrace=False)
