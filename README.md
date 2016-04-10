@@ -12,7 +12,7 @@ to work with various other debuggers (it can be found in the package
 The application is licensed under GNU GPLv3.
 Resource attributions can be found in CREDITS.
 
-This software work has been created as a part of school thesis
+This software work has been created as a part of a bachelor thesis
 at VŠB-TUO: Technical University of Ostrava. The text of the thesis
 can be found in the folder `thesis`.
 
@@ -42,3 +42,5 @@ or use the attached launch script
 ./start.sh
 ```
 
+You can try the attached example programs (they are placed in
+`build/examples` after build).
