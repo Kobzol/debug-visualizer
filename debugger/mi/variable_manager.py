@@ -277,7 +277,7 @@ class VariableManager(debugger_api.VariableManager):
 
                 data_address = self.debugger.communicator.send(
                     "p {}._M_impl._M_start".format(expression))
-                data_address = " ".join(data_address.cli_data)
+                data_address = " ".join(data_address.cli_data).rstrip()
                 data_address = data_address[data_address.rfind(" ") + 1:]
                 variable = VectorVariable(length, data_address, address, name,
                                           value, type, expression)
