@@ -8,4 +8,6 @@ def build(ctx):
     ctx.env.append_value("CXXFLAGS", "-pthread")
     ctx.env.append_value("CXXFLAGS", "-std=c++11")
 
+    ctx.recurse("pointers")
     ctx.recurse("sort")
+    ctx.recurse("threads")

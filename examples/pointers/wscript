@@ -1,0 +1,6 @@
+def build(ctx):
+    ctx.program(
+        source="pointers.cpp",
+        target="pointers",
+        linkflags=ctx.env.CXXFLAGS
+    )

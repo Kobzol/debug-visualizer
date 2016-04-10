@@ -1,0 +1,6 @@
+def build(ctx):
+    ctx.program(
+        source="threads.cpp",
+        target="threads",
+        linkflags=ctx.env.CXXFLAGS
+    )
