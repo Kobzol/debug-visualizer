@@ -333,4 +333,4 @@ class Worker(Thread):
                 job[2]()
 
 
-Logger.init_logger(logging.DEBUG)
+Logger.init_logger(logging.INFO)
