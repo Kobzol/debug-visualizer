@@ -39,11 +39,10 @@ def test_address_no_code(debugger):
 
 def test_address_with_code(debugger):
     def test_address_with_code_cb():
-        assert debugger.file_manager.get_line_address(SRC_FILE, 3) in ((
-            "0x8048471", "0x8048478"
-        ), (
-            "0x4004f8", "0x4004ff"
-        ))
+        line_address = debugger.file_manager.get_line_address(SRC_FILE, 3)
+        assert isinstance(line_address, tuple)
+        assert len(line_address) == 2
+        assert int(line_address[0], 16) < int(line_address[1], 16)
 
     setup_debugger(debugger, TEST_FILE, 3, test_address_with_code_cb)
 
