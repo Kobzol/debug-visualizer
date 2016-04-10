@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #
 #    Copyright (C) 2015-2016 Jakub Beranek
 #
@@ -16,8 +17,6 @@
 #    You should have received a copy of the GNU General Public License
 #    along with Devi.  If not, see <http://www.gnu.org/licenses/>.
 #
-
-# -*- coding: utf-8 -*-
 
 
 import enum

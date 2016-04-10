@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #
 #    Copyright (C) 2015-2016 Jakub Beranek
 #
@@ -17,7 +18,6 @@
 #    along with Devi.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-# -*- coding: utf-8 -*-
 
 import os
 import threading
