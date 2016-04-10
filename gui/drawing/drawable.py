@@ -10,7 +10,7 @@ from mouse import ClickHandler
 from size import Size
 from vector import Vector
 from widgets import ValueEntry
-from debugger.util import EventBroadcaster
+from debugger.util import EventBroadcaster, Logger
 from gui.gui_util import require_gui_thread
 
 
@@ -584,6 +584,20 @@ class Drawable(object):
         if len(children) > 0:
             self.invalidate()
 
+    def get_child_at(self, position):
+        """
+        @type position: vector.Vector
+        @rtype: Drawable
+        """
+        for child in self.children:
+            drawable = child.get_child_at(position)
+            if drawable:
+                return drawable
+        if self.get_rect().is_point_inside(position):
+            return self
+        else:
+            return None
+
     def handle_mouse_event(self, mouse_data):
         """
         @type mouse_data: drawing.mouse.MouseData
@@ -622,6 +636,18 @@ class Drawable(object):
         @type mouse_data: mouse.MouseData
         """
         self.canvas.set_drawable_tooltip(self, None)
+
+    def handle_drag_cancel(self):
+        pass
+
+    def handle_drag_start(self):
+        pass
+
+    def handle_drag_end(self, target):
+        """
+        @type target: Drawable
+        """
+        pass
 
     def on_child_changed(self, child):
         """
@@ -1058,6 +1084,8 @@ class StructDrawable(CompositeLabel):
 
 
 class PointerDrawable(VariableDrawable):
+    MIN_DISTANCE_CURVE = 50
+
     def __init__(self, canvas, pointer, **properties):
         """
         @type canvas: canvas.Canvas
@@ -1065,13 +1093,29 @@ class PointerDrawable(VariableDrawable):
         """
         super(PointerDrawable, self).__init__(canvas, pointer, **properties)
         self.variable = pointer
-        self.dragging = False
 
     def handle_mouse_click(self, mouse_data):
-        self.dragging = not self.dragging
+        if self.canvas.drag_manager.is_dragging(self):
+            self.canvas.drag_manager.cancel_drag()
+        else:
+            self.canvas.drag_manager.start_drag(self)
+
+    def handle_drag_end(self, target):
+        """
+        @type target: Drawable
+        """
+        if isinstance(target, VariableContainer):
+            variable = target.variable
+            if variable.type.name != self.variable.target_type.name:
+                Logger.debug(
+                    "Assigned {} pointer to variable of type {}".format(
+                        self.variable.target_type.name, variable.type.name))
+            if variable.address:
+                self.variable.value = variable.address
+                self.invalidate()
 
     def draw(self):
-        if self.dragging:
+        if self.canvas.drag_manager.is_dragging(self):
             self.canvas.draw_scheduler.register_action(
                 self.canvas.draw_scheduler.last_level,
                 lambda: DrawingUtils.draw_arrow(
@@ -1104,15 +1148,23 @@ class PointerDrawable(VariableDrawable):
             end = drawable.position + Vector(0, target_size.height / 2.0)
 
             direction = end - start
-            segments = (start + direction * 0.33,
-                        start + direction * 0.66)
-            rotated_dir = direction.rotate(-90, start).normalized()
-            segments = map(lambda point: point + rotated_dir * scale, segments)
 
-            self.canvas.draw_scheduler.register_action(
-                self.canvas.draw_scheduler.last_level,
-                lambda: DrawingUtils.draw_arrow_curve(
-                    self.canvas, (start, segments[0], segments[1], end)))
+            if direction.length() > PointerDrawable.MIN_DISTANCE_CURVE:
+                segments = (start + direction * 0.33,
+                            start + direction * 0.66)
+                rotated_dir = direction.rotate(-90, start).normalized()
+                segments = map(lambda point:
+                               point + rotated_dir * scale, segments)
+
+                self.canvas.draw_scheduler.register_action(
+                    self.canvas.draw_scheduler.last_level,
+                    lambda: DrawingUtils.draw_arrow_curve(
+                        self.canvas, (start, segments[0], segments[1], end)))
+            else:
+                self.canvas.draw_scheduler.register_action(
+                    self.canvas.draw_scheduler.last_level,
+                    lambda: DrawingUtils.draw_arrow(self.canvas, start, end)
+                )
         else:
             raise NoDrawableFound()
 

@@ -83,6 +83,56 @@ class LayeredDrawScheduler(object):
                 action[0](*action[1], **action[2])
 
 
+class DragManager(object):
+    def __init__(self, canvas):
+        """
+        @type canvas: Canvas
+        """
+        self.canvas = canvas
+        self.dragged_drawable = None
+
+    def is_dragging(self, drawable=None):
+        """
+        @type drawable: drawable.Drawable
+        @rtype: bool
+        """
+        if drawable:
+            return self.dragged_drawable == drawable
+        else:
+            return self.dragged_drawable is not None
+
+    def start_drag(self, drawable):
+        """
+        @type drawable: drawable.Drawable
+        """
+        if self.is_dragging():
+            self.cancel_drag()
+
+        self.dragged_drawable = drawable
+        drawable.handle_drag_start()
+
+    def cancel_drag(self):
+        if self.dragged_drawable:
+            self.dragged_drawable.handle_drag_cancel()
+            self.dragged_drawable = None
+
+    def handle_mouse_press(self, mouse_data):
+        """
+        @type mouse_data: MouseData
+        """
+        if mouse_data.rb_state == MouseButtonState.Down and self.is_dragging():
+            self.cancel_drag()
+        if mouse_data.lb_state == MouseButtonState.Down and self.is_dragging():
+            for drawable in self.canvas.get_drawables():
+                target = drawable.get_child_at(mouse_data.position)
+                if target:
+                    self.dragged_drawable.handle_drag_end(target)
+                    break
+            self.dragged_drawable = None
+            return True
+        return False
+
+
 class CanvasWrapper(Gtk.Fixed):
     def __init__(self, canvas, **properties):
         super(CanvasWrapper, self).__init__(**properties)
@@ -149,6 +199,7 @@ class Canvas(Gtk.EventBox):
         self.first_draw = True
 
         self.draw_scheduler = LayeredDrawScheduler(3)
+        self.drag_manager = DragManager(self)
 
         self.on_load_start = EventBroadcaster()
         self.on_load_end = EventBroadcaster()
@@ -175,7 +226,8 @@ class Canvas(Gtk.EventBox):
         elif button_event.button == 3:  # right button
             self.mouse_data.rb_state = mouse_state
 
-        self._notify_handlers()
+        if not self.drag_manager.handle_mouse_press(self.mouse_data):
+            self._notify_handlers()
         self.redraw()
 
     def _handle_mouse_move(self, move_event):
