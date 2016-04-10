@@ -26,7 +26,7 @@
 \renewcommand\finalnamedelim{\addspace\mainsstring{and}\space}
 
 \newcommand{\parspace}[1][]{
-	\ifthenelse{\isempty{#1}}{\vspace{5mm}}{\vspace{#1}}
+	\ifthenelse{\isempty{#1}}{\vspace{0mm}}{\vspace{#1}}
 	\par
 }
 
@@ -489,7 +489,8 @@ a~zkoumat takto rychle se měnící datový tok by bylo obtížné. Proces lze z
 			můžou být odesílány v~různých formátech (popř. jsou místo nich dosazeny chybové hlášky), a~toto chování není nikde zcela zdokumentováno.
 			Může se tedy stát, že GDB vrátí data, která nepůjdou zpracovat a~budou ignorována.
 			
-			\parspace Struktura MI zpráv je velmi podobná syntaxi formátu JSON\footnote{http://www.json.org}, který je jedním ze standardních formátů pro výměnu dat.
+			\parspace Struktura MI zpráv je velmi podobná syntaxi datového formátu JSON, který je v době psaní této práce jedním ze standardních formátů pro výměnu
+			dat\footnote{http://www.json.org}.
 			Rozhodl jsem se tedy tyto zprávy nejprve předzpracovat a~poté je zpracovat JSON parserem. Může se stát, že některé zprávy obsahující výše popsané 
 			nezdokumentované hodnoty nebudou správně zpracovány, nicméně stejný problém by existoval, i~kdybych si napsal vlastní parser, proto jsem usoudil, že je
 			toto řešení dostatečné. Komunikační knihovna poskytuje funkci pro odeslání příkazu, která jej odešle do GDB, počká, než jí přijde odpověď, která musí po
@@ -645,7 +646,10 @@ a~zkoumat takto rychle se měnící datový tok by bylo obtížné. Proces lze z
 	\paragraph*{Jednoduché datové typy} Primitivní datové typy (čísla, znaky atd.), řetězce, výčtové typy (enumerace) a~typy, které nelze plně vizualizovat
 	(funkce), jsou zobrazeny klasickým textovým popisem. Při kliknutí na ně se zobrazí textový vstup, pomocí kterého lze změnit jejich hodnota.
 	\paragraph*{Ukazatele} Ukazatele a~reference jsou vizualizovány šipkou (její dráha je určena kubickou Bézierovou křivkou), která ukazuje na objekt na adrese
-	dané ukazatelem či referencí. % TODO: drag and drop?
+	dané ukazatelem či referencí. Kliknutím na ukazatel a přetáhnutím kurzoru na jinou proměnnou lze změnit hodnotu ukazatele na její adresu.
+	\textit{Devi} umí zkontrolovat, jestli se typ cílové proměnné shoduje s typem ukazatele, a tedy jestli je tato akce validní. Nicméně změna hodnoty
+	ukazatele není v programu nijak limitována, protože pro potřeby ladění je někdy užitečné s ukazateli provést i operace, které vyžadují přetypování anebo
+	které nejsou zcela validní.
 	\paragraph*{Složené datové typy} Struktury, třídy a~svazy (typ \texttt{union}) jsou reprezentovány hierarchicky. U~každého atributu struktury je zobrazen jeho
 	název a~hodnota, jejíž podoba závisí na jeho datovém typu. Jelikož mapování proměnných na kreslitelné objekty probíhá rekurzivně, lze takto zobrazit
 	libovolně zanořené hierarchické struktury.
@@ -769,17 +773,17 @@ Jakub Beránek
 \appendix
 \begin{section}{Struktura projektu a~instalační manuál}
 \label{appendix:manual}
-	Projekt, který je přiložen na DVD, má následující adresářovou strukturu.
+	Soubory na přiloženém CD jsou uspořádány do následující adresářové struktury.
 	
 	\vspace{5mm}
 	
 	\dirtree{%
-	.1 /.
+	.1 /\DTcomment{instalační a spouštěcí skript a soubory s licensemi}.
 	.2 debugger\DTcomment{zdrojové kódy komunikační knihovny}.
 	.3 analysis\DTcomment{analýza kódu}.
 	.3 gdbc\DTcomment{komunikace s~GDB pomocí GDB Python API}.
 	.3 lldbc\DTcomment{komunikace s~LLDB pomocí LLDB Python API}.
-	.3 mi\DTcomment{komunikace s~GDB pomocí textového MI rozhraní}.
+	.3 mi\DTcomment{komunikace s~GDB pomocí rozhraní MI}.
 	.3 net\DTcomment{síťová komunikace mezi debuggerem a~klientem}.
 	.3 pycgdb\DTcomment{experimentální implementace debuggeru v~Pythonu}.
 	.2 examples\DTcomment{ukázky jednoduchých programů pro vyzkoušení \textit{Devi}}.
@@ -791,11 +795,13 @@ Jakub Beránek
 	.3 img\DTcomment{obrázky}.
 	.2 tests\DTcomment{unit testy}.
 	.3 src\DTcomment{zdrojové kódy C++ aplikací pro unit testy}.
+	.2 thesis\DTcomment{PDF soubor s textem této práce}.
 	.2 util\DTcomment{pomocné skripty}.
 	}
 	
-	\parspace Pro kompletní instalaci programu je nutné mít GTK3+ (verze 3.10.8 nebo vyšší), překladač C++ a~Pythonovské balíčky \texttt{enum},
-	\texttt{matplotlib} a~\texttt{clang}. Pro spuštění testů je potřeba balíček \texttt{pytest} (ve verzi pro Python 2)
+	\parspace Pro kompletní instalaci programu je nutné mít GTK3 (verze 3.10.8 nebo vyšší), překladač C++ a~Pythonovské balíčky \texttt{enum34},
+	\texttt{matplotlib} a~\texttt{clang}. Dále jsou požadovány (Debian) balíčky \texttt{texinfo} a \texttt{python-dev}.
+	Pro spuštění testů je potřeba balíček \texttt{pytest} (ve verzi pro Python 2)
 	a~pro vygenerování dokumentace balíček \texttt{epydoc}. O~sestavení programu se stará program \textit{waf}. Pro jeho použití stačí spustit v~interpreteru
 	příkazové řádky ve složce projektu \texttt{./waf <příkaz>}. Je možné pro něj použít následující příkazy.
 	
@@ -809,10 +815,12 @@ Jakub Beránek
 	
 	\parspace Pro rychlou instalaci lze použít přiložený skript \texttt{install.sh}, který provede \textit{waf} příkazy \texttt{download}, \texttt{configure}
 	a~\texttt{build} (v~tomto pořadí).
-	Pro otestování aplikace lze použít příkaz \texttt{py.test} ve složce tests. Pro kompilaci testovacích programů v~jazyce C++ je na 64-bitových systémech
-	potřeba nainstalovat balíček \texttt{g++-multilib}.
+	Aplikaci lze otestovat pomocí příkazu \texttt{py.test} ve složce tests. Kompilace C++ programů pro unit testy vyžaduje na 64-bitových systémech
+	balíček \texttt{g++-multilib}.
 	\textit{Devi} lze spustit pomocí skriptu \texttt{start.sh} v~kořenovém adresáři projektu anebo spuštěním Python skriptu \texttt{initialize.py}
 	ve složce \texttt{gui}. Lze mu předat jeden parametr příkazové řádky, a~to cestu ke spustitelnému souboru, který po spuštění aplikace v~\textit{Devi} načte.
+	Binární soubory příkladů, které jsou umístěny ve složce \textit{examples}, lze po sestavení projektu najít ve složce \textit{build/examples}.
+	Příklady lze opětovně přeložit pomocí příkazu \texttt{./waf build}.
 \end{section}
 
 \begin{section}{Ukázky grafických rozhraní debuggerů}
