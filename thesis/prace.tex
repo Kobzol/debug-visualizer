@@ -44,7 +44,7 @@
 
 \ThesisAuthor{Jakub Beránek}
 \CzechThesisTitle{Vizualizace ladění aplikací}
-\EnglishThesisTitle{Visualization of application debugging}
+\EnglishThesisTitle{Vizualization of applications debugging}
 
 \SubmissionDate{29. dubna 2016}
 
@@ -53,7 +53,7 @@
 \CzechAbstract{Tato bakalářská práce se zabývá vizualizací paměti programů napsaných v~jazycích C a~C++, která má sloužit k~usnadnění jejich ladění a~snazšímu
 pochopení jejich průběhu. První část uvádí obecné principy ladění programů a~metody jejich implementace. Druhá část popisuje a~srovnává běžně používané
 ladící nástroje a~jejich grafické nádstavby. Třetí část se zabývá implementací knihovny pro komunikaci s~debuggery a~tvorbou grafického nástroje,
-který vizualizuje pamět a~stav procesu během jeho ladění.}
+který vizualizuje paměť a~stav procesu během jeho ladění.}
 
 \CzechKeywords{ladění programů, vizualizace paměti}
 
@@ -81,7 +81,7 @@ communicating with debuggers and also describes a~graphical tool that serves to 
 
 % Zadame soubor s digitalizovanou podobou prohlaseni
 % Pokud toto makro zapoznamkujeme sazi se cisty text prohlaseni
-%\AuthorDeclarationImageFile{Figures/Prohlaseni.jpg}
+\AuthorDeclarationImageFile{Figures/Prohlaseni}
 % TODO: vytisknout, podepsat a naskenovat s reálným datem odevzdání
 
 % Zacatek dokumentu
@@ -123,7 +123,7 @@ communicating with debuggers and also describes a~graphical tool that serves to 
 	a~generuje tak velký objem dat. Kvůli toho je obtížné ho použít pro ladění větších a~složitějších programů.
 	
 	\parspace Sorva ve své práci o~vizuální simulaci programů \cite[140]{sorva2012visual} uvádí a~kategorizuje několik desítek programů,
-	které se zabývají zobrazováním stavu běžícího procesu v~rozlišných formách. Většina z~nich slouží jako nástroje pro výuku programování,
+	které se zabývají zobrazováním stavu běžícího procesu v~rozličných formách. Většina z~nich slouží jako nástroje pro výuku programování,
 	dle zjištění Sorvy totiž vizualizace skrytých procesů usnadňuje studentům pochopit, jak programy fungují. \cite[212]{sorva2012visual}
 	
 	\parspace Cílem této práce je vytvořit jednoduše použitelné grafické rozhraní, které bude umožňovat ladit programy a~vizualizovat paměť procesu
@@ -199,7 +199,7 @@ a~zkoumat takto rychle se měnící datový tok by bylo obtížné. Proces lze z
 			
 			\parspace Jakmile program během svého běhu
 			provede toto přerušení, tak se vyvolá signál SIGTRAP, který ladící nástroj odchytí a~laděný proces se tímto zastaví. Pokud se uživatel rozhodne proces
-			opět sputit, ladící nástroj zkopíruje původní instrukci programu (kterou si dříve uložil) na místo, kde vložil přerušení, nastaví na ni ukazatel
+			opět spustit, ladící nástroj zkopíruje původní instrukci programu (kterou si dříve uložil) na místo, kde vložil přerušení, nastaví na ni ukazatel
 			příští instrukce (registr \textit{instruction pointer}) a~proces opět spustí.
 			\footnote{http://eli.thegreenplace.net/2011/01/27/how-debuggers-work-part-2-breakpoints}
 			Některé procesory nabízí také hardwarový breakpoint, který sice může být rychlejší, ale obvykle kvůli hardwarové implementaci poskytuje
@@ -283,14 +283,14 @@ a~zkoumat takto rychle se měnící datový tok by bylo obtížné. Proces lze z
 \begin{section}{Existující ladící nástroje}
 \label{sec:ExistingDebuggers}
 	Debuggery jsou komplexní programy, jejichž vývoj vyžaduje detailní znalost programovacího jazyka i~platformy, pro kterou je daný debugger určen.
-	Jazyky C a~C++ samy o~sobě neposkytují téměř žádné prostředky usnadňující ladění, narozdíl od jazyků s~běhovým prostředím, jako je například C\# nebo Java.
+	Jazyky C a~C++ samy o~sobě neposkytují téměř žádné prostředky usnadňující ladění, na rozdíl od jazyků s~běhovým prostředím, jako je například C\# nebo Java.
 	Proto je vývoj debuggerů pro tyto jazyky obtížnější a~není jich mnoho. V~této kapitole jsou popsány dva z~těch nejpoužívanějších,
 	GDB a~LLDB, které byly také použity při implementaci vizualizačního nástroje. Poté následuje výběr některých grafických nádstaveb pro tyto debuggery.
 
 	\subsection{GDB}
 		GDB (The GNU Debugger) je standardním ladícím nástrojem pro Linuxové systémy, často je v~Linuxových distribucích už předinstalovaný.
 		Jeho hlavním zaměřením je ladění programů napsaných v~jazycích C a~C++, ale podporuje mimo jiné i~Adu, Objective-C, Pascal, Fortran, Javu
-		a~Go. \cite{gdb-languages} Podporuje také velké množství instrukčních sad a~procesoů, například ARM, AVR, Itanium, MIPS, PowerPC, SPARC
+		a~Go. \cite{gdb-languages} Podporuje také velké množství instrukčních sad a~procesorů, například ARM, AVR, Itanium, MIPS, PowerPC, SPARC
 		a~samozřejmě x86 i~x86-64. Lze jej spustit i~na platformě Windows pomocí prostředí emulujících Linux, jako je Cygwin nebo MinGW.
 		Byl vydán v~roce 1986 a~k~roku 2016 stále vycházejí nové verze.
 		
@@ -306,7 +306,7 @@ a~zkoumat takto rychle se měnící datový tok by bylo obtížné. Proces lze z
 			Vzdálené ladění se dá využít také k~ladění jádra (kernelu) operačního systému, čehož je využito například v~programu KGDB, který se umí ladit
 			kernely operačních systémů Linux a~FreeBSD pomocí sériového připojení.
 		\paragraph*{Ladění vícevláknových aplikací}
-			Pokud GDB ladí program, který využívá více než jedno vlákno, může pracovat v~několika rozlišných módech \cite{gdb-multithreading}.
+			Pokud GDB ladí program, který využívá více než jedno vlákno, může pracovat v~několika rozličných módech \cite{gdb-multithreading}.
 			V~All-stop módu se při zastavení jednoho vlákna zastaví také všechna ostatní vlákna, aby šlo mezi vlákny přepínat a~číst jejich paměť bez toho,
 			aby se paměť mezitím nějak změnila. Pokud je nutné zastavit pouze jedno vlákno, aby ostatní vlákna mezitím pokračovala v~běhu, lze použít tzv. Non-stop mód,
 			který vždy zastaví pouze vlákno, které narazí na breakpoint, a~zbytek vláken nechá běžet. S~tímto módem je vhodné použít asynchronní ovládání GDB,
@@ -405,7 +405,7 @@ a~zkoumat takto rychle se měnící datový tok by bylo obtížné. Proces lze z
 	\parspace Pro vývoj grafického rozhraní programu jsem vybral knihovnu \textbf{GTK 3}\footnote{http://www.gtk.org}. Jedná se o~volně dostupný
 	\footnote{Pod licencí LGPL 2.1}, multiplatformní grafický software umožňující tvorbu uživatelského rozhraní, který je používán mimo jiné
 	i~některými manažery plochy pro Linux (např. v~GNOME\footnote{https://www.gnome.org/technologies}). Kromě možnosti tvorby vlastních
-	GUI prvků obsahuje několik desítek běžně používaných prvků, které jsou předpřipravené k~okamžitému použití a~usnadňují tak rychlý vývoj aplikací.
+	GUI prvků obsahuje několik desítek běžně používaných prvků, které jsou připravené k~okamžitému použití a~usnadňují tak rychlý vývoj aplikací.
 	
 	\parspace Vytvořil jsem dvě samostatné komponenty, knihovnu, která poskytuje rozhraní pro komunikaci s~libovolným debuggerem a~aplikaci s~grafickým rozhraním,
 	která slouží k~vizualizaci a~k~interakci s~laděným procesem.
@@ -482,7 +482,7 @@ a~zkoumat takto rychle se měnící datový tok by bylo obtížné. Proces lze z
 		
 		\paragraph*{Komunikace s~debuggerem}
 			Aby mohlo GDB komunikovat pomocí protokolu MI, tak se nejprve musí přepnout do MI módu, který lze zapnout parametrem předaným při spuštění debuggeru.
-			V~tomto módu lze na jeho standardní vstup zasílat textové příkazy, které se okamžitě vyhodnotí a~vrátí výsledek. Formát zpráv je daný speficikací
+			V~tomto módu lze na jeho standardní vstup zasílat textové příkazy, které se okamžitě vyhodnotí a~vrátí výsledek. Formát zpráv je daný specifikací
 			\footnote{https://sourceware.org/gdb/onlinedocs/gdb/GDB\_002fMI-Command-Syntax.html} a~je přizpůsoben strojovému zpracování. Zprávy z~debuggeru
 			vždy obsahují hlavičku, která určuje, o~jaký typ zprávy jde, a~tělo, které obsahuje případné další informace o~vyvolané události nebo
 			provedeném příkazu. MI má sice definovaný základní formát zpráv, nicméně věci závislé na konkrétním laděném programu, jako jsou hodnoty proměnných,
@@ -655,7 +655,7 @@ a~zkoumat takto rychle se měnící datový tok by bylo obtížné. Proces lze z
 	libovolně zanořené hierarchické struktury.
 	\paragraph*{Kolekce} Pole a~dynamické vektory (typ \texttt{std::vector} ze standardní šablonové knihovny C++) jsou reprezentované horizontálním výčtem svých prvků.
 	Jelikož takovéto kolekce můžou obsahovat obrovský počet prvků, tak je vždy načtena a~zobrazena vždy pouze jejich část. Pomocí dvou přepínačů lze u~každé
-	kolekce zvolit, kolik prvků se z~ní má zobrazit a~na které pozici v~kolekci má zobrazený výčet začínat. Aby se krátké kolekce nemusely zdlouhavě rozklikávat,
+	kolekce zvolit, kolik prvků se z~ní má zobrazit a~na které pozici v~kolekci má zobrazený výčet začínat. Aby se krátké kolekce nemusely manuálně rozklikávat,
 	tak se implicitně pro každou kolekci zobrazuje prvních deset prvků.
 	
 	\parspace \textit{Devi} obsahuje podporu vizualizace kontejnerů typu \texttt{std::vector}. Ten je často používanou
@@ -759,7 +759,7 @@ a~zkoumat takto rychle se měnící datový tok by bylo obtížné. Proces lze z
 	podpory pro více paměťových kontejnerů standardní knihovny jazyka C++ nebo zobrazení globálních proměnných.
 	Jako doplněk k~grafické reprezentaci by mohlo sloužit textové zobrazení proměnných ve stromové struktuře.
 	Pro velké programy může načítání vizualizace paměti trvat dlouhou dobu, pro omezení tohoto problému by se dalo použít načítání dat na požádání
-	(lazy loading) anebo opětovné vykreslování již vizualizovaných objektů.
+	(tzv. lazy loading) anebo opětovné vykreslování již vizualizovaných objektů.
 \end{section}
 
 \bigskip
