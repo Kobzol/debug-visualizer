@@ -227,7 +227,7 @@ class Canvas(Gtk.EventBox):
 
     def _notify_handlers(self):
         mouse_data = self.get_mouse_data()
-        for drawable in self.get_drawables():  # TODO: synchronize
+        for drawable in self.get_drawables():
             drawable.click_handler.handle_mouse_event(mouse_data)
         self.translation_handler.handle_mouse_event(self.mouse_data)
 

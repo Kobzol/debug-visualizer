@@ -369,11 +369,21 @@ class VariableManager(debugger_api.VariableManager):
         """
         format = "set variable *{0} = {1}"
 
-        if variable.type.type_category == TypeCategory.String:
-            format = "call static_cast<std::string*>({0})->assign(\"{1}\")"
+        value = variable.value
+
+        try:
+            if variable.type.type_category == TypeCategory.String:
+                format = "call static_cast<std::string*>({0})->assign(\"{1}\")"
+            elif BasicTypeCategory.is_char(variable.type.basic_type_category):
+                char_value = variable.value
+                if len(char_value) == 1 and not char_value[0].isdigit():
+                    value = "'{}'".format(char_value)
+        except:
+            Logger.debug(traceback.format_exc())
+            return False
 
         result = self.debugger.communicator.send(format.format(
-            variable.address, variable.value))
+            variable.address, value))
 
         return result.is_success()
 

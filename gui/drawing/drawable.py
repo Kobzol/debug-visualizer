@@ -1260,7 +1260,6 @@ class VectorDrawable(LinearLayout, VariableContainer):
         else:
             return None
 
-    # TODO: make the check more robust
     def _check_count(self, variable, new_value):
         try:
             value = int(new_value)

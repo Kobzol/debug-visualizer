@@ -148,6 +148,10 @@ class BasicTypeCategory(Enum):
 
     @staticmethod
     def is_char(type):
+        """
+        @type type: BasicTypeCategory
+        @rtype: bool
+        """
         return type in (BasicTypeCategory.Char,
                         BasicTypeCategory.Char16,
                         BasicTypeCategory.Char32,
