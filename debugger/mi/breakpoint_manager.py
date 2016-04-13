@@ -76,7 +76,10 @@ class BreakpointManager(debugger_api.BreakpointManager):
         bps = self.debugger.communicator.send("-break-list")
 
         if bps:
-            return self.parser.parse_breakpoints(bps.data)
+            try:
+                return self.parser.parse_breakpoints(bps.data)
+            except:
+                return []
         else:
             return []
 

@@ -38,26 +38,26 @@ class FileManager(debugger_api.FileManager):
     def _get_current_line(self):
         output = self.debugger.communicator.send("info line")
 
-        try:
-            if output:
+        if output:
+            try:
                 cli_data = output.cli_data[0][5:]
                 match = re.match("(\d+)", cli_data)
 
                 return int(match.group(0))
-        except:
-            traceback.print_exc()
+            except:
+                Logger.debug(traceback.format_exc())
 
         return None
 
     def _get_current_file(self):
         output = self.debugger.communicator.send("info source")
 
-        try:
-            if output:
+        if output:
+            try:
                 cli_data = output.cli_data[2]
                 return cli_data[11:]
-        except:
-            traceback.print_exc()
+            except:
+                Logger.debug(traceback.format_exc())
 
         return None
 
@@ -72,10 +72,13 @@ class FileManager(debugger_api.FileManager):
         output = self.debugger.communicator.send("info sources")
 
         if output:
-            files = output.cli_data[1]
-            return files.split(",")[0]
-        else:
-            return None
+            try:
+                files = output.cli_data[1]
+                return files.split(",")[0]
+            except:
+                Logger.debug(traceback.format_exc())
+
+        return None
 
     def get_current_location(self):
         """
@@ -118,10 +121,8 @@ class FileManager(debugger_api.FileManager):
 
             if start_address and end_address:
                 return (start_address, end_address)
-            else:
-                return None
-        else:
-            return None
+
+        return None
 
     def disassemble(self, filename, line):
         """
@@ -135,13 +136,14 @@ class FileManager(debugger_api.FileManager):
                                                                       line)
         result = self.debugger.communicator.send(command)
         if result:
-            disassembled = self.parser.parse_disassembly(result.data)
-            if disassembled:
-                return disassembled
-            else:
-                return None
-        else:
-            return None
+            try:
+                disassembled = self.parser.parse_disassembly(result.data)
+                if disassembled:
+                    return disassembled
+            except:
+                Logger.debug(traceback.format_exc())
+
+        return None
 
     def disassemble_raw(self, filename, line):
         """
@@ -159,8 +161,11 @@ class FileManager(debugger_api.FileManager):
         command = "disas /m {0}, {1}".format(address[0], address[1])
         result = self.debugger.communicator.send(command)
         if result:
-            return "\n".join([row.replace("\\t", "\t")
-                              for row
-                              in result.cli_data[1:-1]])
-        else:
-            return None
+            try:
+                return "\n".join([row.replace("\\t", "\t")
+                                  for row
+                                  in result.cli_data[1:-1]])
+            except:
+                Logger.debug(traceback.format_exc())
+
+        return None

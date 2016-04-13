@@ -44,7 +44,10 @@ class Parser(object):
         @rtype: debugee.ThreadInfo
         """
         data = self.parse(data)
-        current_thread_id = int(data["current-thread-id"])
+        if "current-thread-id" in data:
+            current_thread_id = int(data["current-thread-id"])
+        else:
+            current_thread_id = 0
         current_thread = None
         threads = []
 

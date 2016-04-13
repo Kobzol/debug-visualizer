@@ -23,6 +23,7 @@ import traceback
 
 from debugger.mi.parser import Parser
 from debugger import util, debugger_api
+from debugger.util import Logger
 
 
 class ThreadManager(debugger_api.ThreadManager):
@@ -38,7 +39,11 @@ class ThreadManager(debugger_api.ThreadManager):
         @rtype: debugee.Thread
         """
         thread_info = self.get_thread_info()
-        return thread_info.selected_thread
+
+        if thread_info:
+            return thread_info.selected_thread
+        else:
+            return None
 
     def get_thread_info(self):
         """
@@ -48,9 +53,12 @@ class ThreadManager(debugger_api.ThreadManager):
         output = self.debugger.communicator.send("-thread-info")
 
         if output:
-            return self.parser.parse_thread_info(output.data)
-        else:
-            return None
+            try:
+                return self.parser.parse_thread_info(output.data)
+            except:
+                Logger.debug(traceback.format_exc())
+
+        return None
 
     def set_thread_by_index(self, thread_id):
         """
@@ -81,27 +89,30 @@ class ThreadManager(debugger_api.ThreadManager):
         output = self.debugger.communicator.send("-stack-info-frame")
 
         if output:
-            frame = self.parser.parse_stack_frame(output.data)
+            try:
+                frame = self.parser.parse_stack_frame(output.data)
 
-            if with_variables:
-                variables_info = self.parser.parse_frame_variables(
-                    self.debugger.communicator.send(
-                        "-stack-list-variables --skip-unavailable 0").data
-                )
+                if with_variables:
+                    variables_info = self.parser.parse_frame_variables(
+                        self.debugger.communicator.send(
+                            "-stack-list-variables --skip-unavailable 0").data
+                    )
 
-                for variable in variables_info:
-                    try:
-                        variable = self.debugger.variable_manager.get_variable(
-                            variable["name"])
-                        if variable:
-                            frame.variables.append(variable)
-                    except:
-                        traceback.print_exc()  # TODO
+                    for variable in variables_info:
+                        try:
+                            variable = self.debugger.variable_manager.\
+                                get_variable(variable["name"])
+                            if variable:
+                                frame.variables.append(variable)
+                        except:
+                            Logger.debug("Coult not load variable {}"
+                                         .format(variable))
 
-            return frame
+                return frame
+            except:
+                Logger.debug(traceback.format_exc())
 
-        else:
-            return None
+        return None
 
     def get_frames(self):
         """
@@ -110,9 +121,12 @@ class ThreadManager(debugger_api.ThreadManager):
         output = self.debugger.communicator.send("-stack-list-frames")
 
         if output:
-            return self.parser.parse_stack_frames(output.data)
-        else:
-            return []
+            try:
+                return self.parser.parse_stack_frames(output.data)
+            except:
+                Logger.debug(traceback.format_exc())
+
+        return []
 
     def get_frames_with_variables(self):
         """
@@ -130,7 +144,7 @@ class ThreadManager(debugger_api.ThreadManager):
                 self.change_frame(i, False)
                 frames.append(self.get_current_frame(True))
         except:
-            traceback.print_exc()  # TODO
+            Logger.debug(traceback.format_exc())
         finally:
             self.change_frame(current_frame.level, False)
 

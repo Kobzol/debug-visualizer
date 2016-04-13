@@ -26,6 +26,7 @@ import traceback
 
 from debugger.debugee import HeapBlock
 from debugger import debugger_api, util
+from debugger.util import Logger
 
 
 class HeapManager(debugger_api.HeapManager):
@@ -172,11 +173,14 @@ class HeapManager(debugger_api.HeapManager):
         action = msg_parts[0]
         args = msg_parts[1:]
 
-        if action in ("malloc", "calloc"):
-            self._handle_malloc(*args)
-        elif action == "realloc":
-            self._handle_realloc(*args)
-        elif action == "free":
-            self._handle_free(*args)
-        else:
-            raise Exception("Unknown allocation action: {}".format(action))
+        try:
+            if action in ("malloc", "calloc"):
+                self._handle_malloc(*args)
+            elif action == "realloc":
+                self._handle_realloc(*args)
+            elif action == "free":
+                self._handle_free(*args)
+            else:
+                Logger.debug("Unknown allocation action: {}".format(action))
+        except:
+            Logger.debug(traceback.format_exc())

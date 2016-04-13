@@ -20,12 +20,14 @@
 
 
 import re
+import traceback
 
 from debugger.enums import BasicTypeCategory, TypeCategory
 from debugger.mi.parser import Parser
 from debugger.debugee import Type, Variable, Register, PointerVariable,\
     ArrayType, VectorVariable
 from debugger import debugger_api
+from debugger.util import Logger
 
 basic_type_map = {
     "bool": BasicTypeCategory.Bool,
@@ -135,21 +137,30 @@ class VariableManager(debugger_api.VariableManager):
                                                        format(expression))
 
         if output and short_output:
-            type = self.parser.parse_variable_type(output.cli_data[0])
-            type_name = self.parser.parse_variable_type(
-                short_output.cli_data[0])
+            try:
+                type = self.parser.parse_variable_type(output.cli_data[0])
+                type_name = self.parser.parse_variable_type(
+                    short_output.cli_data[0])
+            except:
+                Logger.debug(traceback.format_exc())
+                return None
+
             basic_type_category = BasicTypeCategory.Invalid
             type_category = TypeCategory.Class
 
             modificators = []
 
-            while type.startswith("volatile") or type.startswith("const"):
-                modificator = type[:type.find(" ")]
-                type = type[len(modificator) + 1:]
-                modificators.append(modificator)
+            try:
+                while type.startswith("volatile") or type.startswith("const"):
+                    modificator = type[:type.find(" ")]
+                    type = type[len(modificator) + 1:]
+                    modificators.append(modificator)
 
-                if type_name.startswith(modificator):
-                    type_name = type_name[len(modificator) + 1:]
+                    if type_name.startswith(modificator):
+                        type_name = type_name[len(modificator) + 1:]
+            except:
+                Logger.debug(traceback.format_exc())
+                return None
 
             if type in basic_type_map:
                 basic_type_category = basic_type_map[type]
@@ -180,27 +191,35 @@ class VariableManager(debugger_api.VariableManager):
             size_output = self.debugger.communicator.send("p sizeof({0})".
                                                           format(type_name))
             if size_output:
-                size = int(self.parser.parse_print_expression(size_output.
-                                                              cli_data[0]))
+                try:
+                    size = int(self.parser.parse_print_expression(
+                        size_output.cli_data[0]))
+                except:
+                    Logger.debug(traceback.format_exc())
+                    return None
 
             args = [type_name, type_category, basic_type_category, size,
                     tuple(modificators)]
 
-            if type_category == TypeCategory.Array:
-                right_bracket_end = type_name.rfind("]")
-                right_bracket_start = type_name.rfind("[")
-                count = int(type_name[
-                            right_bracket_start + 1:right_bracket_end])
-                child_type = self.get_type("{}[0]".format(expression))
-                type = ArrayType(count, child_type, *args)
-            elif type_category == TypeCategory.Vector:
-                child_type = self.debugger.communicator.send(
-                    "python print(gdb.lookup_type(\"{}\")"
-                    ".template_argument(0))".format(type_name))
-                child_type = self.get_type(" ".join(child_type.cli_data))
-                type = ArrayType(0, child_type, *args)
-            else:
-                type = Type(*args)
+            try:
+                if type_category == TypeCategory.Array:
+                    right_bracket_end = type_name.rfind("]")
+                    right_bracket_start = type_name.rfind("[")
+                    count = int(type_name[
+                                right_bracket_start + 1:right_bracket_end])
+                    child_type = self.get_type("{}[0]".format(expression))
+                    type = ArrayType(count, child_type, *args)
+                elif type_category == TypeCategory.Vector:
+                    child_type = self.debugger.communicator.send(
+                        "python print(gdb.lookup_type(\"{}\")"
+                        ".template_argument(0))".format(type_name))
+                    child_type = self.get_type(" ".join(child_type.cli_data))
+                    type = ArrayType(0, child_type, *args)
+                else:
+                    type = Type(*args)
+            except:
+                Logger.debug(traceback.format_exc())
+                return None
 
             return type
         else:
@@ -216,105 +235,119 @@ class VariableManager(debugger_api.VariableManager):
         output = self.debugger.communicator.send("p {0}".format(expression))
 
         if output and type:
-            data = self.parser.parse_print_expression(output.cli_data)
-            address = None
+            try:
+                data = self.parser.parse_print_expression(output.cli_data)
+            except:
+                Logger.debug(traceback.format_exc())
+                return None
 
+            address = None
             address_output = self.debugger.communicator.send(
                 "p &{0}".format(expression))
-            if address_output:
-                address = self._parse_address(address_output.cli_data)
+
+            try:
+                if address_output:
+                    address = self._parse_address(address_output.cli_data)
+            except:
+                Logger.debug(traceback.format_exc())
 
             name = self._get_name(expression)
             value = None
             variable = None
             children = []
 
-            if type.type_category == TypeCategory.Builtin:
-                value = data
-                variable = Variable(address, name, value, type, expression)
+            try:
+                if type.type_category == TypeCategory.Builtin:
+                    value = data
+                    variable = Variable(address, name, value, type, expression)
 
-            elif type.type_category == TypeCategory.Pointer:
-                value = data[data.rfind(" ") + 1:].lower()
-                target_type = self.get_type("*{0}".format(expression))
+                elif type.type_category == TypeCategory.Pointer:
+                        value = data[data.rfind(" ") + 1:].lower()
+                        target_type = self.get_type("*{0}".format(expression))
 
-                if (target_type and BasicTypeCategory.is_char(
-                        target_type.basic_type_category)):
-                    type.type_category = TypeCategory.CString
-                    value = value[1:-1]  # strip quotes
-                variable = PointerVariable(target_type, address, name, value,
-                                           type, expression)
+                        if (target_type and BasicTypeCategory.is_char(
+                                target_type.basic_type_category)):
+                            type.type_category = TypeCategory.CString
+                            value = value[1:-1]  # strip quotes
+                        variable = PointerVariable(target_type, address, name,
+                                                   value, type, expression)
 
-            elif type.type_category == TypeCategory.Reference:
-                value = data[data.find("@") + 1:data.find(":")]
-                address = self.debugger.communicator.send("p &(&{0})".
-                                                          format(expression))
-                if address:
-                    address = self._parse_address(address.cli_data)
+                elif type.type_category == TypeCategory.Reference:
+                    value = data[data.find("@") + 1:data.find(":")]
+                    address = self.debugger.communicator.send(
+                        "p &(&{0})".format(expression))
+                    if address:
+                        address = self._parse_address(address.cli_data)
+                    else:
+                        address = "0x0"
+
+                    target_type = self.get_type("*{0}".format(expression))
+                    variable = PointerVariable(target_type, address, name,
+                                               value, type, expression)
+
+                elif type.type_category == TypeCategory.Function:
+                    # skip function pointer type
+                    if data.startswith("({}) ".format(type.name)):
+                        data = data[(3 + len(type.name)):]
+
+                    variable = Variable(address, name, data, type, expression)
+
+                elif type.type_category == TypeCategory.String:
+                    value = data.strip("\"")
+                    variable = Variable(address, name, value, type, expression)
+
+                elif type.type_category in (TypeCategory.Class,
+                                            TypeCategory.Struct,
+                                            TypeCategory.Union):
+                    result = self.debugger.communicator.send(
+                        "python print([field.name for field in "
+                        "gdb.lookup_type(\"{0}\").fields()])".format(type.name)
+                    )
+
+                    if result:
+                        members = self.parser.parse_struct_member_names(
+                            result.cli_data[0])
+                        for member in members:
+                            child = self.get_variable("({0}).{1}".format(
+                                expression, member))
+                            if child:
+                                children.append(child)
+                    variable = Variable(address, name, value, type, expression)
+
+                elif type.type_category == TypeCategory.Vector:
+                    length = self.get_variable(
+                        "({0}._M_impl._M_finish - {0}._M_impl._M_start)"
+                        .format(expression))
+
+                    if length:
+                        length = int(length.value)
+
+                    data_address = self.debugger.communicator.send(
+                        "p {}._M_impl._M_start".format(expression))
+                    data_address = " ".join(data_address.cli_data).rstrip()
+                    data_address = data_address[data_address.rfind(" ") + 1:]
+                    variable = VectorVariable(length, data_address, address,
+                                              name, value, type, expression)
+                elif type.type_category == TypeCategory.Array:
+                    length = type.count
+                    data_address = self.get_variable(
+                        "&({}[0])".format(expression))
+
+                    if data_address:
+                        data_address = data_address.value
+                    else:
+                        data_address = ""
+
+                    variable = VectorVariable(length, data_address, address,
+                                              name, value, type, expression)
+
+                elif type.type_category == TypeCategory.Enumeration:
+                    variable = Variable(address, name, data, type, expression)
                 else:
-                    address = "0x0"
+                    return None
 
-                target_type = self.get_type("*{0}".format(expression))
-                variable = PointerVariable(target_type, address, name, value,
-                                           type, expression)
-
-            elif type.type_category == TypeCategory.Function:
-                # skip function pointer type
-                if data.startswith("({}) ".format(type.name)):
-                    data = data[(3 + len(type.name)):]
-
-                variable = Variable(address, name, data, type, expression)
-
-            elif type.type_category == TypeCategory.String:
-                value = data.strip("\"")
-                variable = Variable(address, name, value, type, expression)
-
-            elif type.type_category in (TypeCategory.Class,
-                                        TypeCategory.Struct,
-                                        TypeCategory.Union):
-                result = self.debugger.communicator.send(
-                    "python print([field.name for field in "
-                    "gdb.lookup_type(\"{0}\").fields()])".format(type.name)
-                )
-
-                if result:
-                    members = self.parser.parse_struct_member_names(
-                        result.cli_data[0])
-                    for member in members:
-                        child = self.get_variable("({0}).{1}".format(
-                            expression, member))
-                        if child:
-                            children.append(child)
-                variable = Variable(address, name, value, type, expression)
-
-            elif type.type_category == TypeCategory.Vector:
-                length = self.get_variable(
-                    "({0}._M_impl._M_finish - {0}._M_impl._M_start)"
-                    .format(expression))
-
-                if length:
-                    length = int(length.value)
-
-                data_address = self.debugger.communicator.send(
-                    "p {}._M_impl._M_start".format(expression))
-                data_address = " ".join(data_address.cli_data).rstrip()
-                data_address = data_address[data_address.rfind(" ") + 1:]
-                variable = VectorVariable(length, data_address, address, name,
-                                          value, type, expression)
-            elif type.type_category == TypeCategory.Array:
-                length = type.count
-                data_address = self.get_variable("&({}[0])".format(expression))
-
-                if data_address:
-                    data_address = data_address.value
-                else:
-                    data_address = ""
-
-                variable = VectorVariable(length, data_address, address, name,
-                                          value, type, expression)
-
-            elif type.type_category == TypeCategory.Enumeration:
-                variable = Variable(address, name, data, type, expression)
-            else:
+            except:
+                Logger.debug(traceback.format_exc())
                 return None
 
             if variable:
@@ -355,12 +388,15 @@ class VariableManager(debugger_api.VariableManager):
         output = self.debugger.communicator.send(command)
 
         bytes = []
-        for line in output.cli_data:
-            start = line.find(":")
-            line = line[start + 1:]
-            for num in line.split("\\t"):
-                if num:
-                    bytes.append(int(num, 16))
+        try:
+            for line in output.cli_data:
+                start = line.find(":")
+                line = line[start + 1:]
+                for num in line.split("\\t"):
+                    if num:
+                        bytes.append(int(num, 16))
+        except:
+            Logger.debug(traceback.format_exc())
 
         return bytes
 
@@ -370,30 +406,34 @@ class VariableManager(debugger_api.VariableManager):
         the given register.
         @rtype: list of register.Register
         """
-        register_names = self.debugger.communicator.send(
-            "-data-list-register-names")
-        if not register_names:
-            return []
+        try:
+            register_names = self.debugger.communicator.send(
+                "-data-list-register-names")
+            if not register_names:
+                return []
 
-        register_names = self.parser.parse(
-            register_names.data)["register-names"]
+            register_names = self.parser.parse(
+                register_names.data)["register-names"]
 
-        register_values = self.debugger.communicator.send(
-            "-data-list-register-values --skip-unavailable x")
-        if not register_values:
-            return []
+            register_values = self.debugger.communicator.send(
+                "-data-list-register-values --skip-unavailable x")
+            if not register_values:
+                return []
 
-        registers = []
-        register_values = self.parser.parse(
-            register_values.data)["register-values"]
-        for reg in register_values:
-            number = int(reg["number"])
-            if (number < len(register_names) and
-                    len(register_names[number]) > 0):
-                registers.append(Register(str(register_names[number]),
-                                          str(reg["value"])))
+            registers = []
+            register_values = self.parser.parse(
+                register_values.data)["register-values"]
+            for reg in register_values:
+                number = int(reg["number"])
+                if (number < len(register_names) and
+                        len(register_names[number]) > 0):
+                    registers.append(Register(str(register_names[number]),
+                                              str(reg["value"])))
+            return registers
+        except:
+            Logger.debug(traceback.format_exc())
 
-        return registers
+        return []
 
     def get_vector_items(self, vector):
         """
@@ -434,11 +474,14 @@ class VariableManager(debugger_api.VariableManager):
         @type expression: str
         @rtype: str | None
         """
-        address = self.parser.parse_print_expression(expression)
+        try:
+            address = self.parser.parse_print_expression(expression)
 
-        if len(address) > 0 and address[0] == "(":
-            return address[address.rfind(" ") + 1:]
-        elif address[:2] == "0x":
-            return address[:address.find(" ")]
-        else:
-            return None
+            if len(address) > 0 and address[0] == "(":
+                return address[address.rfind(" ") + 1:]
+            elif address[:2] == "0x":
+                return address[:address.find(" ")]
+        except:
+            Logger.debug(traceback.format_exc())
+
+        return None
