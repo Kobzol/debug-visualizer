@@ -423,7 +423,7 @@ communicating with debuggers and also describes a~graphical tool that visualizes
 	této komunikační vrstvy, které jsou popsány dále v~textu. Debugger zajišťuje komunikaci a~manipulaci s~laděným procesem.
 	Celá aplikace je tak rozdělena do několika vrstev, které jsou na sobě nezávislé. Architekturu aplikace si lze prohlédnout na obrázku \ref{fig:DeviArchitecture}.
 	
-	\InsertFigure{Figures/bak_architektura}{0.9\textwidth}{Architektura programu \textit{Devi}}{fig:DeviArchitecture}
+	\InsertFigure{Figures/bak_architektura}{0.9\textwidth}{Architektura \textit{Devi}}{fig:DeviArchitecture}
 		
 \section{Knihovna pro komunikaci s~debuggery}
 	\label{sec:DebuggerApi}
@@ -775,7 +775,7 @@ communicating with debuggers and also describes a~graphical tool that visualizes
 		Obě vlákna se střídají, vždy se tedy jeden znak uloží do fronty, poté jej spotřebitel z~fronty zkopíruje a~vypíše. Synchronizace mezi vlákny je
 		zajištěna pomocí mutexu a~podmíněné proměnné\footnote{http://linux.die.net/man/3/pthread\_cond\_wait}, které dohromady tvoří monitor.
 		\cite[81]{tanenbaum} Tyto synchronizační konstrukce jsou implementované pomocí knihovny
-		\textit{pthread}\footnote{http://man7.org/linux/man-page/man7/pthreads.7.html}. Při ladění tohoto programu se lze přepínat mezi jednotlivými vlákny
+		\textit{pthread}\footnote{http://man7.org/linux/man-pages/man7/pthreads.7.html}. Při ladění tohoto programu se lze přepínat mezi jednotlivými vlákny
 		a~jejich zásobníkovými rámci a~detailně tak sledovat průběh komunikace.
 	\end{itemize}
 \end{section}
