@@ -118,7 +118,7 @@ class HeapManager(debugger_api.HeapManager):
                         if line:
                             self._handle_message(line)
         except:
-            traceback.print_exc()
+            Logger.debug(traceback.format_exc())
 
     def _handle_malloc(self, addr, size, notify=True):
         """

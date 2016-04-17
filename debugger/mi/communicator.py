@@ -277,7 +277,7 @@ class Communicator(object):
                     self._handle_output(output)
 
         except:
-            traceback.print_exc()
+            util.Logger.debug(traceback.format_exc())
 
         self.io_lock.release()
 
@@ -317,7 +317,7 @@ class Communicator(object):
                 output = self._parse_output(output)
                 self._handle_output(output)
         except:
-            traceback.print_exc()
+            util.Logger.debug(traceback.format_exc())
         finally:
             self.io_lock.release()
 
@@ -347,7 +347,7 @@ class Communicator(object):
             else:
                 input = process.stdout.readline()
         except:
-            traceback.print_exc()
+            util.Logger.debug(traceback.format_exc())
 
         self.io_lock.release()
 

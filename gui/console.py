@@ -29,6 +29,7 @@ import time
 import traceback
 
 from debugger.enums import ProcessState
+from debugger.util import Logger
 from gui_util import require_gui_thread, run_on_gui
 
 
@@ -178,7 +179,7 @@ class IOConsole(Console):
         try:
             self.debugger.io_manager.stdin.write(input_buffer)
         except:
-            traceback.print_exc()
+            Logger.debug(traceback.format_exc())
 
     @require_gui_thread
     def _write_on_ui(self, text, tag_name=None):
