@@ -1191,7 +1191,12 @@ class PointerDrawable(VariableDrawable):
         """
         @type label: str
         """
+        dirty = self.label != label
         self.label = label
+
+        if dirty:
+            self.invalidate()
+
         super(PointerDrawable, self).draw()
 
 
