@@ -273,18 +273,20 @@ class VariableManager(object):
         """
         self.debugger = debugger
 
-    def get_type(self, expression):
+    def get_type(self, expression, level=0):
         """
         Returns type for the given expression.
         @type expression: str
+        @type level: int
         @rtype: debugee.Type
         """
         raise NotImplementedError()
 
-    def get_variable(self, expression):
+    def get_variable(self, expression, level=0):
         """
         Returns a variable for the given expression-
         @type expression: str
+        @type level: int
         @rtype: debugee.Variable
         """
         raise NotImplementedError()

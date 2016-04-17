@@ -114,6 +114,8 @@ basic_type_map = {
 
 
 class VariableManager(debugger_api.VariableManager):
+    RECURSION_LIMIT = 3
+
     """
     Handles retrieval and updating of variables and raw memory of the
     debugged process.
@@ -125,12 +127,16 @@ class VariableManager(debugger_api.VariableManager):
         super(VariableManager, self).__init__(debugger)
         self.parser = Parser()
 
-    def get_type(self, expression):
+    def get_type(self, expression, level=0):
         """
         Returns type for the given expression.
         @type expression: str
+        @type level: int
         @rtype: debugee.Type
         """
+        if level > VariableManager.RECURSION_LIMIT:
+            return None
+
         output = self.debugger.communicator.send("ptype {0}".
                                                  format(expression))
         short_output = self.debugger.communicator.send("whatis {0}".
@@ -207,13 +213,15 @@ class VariableManager(debugger_api.VariableManager):
                     right_bracket_start = type_name.rfind("[")
                     count = int(type_name[
                                 right_bracket_start + 1:right_bracket_end])
-                    child_type = self.get_type("{}[0]".format(expression))
+                    child_type = self.get_type("{}[0]".format(expression),
+                                               level + 1)
                     type = ArrayType(count, child_type, *args)
                 elif type_category == TypeCategory.Vector:
                     child_type = self.debugger.communicator.send(
                         "python print(gdb.lookup_type(\"{}\")"
                         ".template_argument(0))".format(type_name))
-                    child_type = self.get_type(" ".join(child_type.cli_data))
+                    child_type = self.get_type(" ".join(child_type.cli_data),
+                                               level + 1)
                     type = ArrayType(0, child_type, *args)
                 else:
                     type = Type(*args)
@@ -225,12 +233,16 @@ class VariableManager(debugger_api.VariableManager):
         else:
             return None
 
-    def get_variable(self, expression):
+    def get_variable(self, expression, level=0):
         """
         Returns a variable for the given expression-
         @type expression: str
+        @type level: int
         @rtype: debugee.Variable
         """
+        if level > VariableManager.RECURSION_LIMIT:
+            return None
+
         type = self.get_type(expression)
         output = self.debugger.communicator.send("p {0}".format(expression))
 
@@ -309,7 +321,7 @@ class VariableManager(debugger_api.VariableManager):
                             result.cli_data[0])
                         for member in members:
                             child = self.get_variable("({0}).{1}".format(
-                                expression, member))
+                                expression, member), level + 1)
                             if child:
                                 children.append(child)
                     variable = Variable(address, name, value, type, expression)
@@ -317,7 +329,7 @@ class VariableManager(debugger_api.VariableManager):
                 elif type.type_category == TypeCategory.Vector:
                     length = self.get_variable(
                         "({0}._M_impl._M_finish - {0}._M_impl._M_start)"
-                        .format(expression))
+                        .format(expression), level + 1)
 
                     if length:
                         length = int(length.value)
@@ -331,7 +343,7 @@ class VariableManager(debugger_api.VariableManager):
                 elif type.type_category == TypeCategory.Array:
                     length = type.count
                     data_address = self.get_variable(
-                        "&({}[0])".format(expression))
+                        "&({}[0])".format(expression), level + 1)
 
                     if data_address:
                         data_address = data_address.value
