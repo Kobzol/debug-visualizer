@@ -146,4 +146,9 @@ def clean(ctx):
 
 
 def docs(ctx):
-    subprocess.call(["epydoc", "epydoc", "-v", "--config", "epydoc"])
+    try:
+        import epydoc
+        subprocess.call(["epydoc", "epydoc", "-v", "--config", "epydoc"])
+    except ImportError:
+        raise ImportError("Couldn't not import package epydoc,"
+                          "do you have it installed?")
