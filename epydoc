@@ -1,6 +1,7 @@
 [epydoc] # Epydoc section marker (required by ConfigParser)
 
 modules: debugger/*
+modules: gui/*
 output: html
 target: docs/
 docformat: epytext
