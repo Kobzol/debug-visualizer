@@ -1,0 +1,6 @@
+def build(ctx):
+    ctx.program(
+        source="sg-struct.cpp",
+        target="sg-struct",
+        linkflags=ctx.env.CXXFLAGS
+    )

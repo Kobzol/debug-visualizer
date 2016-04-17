@@ -11,3 +11,4 @@ def build(ctx):
     ctx.recurse("pointers")
     ctx.recurse("sort")
     ctx.recurse("threads")
+    ctx.recurse("sg-struct")
