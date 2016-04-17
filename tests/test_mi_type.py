@@ -11,7 +11,11 @@ def check_type(debugger, variable_name, type_name, type_category,
                basic_type_category=BasicTypeCategory.Invalid):
     type = debugger.variable_manager.get_type(variable_name)
 
-    assert type.name == type_name
+    if isinstance(type_name, str):
+        assert type.name == type_name
+    elif hasattr(type_name, "__call__"):
+        assert type_name(type.name)
+
     assert type.type_category == type_category
     assert type.basic_type_category == basic_type_category
 
@@ -32,7 +36,7 @@ def test_types(debugger):
         check_type(debugger, "varEnumA", "enumA", TypeCategory.Enumeration)
         check_type(debugger, "varEnumB", "enumB", TypeCategory.Enumeration)
         type = check_type(debugger, "varVector",
-                          "std::vector<int>",
+                          lambda name: name.startswith("std::vector<int>"),
                           TypeCategory.Vector)
         assert type.child_type.name == "int"
 
