@@ -134,7 +134,9 @@ def build(ctx):
 
 def download(ctx):
     apt_args = ["make", "g++", "texinfo", "clang-3.6", "python-dev",
-                "python-matplotlib", "python-enum34", "python-clang-3.6"]
+                "python-matplotlib", "python-enum34", "python-clang-3.6",
+                "python-gi", "python-gobject", "python-gi-cairo",
+                "gir1.2-gtk-3.0", "gir1.2-gtksource-3.0"]
     subprocess.check_call(["sudo", "apt-get", "install"] + apt_args)
 
 
