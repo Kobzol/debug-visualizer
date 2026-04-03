@@ -122,6 +122,9 @@ def configure(conf):
         conf.check_python_module("lldb")
     conf.check_python_module("enum")
     conf.check_python_module("gi.repository.Gtk")
+    conf.check_python_module("gi.repository.Gdk")
+    conf.check_python_module("gi.repository.GtkSource")
+    conf.check_python_module("cairo")
     conf.check_python_module("matplotlib")
     conf.check_python_module("clang.cindex")
 
