@@ -133,7 +133,7 @@ def build(ctx):
 
 
 def download(ctx):
-    apt_args = ["g++", "texinfo", "clang-3.6", "python-dev",
+    apt_args = ["make", "g++", "texinfo", "clang-3.6", "python-dev",
                 "python-matplotlib", "python-enum34", "python-clang-3.6"]
     subprocess.check_call(["sudo", "apt-get", "install"] + apt_args)
 
