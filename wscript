@@ -122,6 +122,9 @@ def configure(conf):
         conf.check_python_module("lldb")
     conf.check_python_module("enum")
     conf.check_python_module("gi.repository.Gtk")
+    conf.check_python_module("gi.repository.Gdk")
+    conf.check_python_module("gi.repository.GtkSource")
+    conf.check_python_module("cairo")
     conf.check_python_module("matplotlib")
     conf.check_python_module("clang.cindex")
 
@@ -133,8 +136,10 @@ def build(ctx):
 
 
 def download(ctx):
-    apt_args = ["g++", "texinfo", "clang-3.6", "python-dev",
-                "python-matplotlib", "python-enum34", "python-clang-3.6"]
+    apt_args = ["make", "g++", "texinfo", "clang-3.6", "python-dev",
+                "python-matplotlib", "python-enum34", "python-clang-3.6",
+                "python-gi", "python-gobject", "python-gi-cairo",
+                "gir1.2-gtk-3.0", "gir1.2-gtksource-3.0"]
     subprocess.check_call(["sudo", "apt-get", "install"] + apt_args)
 
 
