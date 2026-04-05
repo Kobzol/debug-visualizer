@@ -28,10 +28,17 @@ def hash(path):
 
 
 def build_gdb(ctx):
-    gdb_build_dir = os.path.join(ctx.out_dir, "gdb-build")
-    gdb_extract_dir = os.path.join(ctx.out_dir, "gdb-source")
+    try:
+        build_dir = ctx.out_dir
+    except AttributeError as e:
+        build_dir = Context.out_dir
+    if not build_dir:
+        ctx.fatal("Could not determine output dir - has configure been run?")
+
+    gdb_build_dir = os.path.join(build_dir, "gdb-build")
+    gdb_extract_dir = os.path.join(build_dir, "gdb-source")
     gdb_src_dir = os.path.join(gdb_extract_dir, "gdb-7.11")
-    gdb_src_zip = os.path.join(ctx.out_dir, "gdb-7.11.tar.gz")
+    gdb_src_zip = os.path.join(build_dir, "gdb-7.11.tar.gz")
     if (not os.path.isfile(gdb_src_zip) or
             hash(gdb_src_zip) != gdb_archive_sha256):
         print("Downloading GDB 7.11...")
