@@ -64,7 +64,10 @@ def build_gdb(ctx):
                                                100.0), end="")
         print("\n")
 
-    if not os.path.isfile(os.path.join(gdb_build_dir, "gdb")):
+    gdb_bin_path = os.path.join(gdb_build_dir, "gdb")
+    if os.path.isfile(gdb_bin_path):
+        print("%s exists, assuming GDB is built" % gdb_bin_path)
+    else:
         print("Extracting GDB...")
 
         with tarfile.open(gdb_src_zip) as archive:
