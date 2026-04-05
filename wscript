@@ -12,10 +12,6 @@ import hashlib
 
 
 gdb_url = "http://ftp.gnu.org/gnu/gdb/gdb-7.11.tar.gz"
-gdb_build_dir = os.path.abspath("./build/gdb-build")
-gdb_extract_dir = os.path.abspath("./build/gdb-source")
-gdb_src_dir = os.path.join(gdb_extract_dir, "gdb-7.11")
-gdb_src_zip = os.path.abspath("./build/gdb-7.11.tar.gz")
 gdb_archive_length = 34526368
 gdb_archive_sha256 = "9382f5534aa0754169e1e09b5f1a3b77d1fa8c59c1e57617e0" \
                      "6af37cb29c669a"
@@ -31,7 +27,11 @@ def hash(path):
     return digest.hexdigest()
 
 
-def build_gdb():
+def build_gdb(ctx):
+    gdb_build_dir = os.path.join(ctx.out_dir, "gdb-build")
+    gdb_extract_dir = os.path.join(ctx.out_dir, "gdb-source")
+    gdb_src_dir = os.path.join(gdb_extract_dir, "gdb-7.11")
+    gdb_src_zip = os.path.join(ctx.out_dir, "gdb-7.11.tar.gz")
     if (not os.path.isfile(gdb_src_zip) or
             hash(gdb_src_zip) != gdb_archive_sha256):
         print("Downloading GDB 7.11...")
@@ -132,7 +132,7 @@ def configure(conf):
 def build(ctx):
     ctx.recurse("debugger")
     ctx.recurse("examples")
-    build_gdb()
+    build_gdb(ctx)
 
 
 def download(ctx):
