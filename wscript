@@ -12,10 +12,6 @@ import hashlib
 
 
 gdb_url = "http://ftp.gnu.org/gnu/gdb/gdb-7.11.tar.gz"
-gdb_build_dir = os.path.abspath("./build/gdb-build")
-gdb_extract_dir = os.path.abspath("./build/gdb-source")
-gdb_src_dir = os.path.join(gdb_extract_dir, "gdb-7.11")
-gdb_src_zip = os.path.abspath("./build/gdb-7.11.tar.gz")
 gdb_archive_length = 34526368
 gdb_archive_sha256 = "9382f5534aa0754169e1e09b5f1a3b77d1fa8c59c1e57617e0" \
                      "6af37cb29c669a"
@@ -31,7 +27,18 @@ def hash(path):
     return digest.hexdigest()
 
 
-def build_gdb():
+def build_gdb(ctx):
+    try:
+        build_dir = ctx.out_dir
+    except AttributeError as e:
+        build_dir = Context.out_dir
+    if not build_dir:
+        ctx.fatal("Could not determine output dir - has configure been run?")
+
+    gdb_build_dir = os.path.join(build_dir, "gdb-build")
+    gdb_extract_dir = os.path.join(build_dir, "gdb-source")
+    gdb_src_dir = os.path.join(gdb_extract_dir, "gdb-7.11")
+    gdb_src_zip = os.path.join(build_dir, "gdb-7.11.tar.gz")
     if (not os.path.isfile(gdb_src_zip) or
             hash(gdb_src_zip) != gdb_archive_sha256):
         print("Downloading GDB 7.11...")
@@ -57,7 +64,10 @@ def build_gdb():
                                                100.0), end="")
         print("\n")
 
-    if not os.path.isfile(os.path.join(gdb_build_dir, "gdb")):
+    gdb_bin_path = os.path.join(gdb_build_dir, "gdb")
+    if os.path.isfile(gdb_bin_path):
+        print("%s exists, assuming GDB is built" % gdb_bin_path)
+    else:
         print("Extracting GDB...")
 
         with tarfile.open(gdb_src_zip) as archive:
@@ -132,11 +142,11 @@ def configure(conf):
 def build(ctx):
     ctx.recurse("debugger")
     ctx.recurse("examples")
-    build_gdb()
+    build_gdb(ctx)
 
 
 def download(ctx):
-    apt_args = ["make", "g++", "texinfo", "clang-3.6", "python-dev",
+    apt_args = ["make", "g++", "gawk", "libtool", "texinfo", "clang-3.6", "python-dev",
                 "python-matplotlib", "python-enum34", "python-clang-3.6",
                 "python-gi", "python-gobject", "python-gi-cairo",
                 "gir1.2-gtk-3.0", "gir1.2-gtksource-3.0"]
