@@ -135,6 +135,7 @@ def configure(conf):
     conf.check_python_module("gi.repository.Gdk")
     conf.check_python_module("gi.repository.GtkSource")
     conf.check_python_module("cairo")
+    conf.check_python_module("numpy")
     conf.check_python_module("matplotlib")
     conf.check_python_module("clang.cindex")
 
