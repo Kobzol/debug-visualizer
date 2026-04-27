@@ -33,7 +33,7 @@ import debugger.util as util
 from debugger.enums import ProcessState
 from debugger.mi.parser import Parser
 
-GDB_PATH = util.get_root_path("build/gdb-build/gdb")
+GDB_PATH = os.environ.get('DEVI_GDB_PATH', util.get_root_path("build/gdb-build/gdb"))
 
 if not os.path.isfile(GDB_PATH):
     raise BaseException(
